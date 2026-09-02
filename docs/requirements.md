@@ -1,62 +1,33 @@
-# ADHD Stack v1 要件（下書き）
+# 要件
 
-日付: 2026-09-02
-置き場: https://github.com/MichitoSugawara/adhd-stack （`docs/requirements.md`）
-ホスト: adhd.gawarago.com
+## アプリ概要
 
-## 何を作るか
+ADHD Stack は、ブラウザだけでアプリを書いて公開する Web アプリ。ホストは `adhd.gawarago.com`。
 
-Web でアカウントをつないだら、コードを書いて、自分の Cloudflare と Convex に載せる。IDE を開かない。
+ChatGPT と GitHub をつなぐと、GitHub 上にリポジトリと Codex Cloud 環境ができる。チャットで指示を出すと、そのクラウド環境がコードを書く。thinking、いまやってること、コマンド、ファイル差分が見える。
 
-Kumo が開発（ChatGPT + GitHub + Codex Cloud）。Ownstack が公開（Cloudflare Pages + Convex）。ADHD Stack はその二つを一つの流れにする。別プロダクトを行き来しない。
+Cloudflare と Convex をつなぐと、フロントは Cloudflare Pages、API と DB は Convex に載る。公開 URL が返る。
 
-v1 の利用者は自分（道人）。他人向け SaaS はまだやらない。OAuth は全部本物。デモ接続は入れない。
+OAuth は全部本物。デモ接続は無い。IDE は開かない。コードを書くのは Codex Cloud。
 
-## ユーザーがやること
+## 画面一覧
 
-1. adhd.gawarago.com を開く
-2. ChatGPT / GitHub / Cloudflare / Convex を接続する（未接続だけボタンが出る）
-3. アプリ名を入れて「作る」。GitHub にリポが出来て、Codex Cloud 環境がそれに紐づく
-4. チャットで指示する。thinking、今やってること、コマンド、ファイル差分が出る（ChatGPT Codex の画面に寄せる。UI は assistant-ui）
-5. 「公開する」でフロントが自分の Cloudflare Pages、バックエンドと DB が自分の Convex に載る。URL が返る
+### 接続
 
-## v1 でやる
+足りないアカウントだけつなぐ。ChatGPT、GitHub、Cloudflare、Convex。接続済みは状態が見える。切れたら再接続できる。
 
-- 四つのアカウント接続。切れたら再接続。モック経路なし
-- リポ作成（GitHub、ユーザーの個人アカウント）
-- Codex Cloud 環境作成（WHAM。machine_id は universal。repos は github-{id}。ユーザー文をアシスタント扱いにしない）
-- 会話コンソール。タスクごとに本物の Codex 返答。429 は一時障害として待つ
-- 公開。既存 Pages 名がぶつかったら再利用か別名（Ownstack で踏んだ）
-- ホストは adhd.gawarago.com。Kumo の named tunnel と同じ Cloudflare ゾーン
+### 作成
 
-## v1 でやらない
+アプリ名を入れて作る。GitHub リポジトリと、それに紐づく Codex Cloud 環境ができる。終わったらコンソールへ進む。
 
-- t3code 本体の埋め込み（デスクトップ GUI なのでチャット部品にしない）
-- ローカル Codex CLI / ローカル runner
-- マルチテナント、課金、チーム招待
-- GitHub 以外の Git、Vercel、Supabase
-- 自分の ChatGPT アプリを新規発行する（Codex 公開クライアントの device フローを使う）
-- 自動 PR マージ、本番カスタムドメインの自動 DNS（公開 URL は pages.dev と convex.site で足りる）
+### コンソール
 
-## 画面
+会話がメイン。ユーザーと Codex のやり取り、thinking、作業中の表示、コマンドの成否、ファイル差分。ログとファイルはサブ。公開すると Pages と Convex の URL が出る。
 
-- /connect … 四つの接続状態。欠けてるものだけつなぐ
-- /new … 名前と一言。リポ + 環境
-- /app/:id … 会話がメイン。ログ・差分・ファイルはサブ。公開ボタン
-- 公開後はそのアプリの本番 URL を同じ画面に出す
+## ユーザーストーリー
 
-## 今日までの制約（POC で踏んだ）
-
-- ChatGPT は device OAuth。callback を kumo.gawarago.com にすると公開クライアントの allowlist に無い
-- 環境作成は machine_id と repos が必須。repos は owner/name オブジェクトではなく github-{numericId}
-- タスク GET の 429 を失敗扱いにすると会話が死ぬ
-- ユーザーの input_items をアシスタント本文にするとオウム返しになる
-- Ownstack の post-callback で bind アドレス 0.0.0.0 を redirect に使うと接続拒否になる。baseUrl を使う
-- Pages 名 ownstack-notes は既存衝突。再利用する
-- Origin の新規 VM は、Kumo と Ownstack エージェントが動いてると起動前に落ちることがある
-
-## 置いた前提（違うなら直して）
-
-1. v1 は自分用。GitHub は MichitoSugawara、Convex は team gawa、Cloudflare は michitogawara
-2. チャットは Codex Cloud に投げる。こちらの LLM でコードを書かない
-3. フロントは Cloudflare Pages、API/DB は Convex。Kumo 制御面のホストは ADHD 側（adhd.gawarago.com）に寄せる。kumo.gawarago.com は POC のまま残してよい
+- アカウントをつないで、名前を入れるだけで、リポジトリと開発環境が欲しい
+- チャットで指示を出して、いま何をしているかと、変わったファイルを見たい
+- できたアプリを、自分の Cloudflare と Convex に出して、URL を受け取りたい
+- 接続が切れたら、同じ画面からつなぎ直したい
+- 公開先の名前が既にあっても、失敗で止まらずに載せたい
