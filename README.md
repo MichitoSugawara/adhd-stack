@@ -60,7 +60,7 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 - トークン交換: `https://auth.openai.com/oauth/token`（`redirect_uri` は `https://auth.openai.com/deviceauth/callback`）
 - Cloud Environments / Codex Cloud は Plus 以上が必要です。Free と Go では足りません。
 - GitHub リポジトリと Cloudflare Pages / Convex プロジェクトは、つながったトークンで用意を試みます。偽の環境は作りません。
-- Codex Cloud 環境は Codex CLI と同じ `POST /wham/environments` です。`originator: codex_cli_rs`、`machine_id` は取れなければ `wham-public/wham-universal`（`/wham/machines` が空なのは普通です）。`repos` は `github-{id}` の文字列で、id は `GET /wham/github/repositories/search/all-installations` から取ります。GitHub OAuth の `/repos` は使いません。ChatGPT 側にリポジトリが見えないときだけ https://chatgpt.com/codex で GitHub を繋いでください。
+- Codex Cloud 環境は Codex CLI と同じ `POST /wham/environments` です。`originator: codex_cli_rs` は HTTP ヘッダです。`machine_id` は取れなければ `wham-public/wham-universal`（`/wham/machines` が空なのは普通です）。`repos` は `github-{id}` の文字列で、id は `GET /wham/github/repositories/search/all-installations?query=adhd-app` から取ります。GitHub OAuth の `/repos` は使いません。ChatGPT 側にリポジトリが見えないときだけ https://chatgpt.com/codex で GitHub を繋いでください。
 
 ### GitHub
 

@@ -38,6 +38,7 @@ const headersFor = (auth: CodexCloudAuth): HeadersInit => {
     Accept: "application/json",
     Authorization: `Bearer ${auth.accessToken}`,
     "Content-Type": "application/json",
+    // Codex CLI / Kumo: HTTP header, not a query param.
     originator: "codex_cli_rs",
   };
   if (auth.accountId) {
@@ -270,8 +271,8 @@ export const findInstalledGithubRepoId = async (
   repo: string
 ): Promise<{ id?: number; probe: string }> => {
   const probes: string[] = [];
-  for (const q of [`${owner}/${repo}`, repo]) {
-    const path = `/wham/github/repositories/search/all-installations?${new URLSearchParams({ q }).toString()}`;
+  for (const term of [repo, `${owner}/${repo}`]) {
+    const path = `/wham/github/repositories/search/all-installations?${new URLSearchParams({ query: term }).toString()}`;
     const response = await request(auth, "GET", path);
     probes.push(
       `${path} HTTP ${response.status} ${payloadText(response.payload)}`
