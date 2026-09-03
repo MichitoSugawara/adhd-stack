@@ -66,6 +66,14 @@ export const MobileConnectScreen = ({
               >
                 入力ページを開く
               </a>
+              {" · "}
+              <a
+                href={chatgptDevice.verificationUrlFallback}
+                rel="noreferrer"
+                target="_blank"
+              >
+                コードを自分で入力
+              </a>
             </p>
           ) : null}
           <div className="mobile-node-grid">

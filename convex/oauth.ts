@@ -73,6 +73,7 @@ export const beginChatgptDevice = action({
     intervalSeconds: v.number(),
     userCode: v.string(),
     verificationUrl: v.string(),
+    verificationUrlFallback: v.string(),
   }),
 });
 

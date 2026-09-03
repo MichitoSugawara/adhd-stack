@@ -16,7 +16,18 @@ export interface CodexDeviceStart {
   intervalSeconds: number;
   userCode: string;
   verificationUrl: string;
+  verificationUrlFallback: string;
 }
+
+export const buildCodexVerificationUrl = (userCode: string): string => {
+  const trimmed = userCode.trim();
+  if (trimmed.length === 0) {
+    return CODEX_VERIFICATION_URL;
+  }
+  const url = new URL(CODEX_VERIFICATION_URL);
+  url.searchParams.set("user_code", trimmed);
+  return url.toString();
+};
 
 export interface CodexDeviceCodes {
   authorizationCode: string;
@@ -74,7 +85,8 @@ export const requestCodexUserCode = async (): Promise<CodexDeviceStart> => {
     deviceAuthId,
     intervalSeconds: parseIntervalSeconds(payload.interval),
     userCode,
-    verificationUrl: CODEX_VERIFICATION_URL,
+    verificationUrl: buildCodexVerificationUrl(userCode),
+    verificationUrlFallback: CODEX_VERIFICATION_URL,
   };
 };
 

@@ -17,7 +17,19 @@ export interface ChatgptDevicePrompt {
   startedAt: number;
   userCode: string;
   verificationUrl: string;
+  verificationUrlFallback: string;
 }
+
+const openChatgptDevicePage = (
+  verificationUrl: string,
+  verificationUrlFallback: string
+) => {
+  const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer");
+  if (opened) {
+    return;
+  }
+  window.open(verificationUrlFallback, "_blank", "noopener,noreferrer");
+};
 
 interface PublicConnection {
   identity: string;
@@ -127,7 +139,10 @@ export const useConnectBoard = () => {
           ...device,
           startedAt: Date.now(),
         });
-        window.open(device.verificationUrl, "_blank", "noopener,noreferrer");
+        openChatgptDevicePage(
+          device.verificationUrl,
+          device.verificationUrlFallback
+        );
       } catch (error) {
         setPending(null);
         setOauthError(

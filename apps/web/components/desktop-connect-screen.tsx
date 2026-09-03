@@ -115,18 +115,24 @@ export const DesktopConnectScreen = ({
                               </span>
                             ) : null}
                             {service.id === "chatgpt" && chatgptDevice ? (
-                              <a
-                                className="service-identity chatgpt-device-link"
-                                href={chatgptDevice.verificationUrl}
-                                rel="noreferrer"
-                                target="_blank"
-                              >
-                                {chatgptDevice.verificationUrl.replace(
-                                  "https://",
-                                  ""
-                                )}{" "}
-                                でコードを入力
-                              </a>
+                              <span className="service-identity chatgpt-device-links">
+                                <a
+                                  className="chatgpt-device-link"
+                                  href={chatgptDevice.verificationUrl}
+                                  rel="noreferrer"
+                                  target="_blank"
+                                >
+                                  入力ページを開く
+                                </a>
+                                <a
+                                  className="chatgpt-device-link"
+                                  href={chatgptDevice.verificationUrlFallback}
+                                  rel="noreferrer"
+                                  target="_blank"
+                                >
+                                  コードを自分で入力
+                                </a>
+                              </span>
                             ) : null}
                             {status === "disconnected" && !isConfigured ? (
                               <span className="service-identity">
