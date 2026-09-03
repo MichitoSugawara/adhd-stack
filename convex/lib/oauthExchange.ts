@@ -1,3 +1,10 @@
+import { asList, asRecord, asString } from "./httpJson";
+import {
+  chatgptAccountIdFromClaims,
+  chatgptAccountIdFromToken,
+  decodeJwtPayload,
+  looksLikeCfAccountId,
+} from "./jwt";
 import type { ProviderId } from "./providers";
 import {
   getProviderDefinition,
@@ -14,6 +21,7 @@ export interface TokenSet {
 
 export interface ProviderIdentity {
   accountKey: string;
+  connectionAccountId?: string;
   email?: string;
   identity: string;
   name?: string;
@@ -29,25 +37,6 @@ const readJson = async (
   } catch {
     const params = new URLSearchParams(text);
     return Object.fromEntries(params.entries());
-  }
-};
-
-const asString = (value: unknown): string | undefined =>
-  typeof value === "string" && value.length > 0 ? value : undefined;
-
-const decodeJwtPayload = (
-  token: string
-): Record<string, unknown> | undefined => {
-  const [, payload] = token.split(".");
-  if (!payload) {
-    return undefined;
-  }
-  const normalized = payload.replaceAll("-", "+").replaceAll("_", "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  try {
-    return JSON.parse(atob(padded)) as Record<string, unknown>;
-  } catch {
-    return undefined;
   }
 };
 
@@ -99,19 +88,20 @@ export const exchangeAuthorizationCode = async (
 
 const chatgptIdentity = (tokens: TokenSet): ProviderIdentity => {
   const claims = tokens.idToken ? decodeJwtPayload(tokens.idToken) : undefined;
-  const authClaim =
-    claims && typeof claims["https://api.openai.com/auth"] === "object"
-      ? (claims["https://api.openai.com/auth"] as Record<string, unknown>)
-      : undefined;
+  const authClaim = asRecord(claims?.["https://api.openai.com/auth"]);
   const plan =
-    asString(authClaim?.chatgpt_plan_type) ??
+    asString(authClaim.chatgpt_plan_type) ??
     asString(claims?.chatgpt_plan_type);
   const subject = asString(claims?.sub) ?? "chatgpt";
   const email = asString(claims?.email);
   const name = asString(claims?.name);
   const freePlan = plan === "free" || plan === "go";
+  const connectionAccountId =
+    chatgptAccountIdFromClaims(claims) ??
+    chatgptAccountIdFromToken(tokens.accessToken);
   return {
     accountKey: `chatgpt:${subject}`,
+    connectionAccountId,
     email,
     identity: email ?? name ?? subject,
     name,
@@ -158,8 +148,12 @@ const cloudflareIdentity = async (
   const profile = (await response.json()) as Record<string, unknown>;
   const email = asString(profile.email);
   const subject = asString(profile.sub) ?? email ?? "cloudflare";
+  const hinted =
+    asString(profile.account_id) ??
+    asString(asRecord(asList(profile.accounts)[0]).id);
   return {
     accountKey: `cloudflare:${subject}`,
+    connectionAccountId: looksLikeCfAccountId(hinted) ? hinted : undefined,
     email,
     identity: email ?? subject,
     name: asString(profile.name),

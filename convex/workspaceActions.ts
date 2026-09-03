@@ -15,6 +15,7 @@ import { ensureAdhdRepo } from "./lib/githubRepo";
 
 export const provisionWorkspace = internalAction({
   args: {
+    force: v.optional(v.boolean()),
     userId: v.id("users"),
     workspaceId: v.id("workspaces"),
   },
@@ -30,7 +31,7 @@ export const provisionWorkspace = internalAction({
     ) {
       return null;
     }
-    if (existing?.provisionStatus === "provisioning") {
+    if (existing?.provisionStatus === "provisioning" && !args.force) {
       return null;
     }
 
@@ -40,7 +41,8 @@ export const provisionWorkspace = internalAction({
     });
 
     try {
-      const errors: string[] = [];
+      const blockers: string[] = [];
+      const warnings: string[] = [];
       let githubOwner = existing?.githubOwner;
       let githubRepoFullName = existing?.githubRepoFullName;
       let githubRepoId = existing?.githubRepoId;
@@ -58,7 +60,10 @@ export const provisionWorkspace = internalAction({
       const github = await loadFreshConnection(ctx, args.userId, "github");
       if (github) {
         try {
-          const repo = await ensureAdhdRepo(github.accessToken);
+          const repo = await ensureAdhdRepo(
+            github.accessToken,
+            existing?.githubRepoFullName
+          );
           githubOwner = repo.owner;
           githubRepoFullName = repo.fullName;
           githubRepoId = repo.id;
@@ -81,22 +86,23 @@ export const provisionWorkspace = internalAction({
             }
           );
         } catch (error) {
-          errors.push(
+          blockers.push(
             error instanceof Error
               ? error.message
               : "GitHub のプロビジョニングに失敗しました"
           );
         }
       } else {
-        errors.push("GitHub がつながっていません");
+        blockers.push("GitHub がつながっていません");
       }
 
       const chatgpt = await loadFreshConnection(ctx, args.userId, "chatgpt");
       if (githubOwner && githubRepoName && chatgpt) {
         try {
-          const accountId =
-            (await resolveCodexAccountId(chatgpt.accessToken)) ??
-            (chatgpt.accountId.length > 0 ? chatgpt.accountId : undefined);
+          const accountId = await resolveCodexAccountId(
+            chatgpt.accessToken,
+            chatgpt.accountId
+          );
           const environment = await ensureCodexEnvironment(
             { accessToken: chatgpt.accessToken, accountId },
             githubOwner,
@@ -117,14 +123,14 @@ export const provisionWorkspace = internalAction({
             }
           );
         } catch (error) {
-          errors.push(
+          blockers.push(
             error instanceof Error
               ? error.message
               : "Codex Cloud 環境を作成できませんでした"
           );
         }
       } else if (!chatgpt) {
-        errors.push("ChatGPT がつながっていません");
+        blockers.push("ChatGPT がつながっていません");
       }
 
       const cloudflare = await loadFreshConnection(
@@ -138,13 +144,14 @@ export const provisionWorkspace = internalAction({
             cloudflare.accessToken,
             githubOwner,
             githubRepoName,
-            githubRepoId
+            githubRepoId,
+            cloudflare.accountId
           );
           cloudflareAccountId = project.accountId;
           cloudflarePagesUrl = project.url;
           cloudflareProjectName = project.name;
         } catch (error) {
-          errors.push(
+          warnings.push(
             error instanceof Error
               ? error.message
               : "Cloudflare Pages のプロビジョニングに失敗しました"
@@ -161,7 +168,7 @@ export const provisionWorkspace = internalAction({
           convexTeamSlug = project.teamSlug;
           convexUrl = project.url;
         } catch (error) {
-          errors.push(
+          warnings.push(
             error instanceof Error
               ? error.message
               : "Convex プロジェクトのプロビジョニングに失敗しました"
@@ -170,6 +177,7 @@ export const provisionWorkspace = internalAction({
       }
 
       const ready = Boolean(githubRepoUrl && codexEnvironmentId);
+      const notes = ready ? warnings : [...blockers, ...warnings];
       await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
         cloudflareAccountId,
         cloudflarePagesUrl,
@@ -184,14 +192,14 @@ export const provisionWorkspace = internalAction({
         githubRepoId,
         githubRepoName,
         githubRepoUrl,
-        provisionError: errors.length > 0 ? errors.join(" / ") : "",
+        provisionError: notes.length > 0 ? notes.join(" / ") : "",
         provisionStatus: ready ? "ready" : "error",
         workspaceId: args.workspaceId,
       });
       await ctx.runMutation(internal.workspaceInternal.insertSystemMessage, {
         body: ready
           ? "準備できました。チャットで指示してください。"
-          : errors.join(" / ") || "準備に失敗しました",
+          : notes.join(" / ") || "準備に失敗しました",
         workspaceId: args.workspaceId,
       });
       return null;

@@ -9,8 +9,9 @@ import {
 } from "konsta/react";
 import { useRouter } from "next/navigation";
 
-import { KIND_LABELS, provisionHeadline } from "../lib/editor-copy";
+import { KIND_LABELS } from "../lib/editor-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
+import { EditorProvisionStrip } from "./editor-provision-strip";
 
 type EditorState = ReturnType<typeof useEditorWorkspace>;
 
@@ -27,6 +28,7 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
     publish,
     publishing,
     ready,
+    retryProvision,
     send,
     setDraft,
     visibleThread,
@@ -58,10 +60,13 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
             公開する
           </KonstaButton>
         </header>
-        <div className="provision-strip provision-strip--mobile">
-          <p>{provisionHeadline(workspace)}</p>
-          <p>{workspace?.githubRepoUrl ?? "リポジトリ準備中"}</p>
-          <p>{workspace?.codexEnvironmentId ?? "環境 未作成"}</p>
+        <div className="provision-strip--mobile">
+          <EditorProvisionStrip
+            onRetry={() => {
+              void retryProvision();
+            }}
+            workspace={workspace}
+          />
         </div>
         {liveStatus ? (
           <p className="publish-result" role="status">

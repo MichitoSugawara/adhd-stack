@@ -54,7 +54,16 @@ export const provisionHeadline = (
     return "準備完了";
   }
   if (workspace.provisionStatus === "error") {
+    if (workspace.githubRepoUrl && !workspace.codexEnvironmentId) {
+      return "リポジトリはある。Codex 環境を作れませんでした";
+    }
+    if (workspace.githubRepoUrl) {
+      return "リポジトリはある。準備の続きに失敗しました";
+    }
     return "準備に失敗しました";
+  }
+  if (workspace.githubRepoUrl && !workspace.codexEnvironmentId) {
+    return "リポジトリはある。Codex 環境を用意しています";
   }
   return "リポジトリと環境を用意しています";
 };

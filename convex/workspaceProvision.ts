@@ -6,8 +6,10 @@ import type { Id } from "./_generated/dataModel";
 import { action } from "./_generated/server";
 
 export const provision = action({
-  args: {},
-  handler: async (ctx): Promise<Id<"workspaces">> => {
+  args: {
+    force: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args): Promise<Id<"workspaces">> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
@@ -17,6 +19,7 @@ export const provision = action({
       { userId }
     );
     await ctx.runAction(internal.workspaceActions.provisionWorkspace, {
+      force: args.force,
       userId,
       workspaceId,
     });

@@ -70,7 +70,7 @@ export const useEditorWorkspace = () => {
   const retryProvision = async () => {
     setStatusLine("もう一度用意しています");
     await ensure({});
-    await provision({});
+    await provision({ force: true });
   };
 
   const send = async () => {

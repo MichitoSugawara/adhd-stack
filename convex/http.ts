@@ -55,7 +55,7 @@ const handleCallback = httpAction(async (ctx, request) => {
     if (stored.userId) {
       await ctx.runMutation(internal.oauthStore.upsertConnection, {
         accessToken: tokens.accessToken,
-        accountId: identity.accountKey,
+        accountId: identity.connectionAccountId ?? identity.accountKey,
         expiresAt: tokens.expiresAt,
         identity: identity.identity,
         planWarning: identity.planWarning,

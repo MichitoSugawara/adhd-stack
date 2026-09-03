@@ -143,9 +143,10 @@ export const runCodexTurn = internalAction({
       workspaceId: args.workspaceId,
     });
 
-    const accountId =
-      (await resolveCodexAccountId(chatgpt.accessToken)) ??
-      (chatgpt.accountId.length > 0 ? chatgpt.accountId : undefined);
+    const accountId = await resolveCodexAccountId(
+      chatgpt.accessToken,
+      chatgpt.accountId
+    );
     const auth = { accessToken: chatgpt.accessToken, accountId };
 
     let taskId: string;

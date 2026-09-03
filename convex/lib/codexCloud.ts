@@ -1,4 +1,12 @@
-import { asList, asNumber, asRecord, asString, readJson } from "./httpJson";
+import {
+  asList,
+  asNumber,
+  asRecord,
+  asString,
+  payloadText,
+  readJson,
+} from "./httpJson";
+import { chatgptAccountIdFromToken, isUsableCodexAccountId } from "./jwt";
 
 export const CODEX_CLOUD_BASE = "https://chatgpt.com/backend-api";
 
@@ -77,8 +85,16 @@ const environmentsFromPayload = (
 };
 
 export const resolveCodexAccountId = async (
-  accessToken: string
+  accessToken: string,
+  storedAccountId?: string
 ): Promise<string | undefined> => {
+  const fromJwt = chatgptAccountIdFromToken(accessToken);
+  if (fromJwt) {
+    return fromJwt;
+  }
+  if (isUsableCodexAccountId(storedAccountId)) {
+    return storedAccountId;
+  }
   const response = await request(
     { accessToken },
     "GET",
@@ -88,16 +104,89 @@ export const resolveCodexAccountId = async (
     return undefined;
   }
   const defaultId = asString(response.payload.default_account_id);
-  if (defaultId) {
-    return defaultId;
-  }
   const accounts = asList(response.payload.accounts);
   const first = asRecord(accounts[0]);
-  return (
+  const checked =
+    defaultId ??
     asString(first.id) ??
     asString(asRecord(first.account).account_id) ??
-    asString(asRecord(first.account).id)
+    asString(asRecord(first.account).id);
+  return isUsableCodexAccountId(checked) ? checked : undefined;
+};
+
+const GITHUB_CONNECT_HINT =
+  "ChatGPT Codex で GitHub を接続してください。https://chatgpt.com/codex を開き、Environment 作成画面から GitHub を繋いでから、もう一度試してください";
+
+const githubConnectHint = (text: string): string | undefined => {
+  const lower = text.toLowerCase();
+  const mentionsGithub = lower.includes("github");
+  const mentionsLink =
+    lower.includes("connect") ||
+    lower.includes("link") ||
+    lower.includes("install") ||
+    lower.includes("authorization") ||
+    lower.includes("not connected") ||
+    lower.includes("no installation") ||
+    lower.includes("permission") ||
+    lower.includes("connector");
+  if (mentionsGithub && mentionsLink) {
+    return GITHUB_CONNECT_HINT;
+  }
+  return undefined;
+};
+
+export const formatCodexHttpError = (
+  status: number,
+  payload: Record<string, unknown>
+): string => {
+  const text = payloadText(payload);
+  const hint = githubConnectHint(text);
+  if (hint) {
+    return `${hint}（API ${status}: ${text}）`;
+  }
+  return `Codex Cloud 環境を作成できませんでした: HTTP ${status} ${text}`;
+};
+
+const machineIdFrom = (value: unknown): string | undefined => {
+  const row = asRecord(value);
+  return (
+    asString(row.id) ??
+    asString(row.machine_id) ??
+    asString(row.slug) ??
+    asString(asRecord(row.machine).id)
   );
+};
+
+export const listCodexMachineId = async (
+  auth: CodexCloudAuth
+): Promise<string | undefined> => {
+  for (const path of ["/wham/machines", "/wham/environments/machines"]) {
+    const response = await request(auth, "GET", path);
+    if (!response.ok) {
+      continue;
+    }
+    const rows = asList(
+      response.payload.machines ??
+        response.payload.items ??
+        response.payload.data
+    );
+    const source = rows.length > 0 ? rows : asList(response.payload);
+    const preferred = source.find((item) => {
+      const row = asRecord(item);
+      const label = (
+        asString(row.label) ??
+        asString(row.name) ??
+        asString(row.slug) ??
+        ""
+      ).toLowerCase();
+      return label.includes("default") || label.includes("universal");
+    });
+    const id = machineIdFrom(preferred) ?? machineIdFrom(source[0]);
+    if (id) {
+      return id;
+    }
+  }
+  return undefined;
 };
 
 export const listEnvironmentsForRepo = async (
@@ -134,49 +223,34 @@ export const listEnvironmentsForRepo = async (
 };
 
 const createBodies = (
+  machineId: string,
   owner: string,
   repo: string,
   repoId?: number
 ): Record<string, unknown>[] => {
-  const label = "adhd-app";
+  const repoObject = {
+    default_branch: "main",
+    name: repo,
+    owner,
+    provider: "github",
+    ...(repoId === undefined ? {} : { external_id: String(repoId) }),
+  };
   return [
     {
-      default_branch: "main",
-      label,
-      repo: {
-        default_branch: "main",
-        name: repo,
-        owner,
-        provider: "github",
-      },
+      label: "adhd-app",
+      machine_id: machineId,
+      repos: [repoObject],
     },
     {
-      defaultBranch: "main",
-      label,
-      repository: {
-        owner,
-        repo,
-        vcs: "github",
-      },
+      machine_id: machineId,
+      name: "adhd-app",
+      repos: [repoObject],
     },
     {
-      git_repo: `${owner}/${repo}`,
-      label,
-      provider: "github",
+      label: "adhd-app",
+      machine_id: machineId,
+      repo: repoObject,
     },
-    ...(repoId
-      ? [
-          {
-            label,
-            repo: {
-              external_id: String(repoId),
-              name: repo,
-              owner,
-              vcs_provider: "github",
-            },
-          },
-        ]
-      : []),
   ];
 };
 
@@ -186,8 +260,14 @@ export const createCodexEnvironment = async (
   repo: string,
   repoId?: number
 ): Promise<CodexEnvironment> => {
+  const machineId = await listCodexMachineId(auth);
+  if (!machineId) {
+    throw new Error(
+      `${GITHUB_CONNECT_HINT}（Codex Cloud に machine がありません）`
+    );
+  }
   const errors: string[] = [];
-  for (const body of createBodies(owner, repo, repoId)) {
+  for (const body of createBodies(machineId, owner, repo, repoId)) {
     const response = await request(auth, "POST", "/wham/environments", body);
     if (response.ok) {
       const created =
@@ -198,19 +278,12 @@ export const createCodexEnvironment = async (
         return created;
       }
     }
-    const detail =
-      asString(response.payload.message) ??
-      asString(response.payload.error) ??
-      asString(response.payload.raw) ??
-      `HTTP ${response.status}`;
-    errors.push(detail);
+    errors.push(formatCodexHttpError(response.status, response.payload));
     if (response.status === 401 || response.status === 403) {
       break;
     }
   }
-  throw new Error(
-    `Codex Cloud 環境を作成できませんでした: ${errors.at(-1) ?? "不明なエラー"}`
-  );
+  throw new Error(errors.at(-1) ?? "Codex Cloud 環境を作成できませんでした");
 };
 
 export const ensureCodexEnvironment = async (

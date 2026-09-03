@@ -66,7 +66,8 @@ export const publishWorkspace = internalAction({
           cloudflare.accessToken,
           owner,
           repo,
-          workspace.githubRepoId
+          workspace.githubRepoId,
+          cloudflare.accountId
         );
         cloudflareAccountId = project.accountId;
         cloudflareProjectName = project.name;

@@ -49,7 +49,16 @@ export const fetchGitHubRepo = async (
   return parsed;
 };
 
-export const ensureAdhdRepo = async (token: string): Promise<GitHubRepo> => {
+export const ensureAdhdRepo = async (
+  token: string,
+  existingFullName?: string
+): Promise<GitHubRepo> => {
+  if (existingFullName) {
+    const [owner, name] = existingFullName.split("/");
+    if (owner && name) {
+      return await fetchGitHubRepo(token, owner, name);
+    }
+  }
   const created = await fetch("https://api.github.com/user/repos", {
     body: JSON.stringify({
       auto_init: true,

@@ -48,6 +48,7 @@ export default defineConfig({
         "convex/lib/convexProject.ts",
         "convex/lib/githubRepo.ts",
         "convex/lib/httpJson.ts",
+        "convex/lib/jwt.ts",
         "convex/lib/oauthExchange.ts",
         "convex/lib/providers.ts",
         "convex/lib/tokenRefresh.ts",

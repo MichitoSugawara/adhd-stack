@@ -17,6 +17,20 @@ export const asRecord = (value: unknown): Record<string, unknown> =>
 export const asList = (value: unknown): unknown[] =>
   Array.isArray(value) ? value : [];
 
+export const truncateText = (value: string, max = 900): string =>
+  value.length > max ? `${value.slice(0, max)}…` : value;
+
+export const payloadText = (
+  payload: Record<string, unknown>,
+  max = 900
+): string => {
+  try {
+    return truncateText(JSON.stringify(payload), max);
+  } catch {
+    return truncateText(asString(payload.raw) ?? "unserializable", max);
+  }
+};
+
 export const readJson = async (
   response: Response
 ): Promise<Record<string, unknown>> => {

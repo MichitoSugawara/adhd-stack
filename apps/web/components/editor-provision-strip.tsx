@@ -3,6 +3,7 @@
 import { Button } from "@cloudflare/kumo";
 
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { provisionHeadline } from "../lib/editor-copy";
 
 interface EditorProvisionStripProperties {
   onRetry: () => void;
@@ -24,9 +25,16 @@ export const EditorProvisionStrip = ({
   workspace,
 }: EditorProvisionStripProperties) => (
   <div className="provision-strip">
+    <p className="provision-strip-headline">{provisionHeadline(workspace)}</p>
     <p>
       <span className="editor-label">REPO</span>
-      {workspace?.githubRepoUrl ?? "準備中"}
+      {workspace?.githubRepoUrl ? (
+        <a href={workspace.githubRepoUrl} rel="noreferrer" target="_blank">
+          {workspace.githubRepoUrl}
+        </a>
+      ) : (
+        "準備中"
+      )}
     </p>
     <p>
       <span className="editor-label">ENV</span>
