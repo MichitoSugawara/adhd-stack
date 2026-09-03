@@ -1,5 +1,5 @@
 export const SetupBanner = () => (
-  <main className="login-shell desktop-experience">
+  <main className="login-shell">
     <section className="login-card" aria-labelledby="setup-title">
       <p className="eyebrow">ADHD STACK</p>
       <h1 id="setup-title">Convex の接続がまだです</h1>

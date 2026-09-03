@@ -90,7 +90,7 @@ export const EditorScreen = () => {
 
   if (board && !board.allConnected) {
     return (
-      <main className="login-shell desktop-experience">
+      <main className="login-shell">
         <section className="login-card" aria-labelledby="editor-locked-title">
           <p className="eyebrow">EDITOR LOCKED</p>
           <h1 id="editor-locked-title">まだエディタは開けません</h1>
