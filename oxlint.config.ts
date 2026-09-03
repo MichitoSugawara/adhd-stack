@@ -58,6 +58,9 @@ export default defineConfig({
         "convex/oauthInternal.ts",
         "convex/publishActions.ts",
         "convex/workspaceActions.ts",
+        "apps/web/lib/mock-store.ts",
+        "apps/web/lib/use-connect-board.ts",
+        "apps/web/lib/use-editor-workspace.ts",
       ],
       rules: {
         // Third-party OAuth / platform JSON is parsed at the HTTP boundary.
@@ -69,6 +72,7 @@ export default defineConfig({
         "anti-slop/require-safety-comment-for-type-assertion": "off",
         "eslint/complexity": "off",
         "eslint/no-await-in-loop": "off",
+        "node/callback-return": "off",
         "promise/avoid-new": "off",
         "react-doctor/async-await-in-loop": "off",
       },

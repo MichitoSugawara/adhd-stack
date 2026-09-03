@@ -2,22 +2,12 @@
 
 import { Button } from "@cloudflare/kumo";
 
-import type { Doc } from "../../../convex/_generated/dataModel";
 import { provisionHeadline } from "../lib/editor-copy";
+import type { MockWorkspace } from "../lib/mock-types";
 
 interface EditorProvisionStripProperties {
   onRetry: () => void;
-  workspace:
-    | Pick<
-        Doc<"workspaces">,
-        | "cloudflarePagesUrl"
-        | "codexEnvironmentId"
-        | "convexUrl"
-        | "githubRepoUrl"
-        | "provisionStatus"
-      >
-    | null
-    | undefined;
+  workspace: MockWorkspace | null;
 }
 
 export const EditorProvisionStrip = ({
@@ -29,9 +19,10 @@ export const EditorProvisionStrip = ({
     <p>
       <span className="editor-label">REPO</span>
       {workspace?.githubRepoUrl ? (
-        <a href={workspace.githubRepoUrl} rel="noreferrer" target="_blank">
+        <span>
           {workspace.githubRepoUrl}
-        </a>
+          <em className="mock-inline">モック</em>
+        </span>
       ) : (
         "準備中"
       )}

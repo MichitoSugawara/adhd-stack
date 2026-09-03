@@ -12,9 +12,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { connectFontVariables } from "../lib/connect-fonts";
+import { SERVICE_META } from "../lib/mock-copy";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
-import { ChatgptDevicePanel } from "./chatgpt-device-panel";
+import { DemoBanner } from "./demo-banner";
 
 interface MobileConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -26,16 +27,14 @@ export const MobileConnectScreen = ({
   const router = useRouter();
   const {
     allConnected,
-    cancelChatgptDevice,
-    chatgptDevice,
     connect,
     connectedCount,
     identityFor,
-    oauthError,
-    warningFor,
     onDisconnect,
-    openChatgptDevice,
+    startDemo,
+    startingDemo,
     statusFor,
+    warningFor,
   } = board;
 
   return (
@@ -57,55 +56,31 @@ export const MobileConnectScreen = ({
             className="mobile-title-block"
             aria-labelledby="mobile-title"
           >
-            <p>STEP 1 OF 1</p>
+            <p>DEMO · STEP 1</p>
             <h1 id="mobile-title">接続</h1>
-            <span>必要なサービスをつなげば、すぐ始められます。</span>
+            <span>カードをタップすると、モック接続になります。</span>
           </section>
-          {oauthError ? (
-            <p className="oauth-error" role="alert">
-              {oauthError}
-            </p>
-          ) : null}
-          {chatgptDevice ? (
-            <ChatgptDevicePanel
-              device={chatgptDevice}
-              onCancel={cancelChatgptDevice}
-              onOpen={openChatgptDevice}
-            />
-          ) : null}
+          <DemoBanner />
           <div className="mobile-node-grid">
             {SERVICES.map((service) => {
               const status = statusFor(service.id);
               const isConnected = status === "connected";
-              let identityLabel = "タップして接続";
-              if (service.id === "chatgpt" && chatgptDevice) {
-                identityLabel = "確認待ち";
-              } else if (isConnected) {
+              const meta = SERVICE_META[service.id];
+              let identityLabel = "タップしてデモ接続";
+              if (isConnected) {
                 identityLabel = identityFor(service.id);
               } else if (warningFor(service.id)) {
-                identityLabel = warningFor(service.id) ?? "タップして接続";
-              }
-              const canCancelChatgpt =
-                service.id === "chatgpt" && Boolean(chatgptDevice);
-              let actionLabel = "接続する";
-              if (isConnected) {
-                actionLabel = "切断する";
-              } else if (canCancelChatgpt) {
-                actionLabel = "やめる";
+                identityLabel = warningFor(service.id) ?? "タップしてデモ接続";
               }
               return (
                 <button
-                  aria-label={`${service.label}: ${STATUS_LABELS[status]}. ${actionLabel}`}
+                  aria-label={`${service.label}: ${STATUS_LABELS[status]}`}
                   className="mobile-card-button"
-                  disabled={status === "connecting" && !canCancelChatgpt}
+                  disabled={status === "connecting"}
                   key={service.id}
                   onClick={() => {
                     if (isConnected) {
-                      void onDisconnect(service.id);
-                      return;
-                    }
-                    if (canCancelChatgpt) {
-                      cancelChatgptDevice();
+                      onDisconnect(service.id);
                       return;
                     }
                     void connect(service.id);
@@ -133,6 +108,9 @@ export const MobileConnectScreen = ({
                     <span className="mobile-service-identity">
                       {identityLabel}
                     </span>
+                    <span className="mobile-service-meta">
+                      {meta.permission}
+                    </span>
                   </KonstaGlass>
                 </button>
               );
@@ -140,7 +118,7 @@ export const MobileConnectScreen = ({
           </div>
           <section className="mobile-progress" aria-label="接続の進捗">
             <div>
-              <span>準備の進捗</span>
+              <span>デモの進捗</span>
               <strong>{connectedCount}/4</strong>
             </div>
             <KonstaProgressbar progress={connectedCount / SERVICES.length} />
@@ -150,21 +128,36 @@ export const MobileConnectScreen = ({
           <KonstaGlass className="mobile-glass-bar">
             <div>
               <strong>
-                {allConnected ? "準備完了" : `あと${4 - connectedCount}つ`}
+                {allConnected ? "デモ準備完了" : `あと${4 - connectedCount}つ`}
               </strong>
               <span>
-                {allConnected ? "エディタを開けます" : "カードをタップして接続"}
+                {allConnected
+                  ? "モックのエディタを開けます"
+                  : "カードをタップ、または一括デモ"}
               </span>
             </div>
-            <KonstaButton
-              aria-label="エディタを開く"
-              className="mobile-primary-action"
-              disabled={!allConnected}
-              onClick={() => router.push("/editor")}
-              rounded
-            >
-              エディタを開く
-            </KonstaButton>
+            {allConnected ? (
+              <KonstaButton
+                aria-label="エディタを開く"
+                className="mobile-primary-action"
+                onClick={() => router.push("/editor")}
+                rounded
+              >
+                エディタを開く
+              </KonstaButton>
+            ) : (
+              <KonstaButton
+                aria-label="デモを開始"
+                className="mobile-primary-action"
+                disabled={startingDemo}
+                onClick={() => {
+                  void startDemo();
+                }}
+                rounded
+              >
+                デモを開始
+              </KonstaButton>
+            )}
           </KonstaGlass>
         </div>
       </KonstaPage>

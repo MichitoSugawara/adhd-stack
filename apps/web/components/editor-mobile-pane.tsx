@@ -10,7 +10,9 @@ import {
 import { useRouter } from "next/navigation";
 
 import { KIND_LABELS } from "../lib/editor-copy";
+import { PROMPT_CHIPS } from "../lib/mock-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
+import { DemoBanner } from "./demo-banner";
 import { EditorProvisionStrip } from "./editor-provision-strip";
 
 type EditorState = ReturnType<typeof useEditorWorkspace>;
@@ -22,6 +24,7 @@ interface EditorMobilePaneProperties {
 export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
   const router = useRouter();
   const {
+    applyChip,
     composerDisabled,
     draft,
     liveStatus,
@@ -51,15 +54,16 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
           <strong>{workspace?.name ?? "app"}</strong>
           <KonstaButton
             className="mobile-publish-button"
-            disabled={publishing || !workspace?.githubRepoUrl}
+            disabled={publishing || !ready}
             onClick={() => {
               void publish();
             }}
             rounded
           >
-            公開する
+            公開
           </KonstaButton>
         </header>
+        <DemoBanner />
         <div className="provision-strip--mobile">
           <EditorProvisionStrip
             onRetry={() => {
@@ -77,6 +81,7 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
           {visibleThread.length === 0 ? (
             <div className="chat-empty">
               <h1>何を作りますか</h1>
+              <p>デモの思考と差分が流れます。</p>
             </div>
           ) : (
             visibleThread.map((message) => (
@@ -99,12 +104,24 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
           )}
         </div>
         <div className="mobile-composer-dock">
+          <div className="prompt-chips prompt-chips--mobile">
+            {PROMPT_CHIPS.map((chip) => (
+              <button
+                disabled={!ready}
+                key={chip}
+                onClick={() => applyChip(chip)}
+                type="button"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
           <KonstaGlass className="mobile-composer-glass">
             <textarea
               aria-label="作りたいものを入力"
               disabled={!ready}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder={ready ? "作りたいものを話してください" : "準備中"}
+              placeholder={ready ? "作りたいものを話す（デモ）" : "準備中"}
               rows={1}
               value={draft}
             />

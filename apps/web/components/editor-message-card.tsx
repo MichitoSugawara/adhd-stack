@@ -1,8 +1,8 @@
-import type { Doc } from "../../../convex/_generated/dataModel";
 import { KIND_LABELS } from "../lib/editor-copy";
+import type { MockMessage } from "../lib/mock-types";
 
 interface EditorMessageCardProperties {
-  message: Doc<"messages">;
+  message: MockMessage;
 }
 
 export const EditorMessageCard = ({ message }: EditorMessageCardProperties) => {
@@ -31,7 +31,7 @@ export const EditorMessageCard = ({ message }: EditorMessageCardProperties) => {
               <li key={file}>{file}</li>
             ))}
           </ul>
-          {files.length === 0 ? <p>{message.body}</p> : null}
+          <p>{message.body}</p>
         </>
       ) : null}
       {message.kind === "command" || message.kind === "diff" ? null : (

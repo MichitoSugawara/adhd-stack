@@ -24,7 +24,7 @@ export const SERVICES = [
 export type ServiceId = (typeof SERVICES)[number]["id"];
 
 export const STATUS_LABELS = {
-  connected: "接続済み",
-  connecting: "接続中",
+  connected: "デモ接続",
+  connecting: "接続中（デモ）",
   disconnected: "未接続",
 } as const;

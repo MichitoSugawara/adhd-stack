@@ -1,19 +1,19 @@
-import type { Doc } from "../../../convex/_generated/dataModel";
+import type { MockMessage, MockWorkspace } from "./mock-types";
 
 export const KIND_LABELS = {
-  command: "コマンド",
-  diff: "ファイル差分",
+  command: "コマンド（モック）",
+  diff: "ファイル差分（モック）",
   text: "",
-  thinking: "考え中",
-  work: "いまやってること",
+  thinking: "考え中（デモ）",
+  work: "いまやってること（デモ）",
 } as const;
 
 export type EditorRail = "chat" | "commands" | "files";
 
 export const filterThread = (
-  thread: Doc<"messages">[],
+  thread: MockMessage[],
   rail: EditorRail
-): Doc<"messages">[] => {
+): MockMessage[] => {
   if (rail === "files") {
     return thread.filter((message) => message.kind === "diff");
   }
@@ -24,13 +24,10 @@ export const filterThread = (
 };
 
 export const isEditorReady = (
-  workspace:
-    | Pick<
-        Doc<"workspaces">,
-        "codexEnvironmentId" | "githubRepoUrl" | "provisionStatus"
-      >
-    | null
-    | undefined
+  workspace: Pick<
+    MockWorkspace,
+    "codexEnvironmentId" | "githubRepoUrl" | "provisionStatus"
+  > | null
 ): boolean =>
   Boolean(
     workspace?.provisionStatus === "ready" &&
@@ -39,31 +36,19 @@ export const isEditorReady = (
   );
 
 export const provisionHeadline = (
-  workspace:
-    | Pick<
-        Doc<"workspaces">,
-        "codexEnvironmentId" | "githubRepoUrl" | "provisionStatus"
-      >
-    | null
-    | undefined
+  workspace: Pick<
+    MockWorkspace,
+    "codexEnvironmentId" | "githubRepoUrl" | "provisionStatus"
+  > | null
 ): string => {
   if (!workspace) {
-    return "リポジトリと環境を用意しています";
+    return "モックのリポジトリと環境を用意しています";
   }
   if (isEditorReady(workspace)) {
-    return "準備完了";
+    return "デモ準備完了 · モックデータ";
   }
   if (workspace.provisionStatus === "error") {
-    if (workspace.githubRepoUrl && !workspace.codexEnvironmentId) {
-      return "リポジトリはある。Codex 環境を作れませんでした";
-    }
-    if (workspace.githubRepoUrl) {
-      return "リポジトリはある。準備の続きに失敗しました";
-    }
-    return "準備に失敗しました";
+    return "デモ準備に失敗しました";
   }
-  if (workspace.githubRepoUrl && !workspace.codexEnvironmentId) {
-    return "リポジトリはある。Codex 環境を用意しています";
-  }
-  return "リポジトリと環境を用意しています";
+  return "モックのリポジトリと環境を用意しています";
 };

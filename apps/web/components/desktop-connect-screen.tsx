@@ -6,9 +6,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { connectFontVariables } from "../lib/connect-fonts";
+import { SERVICE_META } from "../lib/mock-copy";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
-import { ChatgptDevicePanel } from "./chatgpt-device-panel";
+import { DemoBanner } from "./demo-banner";
 
 interface DesktopConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -20,17 +21,13 @@ export const DesktopConnectScreen = ({
   const router = useRouter();
   const {
     allConnected,
-    authenticated,
-    cancelChatgptDevice,
-    chatgptDevice,
-    configured,
     connect,
     connectedCount,
     identityFor,
-    oauthError,
     onDisconnect,
-    openChatgptDevice,
-    signOut,
+    resetDemo,
+    startDemo,
+    startingDemo,
     statusFor,
     warningFor,
   } = board;
@@ -44,45 +41,46 @@ export const DesktopConnectScreen = ({
           </span>
           <span>ADHD Stack</span>
         </div>
-        {authenticated ? (
+        <div className="header-actions">
           <Button
-            onClick={() => {
-              void signOut();
-            }}
+            onClick={() => router.push("/projects")}
+            size="sm"
             variant="ghost"
           >
-            ログアウト
+            プロジェクト
           </Button>
-        ) : null}
+          <Button
+            loading={startingDemo}
+            onClick={() => {
+              void startDemo();
+            }}
+            size="sm"
+            variant="secondary"
+          >
+            デモを開始
+          </Button>
+          <Button onClick={resetDemo} size="sm" variant="ghost">
+            デモをリセット
+          </Button>
+        </div>
       </header>
       <section className="connection-page" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <p className="eyebrow">CONNECT ONCE. BUILD ANYTHING.</p>
+          <p className="eyebrow">DEMO MODE. MOCK CONNECTIONS.</p>
           <h1 id="hero-title">何も考えずに、始める。</h1>
-          <p>つなぐだけで、開発から公開まで。</p>
+          <p>つなぐだけで、開発から公開まで。全部モックです。</p>
         </div>
-        {oauthError ? (
-          <p className="oauth-error" role="alert">
-            {oauthError}
-          </p>
-        ) : null}
-        {chatgptDevice ? (
-          <ChatgptDevicePanel
-            device={chatgptDevice}
-            onCancel={cancelChatgptDevice}
-            onOpen={openChatgptDevice}
-          />
-        ) : null}
+        <DemoBanner />
         <div className="flow-shell">
           <div className="flow-heading">
             <div>
-              <p className="flow-title">接続</p>
+              <p className="flow-title">接続（デモ）</p>
               <p className="flow-description">
-                4つそろうと、エディタを開けます。
+                4つそろうと、モックのエディタを開けます。
               </p>
             </div>
             <span className="connection-count">
-              {connectedCount}/4 接続済み
+              {connectedCount}/4 デモ接続
             </span>
           </div>
           <Flow
@@ -94,9 +92,7 @@ export const DesktopConnectScreen = ({
             <Flow.Parallel>
               {SERVICES.map((service) => {
                 const status = statusFor(service.id);
-                const isConfigured = configured?.[service.id] ?? false;
-                const waitingChatgpt =
-                  service.id === "chatgpt" && Boolean(chatgptDevice);
+                const meta = SERVICE_META[service.id];
                 let nodeAction = (
                   <Button
                     className="node-action"
@@ -107,34 +103,23 @@ export const DesktopConnectScreen = ({
                     size="sm"
                     variant="secondary"
                   >
-                    接続する
+                    デモ接続
                   </Button>
                 );
                 if (status === "connected") {
                   nodeAction = (
                     <Button
-                      aria-label={`${service.label}を切断`}
+                      aria-label={`${service.label}のデモ接続を外す`}
                       className="node-action node-action--connected"
                       onClick={() => {
-                        void onDisconnect(service.id);
+                        onDisconnect(service.id);
                       }}
                       shape="circle"
                       size="sm"
-                      title={`${service.label}を切断`}
+                      title={`${service.label}のデモ接続を外す`}
                       variant="ghost"
                     >
                       <CheckIcon size={14} weight="bold" />
-                    </Button>
-                  );
-                } else if (waitingChatgpt) {
-                  nodeAction = (
-                    <Button
-                      className="node-action"
-                      onClick={cancelChatgptDevice}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      やめる
                     </Button>
                   );
                 }
@@ -168,11 +153,15 @@ export const DesktopConnectScreen = ({
                                 {warningFor(service.id)}
                               </span>
                             ) : null}
-                            {status === "disconnected" && !isConfigured ? (
-                              <span className="service-identity">
-                                OAuth アプリ未設定
-                              </span>
-                            ) : null}
+                            <span className="service-meta">
+                              権限 {meta.permission}
+                            </span>
+                            <span className="service-meta">
+                              対象 {meta.target}
+                            </span>
+                            <span className="service-meta">
+                              最終確認 {meta.lastCheck}
+                            </span>
                           </span>
                         </div>
                         {nodeAction}

@@ -20,6 +20,11 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--color-kumo-canvas);
@@ -272,7 +277,7 @@ textarea {
 }
 
 .connection-flow {
-  height: 430px;
+  height: 560px;
   color: var(--color-kumo-brand);
   background: color-mix(in oklab, var(--color-kumo-base) 90%, transparent);
 }
@@ -301,8 +306,8 @@ textarea {
 }
 
 .service-node {
-  width: 224px;
-  min-height: 96px;
+  width: 248px;
+  min-height: 148px;
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
@@ -846,7 +851,7 @@ textarea {
 .editor-shell {
   display: grid;
   min-height: 100svh;
-  grid-template-columns: 228px 1fr;
+  grid-template-columns: 228px minmax(0, 1fr) 280px;
   background: var(--color-kumo-canvas);
 }
 
@@ -891,9 +896,9 @@ textarea {
 }
 
 .chat-panel {
-  display: grid;
+  display: flex;
   min-width: 0;
-  grid-template-rows: 64px auto auto 1fr auto;
+  flex-direction: column;
 }
 
 .chat-header {
@@ -1202,6 +1207,7 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 32px;
+  min-width: 0;
 }
 
 .mobile-connect-orb {
@@ -1560,7 +1566,7 @@ textarea {
   min-height: var(--vvh, 100dvh);
   padding-top: max(12px, env(safe-area-inset-top, 0px));
   padding-bottom: calc(
-    146px + env(safe-area-inset-bottom, 0px) + var(--vv-bottom, 0px)
+    210px + env(safe-area-inset-bottom, 0px) + var(--vv-bottom, 0px)
   );
 }
 
@@ -2111,4 +2117,169 @@ textarea {
   .mobile-card-button:active {
     transform: none;
   }
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-banner {
+  display: flex;
+  width: min(760px, 100%);
+  align-items: center;
+  gap: 10px;
+  margin: 16px auto 0;
+  padding: 0 4px;
+  color: var(--text-color-kumo-subtle);
+  font-size: 12px;
+}
+
+.service-meta,
+.mobile-service-meta {
+  display: block;
+  overflow: hidden;
+  color: var(--text-color-kumo-placeholder);
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-tree li {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: var(--text-color-kumo-subtle);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-thread {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: min(760px, calc(100% - 40px));
+  margin: 0 auto 10px;
+}
+
+.prompt-chips button {
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-kumo-line);
+  border-radius: 999px;
+  background: var(--color-kumo-base);
+  color: var(--text-color-kumo-default);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.prompt-chips--mobile {
+  width: 100%;
+  margin: 0 0 8px;
+}
+
+.review-pane {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 18px 16px;
+  border-left: 1px solid var(--color-kumo-line);
+  background: var(--color-kumo-base);
+}
+
+.review-status,
+.review-url {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-color-kumo-subtle);
+  font-size: 12px;
+}
+
+.project-summary,
+.service-graph,
+.activity-list {
+  width: min(720px, 100%);
+  margin: 18px 0;
+}
+
+.project-summary {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--color-kumo-line);
+  border-radius: 14px;
+  background: var(--color-kumo-base);
+}
+
+.project-summary p,
+.project-summary small {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-color-kumo-subtle);
+  font-size: 12px;
+}
+
+.graph-row {
+  display: grid;
+  justify-items: start;
+}
+
+.graph-node {
+  padding: 8px 12px;
+  border: 1px solid var(--color-kumo-line);
+  border-radius: 10px;
+  background: var(--color-kumo-recessed);
+  font-size: 12px;
+}
+
+.graph-line {
+  display: block;
+  width: 1px;
+  height: 14px;
+  margin-left: 22px;
+  background: var(--color-kumo-brand);
+}
+
+.activity-list {
+  padding-left: 18px;
+  color: var(--text-color-kumo-subtle);
+  font-size: 13px;
+}
+
+.mock-inline {
+  margin-left: 8px;
+  color: var(--text-color-kumo-brand);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.mobile-connect-page .demo-banner,
+.mobile-editor-page .demo-banner {
+  width: calc(100% - 8px);
+  margin: 8px 4px 12px;
+}
+
+.mobile-service-card {
+  min-width: 0;
 }

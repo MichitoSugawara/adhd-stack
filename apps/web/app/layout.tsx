@@ -2,11 +2,9 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
-import { ConvexClientProvider } from "./convex-client-provider";
-
 export const metadata: Metadata = {
-  description: "何も考えずに始められる開発と公開",
-  title: "ADHD Stack",
+  description: "デモモード。接続から公開までをモックで体験する",
+  title: "ADHD Stack（デモ）",
 };
 
 export const viewport: Viewport = {
@@ -24,9 +22,7 @@ interface RootLayoutProperties {
 export default function RootLayout({ children }: RootLayoutProperties) {
   return (
     <html lang="ja">
-      <body>
-        <ConvexClientProvider>{children}</ConvexClientProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
