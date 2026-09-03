@@ -436,6 +436,53 @@ textarea {
   margin-top: 18px;
 }
 
+.oauth-error,
+.publish-result {
+  width: min(760px, 100%);
+  margin: 18px auto 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.oauth-error {
+  border: 1px solid
+    color-mix(in oklab, var(--color-kumo-danger, #c23) 40%, transparent);
+  background: color-mix(in oklab, var(--color-kumo-danger, #c23) 8%, white);
+  color: #8a1f1f;
+}
+
+.publish-result {
+  border: 1px solid var(--color-kumo-hairline);
+  background: var(--color-kumo-base);
+  color: var(--text-color-kumo-default);
+}
+
+.chat-thread {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  overflow: auto;
+  padding: 24px 22px;
+}
+
+.chat-message {
+  max-width: 720px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-kumo-hairline);
+  border-radius: 12px;
+  background: var(--color-kumo-base);
+}
+
+.chat-message--user {
+  justify-self: end;
+}
+
+.chat-message p {
+  margin: 4px 0 0;
+}
+
 .projects-shell {
   min-height: 100svh;
   background: var(--color-kumo-canvas);
