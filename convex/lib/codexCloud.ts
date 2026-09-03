@@ -159,9 +159,13 @@ const machineIdFrom = (value: unknown): string | undefined => {
 
 export const listCodexMachineId = async (
   auth: CodexCloudAuth
-): Promise<string | undefined> => {
+): Promise<{ id?: string; probe: string }> => {
+  const probes: string[] = [];
   for (const path of ["/wham/machines", "/wham/environments/machines"]) {
     const response = await request(auth, "GET", path);
+    probes.push(
+      `${path} HTTP ${response.status} ${payloadText(response.payload)}`
+    );
     if (!response.ok) {
       continue;
     }
@@ -183,10 +187,10 @@ export const listCodexMachineId = async (
     });
     const id = machineIdFrom(preferred) ?? machineIdFrom(source[0]);
     if (id) {
-      return id;
+      return { id, probe: probes.join(" | ") };
     }
   }
-  return undefined;
+  return { probe: probes.join(" | ") };
 };
 
 export const listEnvironmentsForRepo = async (
@@ -260,14 +264,14 @@ export const createCodexEnvironment = async (
   repo: string,
   repoId?: number
 ): Promise<CodexEnvironment> => {
-  const machineId = await listCodexMachineId(auth);
-  if (!machineId) {
+  const machines = await listCodexMachineId(auth);
+  if (!machines.id) {
     throw new Error(
-      `${GITHUB_CONNECT_HINT}（Codex Cloud に machine がありません）`
+      `${GITHUB_CONNECT_HINT}（Codex Cloud に machine がありません: ${machines.probe}）`
     );
   }
   const errors: string[] = [];
-  for (const body of createBodies(machineId, owner, repo, repoId)) {
+  for (const body of createBodies(machines.id, owner, repo, repoId)) {
     const response = await request(auth, "POST", "/wham/environments", body);
     if (response.ok) {
       const created =
