@@ -1,11 +1,11 @@
 import type { MockMessage, MockWorkspace } from "./mock-types";
 
 export const KIND_LABELS = {
-  command: "コマンド（モック）",
-  diff: "ファイル差分（モック）",
+  command: "command",
+  diff: "diff",
   text: "",
-  thinking: "考え中（デモ）",
-  work: "いまやってること（デモ）",
+  thinking: "thinking",
+  work: "work",
 } as const;
 
 export type EditorRail = "chat" | "commands" | "files";

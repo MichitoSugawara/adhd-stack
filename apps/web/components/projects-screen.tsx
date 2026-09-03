@@ -1,18 +1,13 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo";
-import { ArrowLeftIcon, StackIcon } from "@phosphor-icons/react";
-import {
-  App as KonstaApp,
-  Button as KonstaButton,
-  Page as KonstaPage,
-} from "konsta/react";
+import { App as KonstaApp, Page as KonstaPage } from "konsta/react";
 import { useRouter } from "next/navigation";
 
 import { connectFontVariables } from "../lib/connect-fonts";
 import { MOCK_REPO } from "../lib/mock-copy";
 import { allConnectedOf, useMockApp } from "../lib/mock-store";
 import { ActivityTimeline } from "./activity-timeline";
+import { AtelierNav } from "./atelier-nav";
 import { DemoBanner } from "./demo-banner";
 import { ServiceCanvas } from "./service-canvas";
 import { StageStrip } from "./stage-strip";
@@ -25,27 +20,20 @@ export const ProjectsScreen = () => {
 
   return (
     <>
-      <main
-        className={`projects-shell desktop-experience ${connectFontVariables}`}
-      >
-        <header className="product-header">
-          <div className="brand-lockup">
-            <span className="brand-mark" aria-hidden="true">
-              <StackIcon size={19} weight="bold" />
-            </span>
-            <span>ADHD Stack</span>
-          </div>
-        </header>
-        <section className="projects-page" aria-labelledby="projects-title">
-          <div className="projects-heading">
-            <div>
-              <p className="eyebrow">02 · WORKSPACE</p>
-              <h1 id="projects-title">プロジェクト</h1>
-              <p>実データは使いません。全部モックの要約です。</p>
-            </div>
-          </div>
-          <StageStrip current="PROVISION" />
-          <DemoBanner />
+      <main className={`atelier desktop-experience ${connectFontVariables}`}>
+        <AtelierNav />
+        <section className="atelier-hero" aria-labelledby="projects-title">
+          <p className="chapter">
+            <em>02</em> WORKSPACE
+          </p>
+          <h1 id="projects-title">プロジェクト</h1>
+          <p className="lede">
+            小さな依存グラフと、静かな活動列。実データは使いません。
+          </p>
+        </section>
+        <StageStrip current="PROVISION" />
+        <DemoBanner />
+        <section className="project-desk">
           {hydrated && ready ? (
             <>
               <article className="project-summary">
@@ -53,45 +41,47 @@ export const ProjectsScreen = () => {
                 <small>リポジトリ · Codex環境 · Pages · Convex（モック）</small>
                 <p>{workspace?.codexEnvironmentId ?? MOCK_REPO.envId}</p>
                 <p>{workspace?.cloudflarePagesUrl ?? MOCK_REPO.pagesUrl}</p>
-                <p>
-                  {workspace?.convexUrl ??
-                    `https://${MOCK_REPO.project}.convex.cloud`}
-                </p>
               </article>
               <ServiceCanvas />
               <ActivityTimeline />
-              <Button onClick={() => router.push("/editor")} variant="primary">
+              <button
+                className="atelier-btn atelier-btn--solid"
+                onClick={() => router.push("/editor")}
+                type="button"
+              >
                 エディタを開く
-              </Button>
+              </button>
             </>
           ) : (
-            <p>先に4つのデモ接続をすると、ここに作業場が出ます。</p>
+            <p className="lede">
+              先に4つのデモ接続をすると、ここに作業場が出ます。
+            </p>
           )}
-          <Button
-            className="projects-back"
-            icon={ArrowLeftIcon}
+          <button
+            className="atelier-btn atelier-btn--ghost"
             onClick={() => router.push("/")}
-            variant="ghost"
+            type="button"
           >
-            接続を管理
-          </Button>
+            接続カタログへ
+          </button>
         </section>
       </main>
       <KonstaApp
-        className={`mobile-experience ${connectFontVariables}`}
-        dark
+        className={`atelier mobile-experience ${connectFontVariables}`}
         safeAreas
         theme="ios"
       >
         <KonstaPage className="mobile-page mobile-connect-page">
           <div className="mobile-scroll-content">
             <section
-              className="mobile-title-block"
+              className="atelier-hero atelier-hero--mobile"
               aria-labelledby="mobile-projects"
             >
-              <p>02 · WORKSPACE</p>
+              <p className="chapter">
+                <em>02</em> WORKSPACE
+              </p>
               <h1 id="mobile-projects">プロジェクト</h1>
-              <span>モックの要約だけです。</span>
+              <p className="lede">モックの要約だけです。</p>
             </section>
             <StageStrip current="PROVISION" />
             <DemoBanner />
@@ -105,17 +95,17 @@ export const ProjectsScreen = () => {
                 <ActivityTimeline />
               </>
             ) : (
-              <p>先に4つのデモ接続をしてください。</p>
+              <p className="lede">先に4つのデモ接続をしてください。</p>
             )}
           </div>
           <div className="mobile-bottom-dock">
-            <KonstaButton
-              className="mobile-primary-action"
+            <button
+              className="atelier-btn atelier-btn--solid"
               onClick={() => router.push(ready ? "/editor" : "/")}
-              rounded
+              type="button"
             >
               {ready ? "エディタを開く" : "接続へ"}
-            </KonstaButton>
+            </button>
           </div>
         </KonstaPage>
       </KonstaApp>

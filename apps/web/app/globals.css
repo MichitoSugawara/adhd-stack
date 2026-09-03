@@ -2,6 +2,7 @@
 @import "@cloudflare/kumo/styles/tailwind";
 @import "tailwindcss";
 @import "konsta/react/theme.css";
+@import "./atelier.css";
 
 :root {
   --vvh: 100dvh;
@@ -27,8 +28,8 @@ body {
 
 body {
   margin: 0;
-  background: var(--color-kumo-canvas);
-  color: var(--text-color-kumo-default);
+  background: #f3efe4;
+  color: #16140f;
 }
 
 .mobile-experience {
@@ -1746,69 +1747,17 @@ textarea {
 .desktop-experience,
 .mobile-connect-page,
 .mobile-editor-page {
-  --connect-bg: #0f172a;
-  --connect-fg: #f8fafc;
-  --connect-card: #1b2336;
-  --connect-muted: #272f42;
-  --connect-muted-fg: #94a3b8;
-  --connect-border: #475569;
-  --connect-primary: #1e293b;
-  --connect-accent: #22c55e;
-  --connect-on-accent: #0f172a;
-  --connect-destructive: #ef4444;
-  --connect-ring: #fff;
-  --color-kumo-canvas: #0f172a;
-  --color-kumo-base: #1b2336;
-  --color-kumo-recessed: #272f42;
-  --color-kumo-line: #475569;
-  --color-kumo-hairline: #334155;
-  --color-kumo-brand: #22c55e;
-  --color-kumo-success: #22c55e;
-  --color-kumo-success-tint: rgb(34 197 94 / 16%);
-  --text-color-kumo-default: #f8fafc;
-  --text-color-kumo-strong: #f8fafc;
-  --text-color-kumo-subtle: #94a3b8;
-  --text-color-kumo-brand: #22c55e;
-  --text-color-kumo-success: #4ade80;
-  --text-color-kumo-placeholder: #64748b;
-  font-family:
-    var(--font-connect-body), "IBM Plex Sans", "Hiragino Sans", "Noto Sans JP",
-    sans-serif;
-}
-
-.desktop-experience {
-  background:
-    radial-gradient(circle at 50% 18%, rgb(34 197 94 / 10%), transparent 28rem),
-    var(--connect-bg);
-  color: var(--connect-fg);
-}
-
-.desktop-experience .product-header {
-  background: color-mix(in oklab, var(--connect-card) 92%, transparent);
-  border-bottom-color: var(--connect-border);
-}
-
-.desktop-experience .hero-copy h1 {
-  font-weight: 600;
-}
-
-.desktop-experience .oauth-error {
-  border-color: color-mix(
-    in oklab,
-    var(--connect-destructive) 50%,
-    transparent
-  );
-  background: color-mix(in oklab, var(--connect-destructive) 12%, #0f172a);
-  color: #fecaca;
-}
-
-.desktop-experience .node-action {
-  min-height: 44px;
-}
-
-.mobile-connect-page {
-  background: var(--connect-bg);
-  color: var(--connect-fg);
+  --connect-bg: var(--paper, #f3efe4);
+  --connect-fg: var(--ink, #16140f);
+  --connect-card: var(--surface, #fffcf6);
+  --connect-muted: var(--recessed, #ebe6d8);
+  --connect-muted-fg: var(--muted, #6f6a5e);
+  --connect-border: var(--line, #d9d3c4);
+  --connect-primary: var(--ink, #16140f);
+  --connect-accent: var(--accent, #2541f4);
+  --connect-on-accent: var(--surface, #fffcf6);
+  --connect-destructive: var(--danger, #c0392b);
+  --connect-ring: var(--ink, #16140f);
 }
 
 .mobile-connect-page .mobile-connect-orb {

@@ -1,8 +1,5 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo";
-import { ChatCircleDotsIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
-
 import { MOCK_DIFF_HUNKS, PROMPT_CHIPS } from "../lib/mock-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
 import { DemoBanner } from "./demo-banner";
@@ -27,7 +24,7 @@ const reviewCopy = (
   if (hasDiffs) {
     return "差分あり · 未公開";
   }
-  return "まだ差分はありません";
+  return "差分はまだありません";
 };
 
 interface EditorDesktopPaneProperties {
@@ -56,31 +53,31 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
   } = state;
 
   return (
-    <main className="desktop-experience editor-shell">
+    <main className="atelier desktop-experience ide-shell">
       <EditorSidebar
         hasCommands={hasCommands}
         hasDiffs={hasDiffs}
         rail={rail}
         setRail={setRail}
       />
-      <section className="chat-panel">
-        <header className="chat-header">
+      <section className="ide-center">
+        <header className="ide-center-head">
           <div>
-            <p className="editor-label">
-              {workspace?.githubRepoFullName ?? "WORKSPACE"} · モック
+            <p className="chapter">
+              <em>WORK</em> {workspace?.githubRepoFullName ?? "workspace"}
             </p>
             <strong>{workspace?.name ?? "app"}</strong>
           </div>
-          <Button
+          <button
+            className="atelier-btn atelier-btn--solid"
             disabled={publishing || !ready}
             onClick={() => {
               void publish();
             }}
-            size="sm"
-            variant="primary"
+            type="button"
           >
             公開する（デモ）
-          </Button>
+          </button>
         </header>
         <StageStrip current={hasDiffs ? "DIFF" : "WORK"} />
         <DemoBanner />
@@ -99,14 +96,14 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
             準備状況
           </p>
         )}
-        <div className="chat-thread">
+        <div className="timeline-feed">
           {visibleThread.length === 0 ? (
-            <div className="chat-empty">
-              <span className="empty-icon" aria-hidden="true">
-                <ChatCircleDotsIcon size={28} weight="duotone" />
-              </span>
-              <h1>何を作りますか</h1>
-              <p>話しかけると、デモの思考・作業・差分が流れます。</p>
+            <div className="timeline-empty">
+              <p className="chapter">
+                <em>04</em> ACTIVITY
+              </p>
+              <h1>活動はまだ空です</h1>
+              <p>話しかけると、思考・作業・差分が静かな列になります。</p>
             </div>
           ) : (
             visibleThread.map((message) => (
@@ -127,7 +124,7 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
           ))}
         </div>
         <form
-          className="composer"
+          className="ide-composer"
           onSubmit={(event) => {
             event.preventDefault();
             void send();
@@ -144,29 +141,31 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
             placeholder={
               ready ? "作りたいものを話してください（デモ）" : "準備中…"
             }
-            rows={3}
+            rows={2}
             value={draft}
           />
-          <Button
-            aria-label="送信"
+          <button
+            className="atelier-btn atelier-btn--solid"
             disabled={composerDisabled}
-            icon={PaperPlaneTiltIcon}
-            shape="circle"
-            title="送信"
             type="submit"
-            variant="primary"
-          />
+          >
+            送る
+          </button>
         </form>
       </section>
-      <aside className="review-pane" aria-label="差分と公開">
-        <p className="editor-label">REVIEW</p>
+      <aside className="ide-diff" aria-label="差分と公開">
+        <p className="chapter">
+          <em>DIFF</em> REVIEW
+        </p>
         <strong>差分 / 公開（モック）</strong>
         <p className="review-status">
           {reviewCopy(publishState.status, hasDiffs)}
         </p>
         {hasDiffs ? (
           <DiffHunkList additions={12} deletions={3} hunks={MOCK_DIFF_HUNKS} />
-        ) : null}
+        ) : (
+          <p className="review-status">右面は差分専用です。</p>
+        )}
         {workspace?.cloudflarePagesUrl ? (
           <p className="review-url">{workspace.cloudflarePagesUrl}</p>
         ) : null}

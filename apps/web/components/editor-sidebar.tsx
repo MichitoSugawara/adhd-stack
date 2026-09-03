@@ -1,12 +1,9 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo";
 import {
-  ArrowLeftIcon,
   ChatCircleDotsIcon,
   CodeIcon,
-  FolderIcon,
-  StackIcon,
+  FileIcon,
   TerminalWindowIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
@@ -29,19 +26,16 @@ export const EditorSidebar = ({
 }: EditorSidebarProperties) => {
   const router = useRouter();
   return (
-    <aside className="editor-sidebar">
-      <div className="brand-lockup">
-        <span className="brand-mark" aria-hidden="true">
-          <StackIcon size={19} weight="bold" />
-        </span>
-        <span>ADHD Stack</span>
-      </div>
+    <aside className="ide-sidebar">
+      <p className="chapter">
+        <em>03</em> FILES
+      </p>
       <p className="mock-badge">デモ · ファイル</p>
       <ul className="file-tree">
         {MOCK_FILES.map((file) => (
           <li key={file}>
-            <FolderIcon size={14} />
-            {file}
+            <FileIcon size={12} />
+            <span>{file}</span>
           </li>
         ))}
       </ul>
@@ -51,8 +45,8 @@ export const EditorSidebar = ({
           onClick={() => setRail("chat")}
           type="button"
         >
-          <ChatCircleDotsIcon size={18} />
-          チャット
+          <ChatCircleDotsIcon size={16} />
+          活動
         </button>
         {hasDiffs ? (
           <button
@@ -60,8 +54,8 @@ export const EditorSidebar = ({
             onClick={() => setRail("files")}
             type="button"
           >
-            <CodeIcon size={18} />
-            ファイル差分
+            <CodeIcon size={16} />
+            差分
           </button>
         ) : null}
         {hasCommands ? (
@@ -70,20 +64,18 @@ export const EditorSidebar = ({
             onClick={() => setRail("commands")}
             type="button"
           >
-            <TerminalWindowIcon size={18} />
+            <TerminalWindowIcon size={16} />
             コマンド
           </button>
         ) : null}
       </nav>
-      <Button
-        className="back-button"
-        icon={ArrowLeftIcon}
+      <button
+        className="atelier-btn atelier-btn--ghost"
         onClick={() => router.push("/")}
-        size="sm"
-        variant="ghost"
+        type="button"
       >
-        接続へ戻る
-      </Button>
+        カタログへ
+      </button>
     </aside>
   );
 };

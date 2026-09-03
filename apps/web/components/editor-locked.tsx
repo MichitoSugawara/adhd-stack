@@ -1,9 +1,8 @@
 "use client";
 
-import { Button } from "@cloudflare/kumo";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 
+import { connectFontVariables } from "../lib/connect-fonts";
 import { DemoBanner } from "./demo-banner";
 
 interface EditorLockedProperties {
@@ -13,28 +12,26 @@ interface EditorLockedProperties {
 export const EditorLocked = ({ waiting }: EditorLockedProperties) => {
   const router = useRouter();
   return (
-    <main className="login-shell desktop-experience">
-      <section className="login-card" aria-labelledby="editor-locked-title">
-        <p className="eyebrow">DEMO EDITOR LOCKED</p>
-        <h1 id="editor-locked-title">
-          {waiting ? "デモ状態を読み込んでいます" : "まだエディタは開けません"}
-        </h1>
-        <p className="login-description">
-          {waiting
-            ? "モックの接続がそろうと、ここにチャットが開きます。"
-            : "接続画面で4つのデモ接続をそろえてください。"}
-        </p>
-        <DemoBanner />
-        <Button
-          className="back-button"
-          icon={ArrowLeftIcon}
-          onClick={() => router.push("/")}
-          size="sm"
-          variant="ghost"
-        >
-          接続へ戻る
-        </Button>
-      </section>
+    <main className={`atelier locked-shell ${connectFontVariables}`}>
+      <p className="chapter">
+        <em>03</em> EDITOR
+      </p>
+      <h1>
+        {waiting ? "デモ状態を読み込んでいます" : "作業面はまだ閉じています"}
+      </h1>
+      <p className="lede">
+        {waiting
+          ? "モックの4接続がそろうと、ファイル・活動・差分の3面が開きます。"
+          : "接続カタログで4つのデモ接続をそろえてください。ログイン画面ではありません。"}
+      </p>
+      <DemoBanner />
+      <button
+        className="atelier-btn atelier-btn--solid"
+        onClick={() => router.push("/")}
+        type="button"
+      >
+        接続カタログへ
+      </button>
     </main>
   );
 };

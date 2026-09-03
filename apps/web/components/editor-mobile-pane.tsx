@@ -1,19 +1,13 @@
 "use client";
 
-import { ArrowLeftIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
-import {
-  App as KonstaApp,
-  Button as KonstaButton,
-  Glass as KonstaGlass,
-  Page as KonstaPage,
-} from "konsta/react";
+import { App as KonstaApp, Page as KonstaPage } from "konsta/react";
 import { useRouter } from "next/navigation";
 
-import { KIND_LABELS } from "../lib/editor-copy";
+import { connectFontVariables } from "../lib/connect-fonts";
 import { PROMPT_CHIPS } from "../lib/mock-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
 import { DemoBanner } from "./demo-banner";
-import { DiffHunkList } from "./diff-hunk";
+import { EditorMessageCard } from "./editor-message-card";
 import { EditorProvisionStrip } from "./editor-provision-strip";
 import { StageStrip } from "./stage-strip";
 
@@ -41,29 +35,32 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
   } = state;
 
   return (
-    <KonstaApp className="mobile-experience" dark safeAreas theme="ios">
+    <KonstaApp
+      className={`atelier mobile-experience ${connectFontVariables}`}
+      safeAreas
+      theme="ios"
+    >
       <KonstaPage className="mobile-page mobile-editor-page">
-        <header className="mobile-editor-nav">
-          <KonstaButton
+        <header className="ide-mobile-nav">
+          <button
             aria-label="接続へ戻る"
-            className="mobile-circle-button"
-            clear
+            className="atelier-btn atelier-btn--ghost"
             onClick={() => router.push("/")}
-            rounded
+            type="button"
           >
-            <ArrowLeftIcon size={25} weight="bold" />
-          </KonstaButton>
+            戻る
+          </button>
           <strong>{workspace?.name ?? "app"}</strong>
-          <KonstaButton
-            className="mobile-publish-button"
+          <button
+            className="atelier-btn atelier-btn--solid"
             disabled={publishing || !ready}
             onClick={() => {
               void publish();
             }}
-            rounded
+            type="button"
           >
             公開
-          </KonstaButton>
+          </button>
         </header>
         <StageStrip current="WORK" />
         <DemoBanner />
@@ -80,37 +77,15 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
             {liveStatus}
           </p>
         ) : null}
-        <div className="mobile-conversation">
+        <div className="timeline-feed timeline-feed--mobile">
           {visibleThread.length === 0 ? (
-            <div className="chat-empty">
-              <h1>何を作りますか</h1>
-              <p>デモの思考と差分が流れます。</p>
+            <div className="timeline-empty">
+              <h1>活動はまだ空です</h1>
+              <p>デモの思考と差分が列になります。</p>
             </div>
           ) : (
             visibleThread.map((message) => (
-              <div
-                className={
-                  message.role === "user"
-                    ? "mobile-user-message"
-                    : "mobile-assistant-copy"
-                }
-                key={message._id}
-              >
-                {message.kind === "text" ? null : (
-                  <p className="mobile-tool-summary">
-                    {KIND_LABELS[message.kind]}
-                  </p>
-                )}
-                {message.kind === "diff" && message.meta?.hunks ? (
-                  <DiffHunkList
-                    additions={message.meta.additions}
-                    deletions={message.meta.deletions}
-                    hunks={message.meta.hunks}
-                  />
-                ) : (
-                  message.body
-                )}
-              </div>
+              <EditorMessageCard key={message._id} message={message} />
             ))
           )}
         </div>
@@ -127,7 +102,13 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
               </button>
             ))}
           </div>
-          <KonstaGlass className="mobile-composer-glass">
+          <form
+            className="ide-composer"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void send();
+            }}
+          >
             <textarea
               aria-label="作りたいものを入力"
               disabled={!ready}
@@ -136,18 +117,14 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
               rows={1}
               value={draft}
             />
-            <KonstaButton
-              aria-label="送信"
-              className="mobile-stop-button"
+            <button
+              className="atelier-btn atelier-btn--solid"
               disabled={composerDisabled}
-              onClick={() => {
-                void send();
-              }}
-              rounded
+              type="submit"
             >
-              <PaperPlaneTiltIcon size={16} weight="fill" />
-            </KonstaButton>
-          </KonstaGlass>
+              送る
+            </button>
+          </form>
         </div>
       </KonstaPage>
     </KonstaApp>
