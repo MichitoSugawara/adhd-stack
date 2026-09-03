@@ -90,41 +90,43 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
           )}
         </div>
         <div className="mobile-composer-dock">
-          <div className="prompt-chips prompt-chips--mobile">
-            {PROMPT_CHIPS.map((chip) => (
-              <button
-                disabled={!ready}
-                key={chip}
-                onClick={() => applyChip(chip)}
-                type="button"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          <form
-            className="ide-composer"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void send();
-            }}
-          >
-            <textarea
-              aria-label="作りたいものを入力"
-              disabled={!ready}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={ready ? "作りたいものを話す（デモ）" : "準備中"}
-              rows={1}
-              value={draft}
-            />
-            <button
-              className="atelier-btn atelier-btn--solid"
-              disabled={composerDisabled}
-              type="submit"
+          <div className="atelier-dock atelier-dock--composer">
+            <div className="prompt-chips prompt-chips--mobile">
+              {PROMPT_CHIPS.map((chip) => (
+                <button
+                  disabled={!ready}
+                  key={chip}
+                  onClick={() => applyChip(chip)}
+                  type="button"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+            <form
+              className="ide-composer"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void send();
+              }}
             >
-              送る
-            </button>
-          </form>
+              <textarea
+                aria-label="作りたいものを入力"
+                disabled={!ready}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder={ready ? "作りたいものを話す（デモ）" : "準備中"}
+                rows={1}
+                value={draft}
+              />
+              <button
+                className="atelier-btn atelier-btn--solid"
+                disabled={composerDisabled}
+                type="submit"
+              >
+                送る
+              </button>
+            </form>
+          </div>
         </div>
       </KonstaPage>
     </KonstaApp>

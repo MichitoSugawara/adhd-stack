@@ -1,12 +1,13 @@
 import { MOCK_REPO } from "../lib/mock-copy";
 import { SERVICES } from "../lib/services";
 
-const CANVAS_NODES = [
-  ...SERVICES.map((service) => ({
-    id: service.id,
-    label: service.label,
-    status: "デモ接続",
-  })),
+const TOP_NODES = SERVICES.map((service) => ({
+  id: service.id,
+  label: service.label,
+  status: "デモ接続",
+}));
+
+const BOTTOM_NODES = [
   {
     id: "repo",
     label: MOCK_REPO.name,
@@ -29,26 +30,40 @@ const CANVAS_NODES = [
   },
 ] as const;
 
+const NodeList = ({
+  nodes,
+}: {
+  nodes: readonly { id: string; label: string; status: string }[];
+}) => (
+  <ul className="railway-nodes">
+    {nodes.map((node) => (
+      <li className="railway-node" key={node.id}>
+        <strong>{node.label}</strong>
+        <span>
+          <i aria-hidden="true" />
+          {node.status}
+        </span>
+      </li>
+    ))}
+  </ul>
+);
+
 export const ServiceCanvas = () => (
   <div className="railway-canvas" aria-label="サービスの関係">
-    <svg aria-hidden="true" className="railway-wires" viewBox="0 0 640 280">
-      <path d="M120 52 C120 88, 200 88, 200 124" />
-      <path d="M280 52 C280 88, 200 88, 200 124" />
-      <path d="M440 52 C440 88, 360 88, 360 124" />
-      <path d="M520 52 C520 88, 440 88, 440 124" />
-      <path d="M200 176 C200 208, 240 208, 240 236" />
-      <path d="M360 176 C360 208, 400 208, 400 236" />
+    <svg
+      aria-hidden="true"
+      className="railway-wires"
+      preserveAspectRatio="none"
+      viewBox="0 0 800 120"
+    >
+      <path d="M100 8 C100 48, 100 48, 100 112" />
+      <path d="M300 8 C300 48, 300 48, 300 112" />
+      <path d="M500 8 C500 48, 500 48, 500 112" />
+      <path d="M700 8 C700 48, 700 48, 700 112" />
+      <path d="M100 60 C220 60, 280 60, 300 112" />
+      <path d="M500 60 C380 60, 320 60, 300 112" />
     </svg>
-    <ul className="railway-nodes">
-      {CANVAS_NODES.map((node) => (
-        <li className="railway-node" key={node.id}>
-          <strong>{node.label}</strong>
-          <span>
-            <i aria-hidden="true" />
-            {node.status}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <NodeList nodes={TOP_NODES} />
+    <NodeList nodes={BOTTOM_NODES} />
   </div>
 );

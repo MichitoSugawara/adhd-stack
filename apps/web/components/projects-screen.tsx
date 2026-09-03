@@ -99,13 +99,21 @@ export const ProjectsScreen = () => {
             )}
           </div>
           <div className="mobile-bottom-dock">
-            <button
-              className="atelier-btn atelier-btn--solid"
-              onClick={() => router.push(ready ? "/editor" : "/")}
-              type="button"
-            >
-              {ready ? "エディタを開く" : "接続へ"}
-            </button>
+            <div className="atelier-dock">
+              <div>
+                <strong>{ready ? "デモ準備完了" : "未接続"}</strong>
+                <span>
+                  {ready ? "モックのエディタを開けます" : "先に4つのデモ接続を"}
+                </span>
+              </div>
+              <button
+                className="atelier-btn atelier-btn--solid"
+                onClick={() => router.push(ready ? "/editor" : "/")}
+                type="button"
+              >
+                {ready ? "エディタを開く" : "接続へ"}
+              </button>
+            </div>
           </div>
         </KonstaPage>
       </KonstaApp>
