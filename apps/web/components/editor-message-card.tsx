@@ -1,5 +1,6 @@
 import { KIND_LABELS } from "../lib/editor-copy";
 import type { MockMessage } from "../lib/mock-types";
+import { DiffHunkList } from "./diff-hunk";
 
 interface EditorMessageCardProperties {
   message: MockMessage;
@@ -7,10 +8,8 @@ interface EditorMessageCardProperties {
 
 export const EditorMessageCard = ({ message }: EditorMessageCardProperties) => {
   const label = KIND_LABELS[message.kind];
-  const files = message.meta?.files ?? [];
   const command = message.meta?.command ?? message.body;
-  const additions = message.meta?.additions;
-  const deletions = message.meta?.deletions;
+  const hunks = message.meta?.hunks ?? [];
 
   return (
     <article
@@ -21,18 +20,11 @@ export const EditorMessageCard = ({ message }: EditorMessageCardProperties) => {
         <pre className="chat-command">{command}</pre>
       ) : null}
       {message.kind === "diff" ? (
-        <>
-          <p className="chat-diff-stats">
-            {additions === undefined ? null : `+${additions}`}
-            {deletions === undefined ? null : ` −${deletions}`}
-          </p>
-          <ul className="chat-file-list">
-            {files.map((file) => (
-              <li key={file}>{file}</li>
-            ))}
-          </ul>
-          <p>{message.body}</p>
-        </>
+        <DiffHunkList
+          additions={message.meta?.additions}
+          deletions={message.meta?.deletions}
+          hunks={hunks}
+        />
       ) : null}
       {message.kind === "command" || message.kind === "diff" ? null : (
         <p>{message.body}</p>

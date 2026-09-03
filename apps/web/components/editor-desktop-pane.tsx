@@ -3,12 +3,14 @@
 import { Button } from "@cloudflare/kumo";
 import { ChatCircleDotsIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
 
-import { PROMPT_CHIPS } from "../lib/mock-copy";
+import { MOCK_DIFF_HUNKS, PROMPT_CHIPS } from "../lib/mock-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
 import { DemoBanner } from "./demo-banner";
+import { DiffHunkList } from "./diff-hunk";
 import { EditorMessageCard } from "./editor-message-card";
 import { EditorProvisionStrip } from "./editor-provision-strip";
 import { EditorSidebar } from "./editor-sidebar";
+import { StageStrip } from "./stage-strip";
 
 type EditorState = ReturnType<typeof useEditorWorkspace>;
 
@@ -80,6 +82,7 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
             公開する（デモ）
           </Button>
         </header>
+        <StageStrip current={hasDiffs ? "DIFF" : "WORK"} />
         <DemoBanner />
         <EditorProvisionStrip
           onRetry={() => {
@@ -161,6 +164,9 @@ export const EditorDesktopPane = ({ state }: EditorDesktopPaneProperties) => {
         <p className="review-status">
           {reviewCopy(publishState.status, hasDiffs)}
         </p>
+        {hasDiffs ? (
+          <DiffHunkList additions={12} deletions={3} hunks={MOCK_DIFF_HUNKS} />
+        ) : null}
         {workspace?.cloudflarePagesUrl ? (
           <p className="review-url">{workspace.cloudflarePagesUrl}</p>
         ) : null}

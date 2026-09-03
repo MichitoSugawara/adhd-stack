@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { EditorRail } from "./editor-copy";
 import { filterThread, isEditorReady, provisionHeadline } from "./editor-copy";
-import { MOCK_FILES, MOCK_REPO } from "./mock-copy";
+import { MOCK_DIFF_HUNKS, MOCK_FILES, MOCK_REPO } from "./mock-copy";
 import {
   allConnectedOf,
   appendMessage,
@@ -137,6 +137,7 @@ export const useEditorWorkspace = () => {
           additions: 12,
           deletions: 3,
           files: [...MOCK_FILES],
+          hunks: MOCK_DIFF_HUNKS,
         },
         role: "assistant",
       })

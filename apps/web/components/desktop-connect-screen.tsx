@@ -10,6 +10,7 @@ import { SERVICE_META } from "../lib/mock-copy";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
 import { DemoBanner } from "./demo-banner";
+import { StageStrip } from "./stage-strip";
 
 interface DesktopConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -66,10 +67,11 @@ export const DesktopConnectScreen = ({
       </header>
       <section className="connection-page" aria-labelledby="hero-title">
         <div className="hero-copy">
-          <p className="eyebrow">DEMO MODE. MOCK CONNECTIONS.</p>
+          <p className="eyebrow">01 · CONNECT</p>
           <h1 id="hero-title">何も考えずに、始める。</h1>
           <p>つなぐだけで、開発から公開まで。全部モックです。</p>
         </div>
+        <StageStrip current="CONNECT" />
         <DemoBanner />
         <div className="flow-shell">
           <div className="flow-heading">
@@ -129,14 +131,15 @@ export const DesktopConnectScreen = ({
                     key={service.id}
                     render={
                       <div className={`service-node service-node--${status}`}>
+                        <span className="card-chip">{service.category}</span>
                         <div className="service-main">
                           <span className="service-icon" aria-hidden="true">
                             <Image
                               alt=""
                               className="service-logo-image"
-                              height={26}
+                              height={32}
                               src={service.logo}
-                              width={26}
+                              width={32}
                             />
                           </span>
                           <span>
@@ -153,15 +156,7 @@ export const DesktopConnectScreen = ({
                                 {warningFor(service.id)}
                               </span>
                             ) : null}
-                            <span className="service-meta">
-                              権限 {meta.permission}
-                            </span>
-                            <span className="service-meta">
-                              対象 {meta.target}
-                            </span>
-                            <span className="service-meta">
-                              最終確認 {meta.lastCheck}
-                            </span>
+                            <span className="service-meta">{meta.target}</span>
                           </span>
                         </div>
                         {nodeAction}

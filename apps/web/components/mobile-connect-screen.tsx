@@ -16,6 +16,7 @@ import { SERVICE_META } from "../lib/mock-copy";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
 import { DemoBanner } from "./demo-banner";
+import { StageStrip } from "./stage-strip";
 
 interface MobileConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -56,10 +57,11 @@ export const MobileConnectScreen = ({
             className="mobile-title-block"
             aria-labelledby="mobile-title"
           >
-            <p>DEMO · STEP 1</p>
+            <p>01 · CONNECT</p>
             <h1 id="mobile-title">接続</h1>
             <span>カードをタップすると、モック接続になります。</span>
           </section>
+          <StageStrip current="CONNECT" />
           <DemoBanner />
           <div className="mobile-node-grid">
             {SERVICES.map((service) => {
@@ -90,6 +92,7 @@ export const MobileConnectScreen = ({
                   <KonstaGlass
                     className={`mobile-service-card mobile-service-card--${status}`}
                   >
+                    <span className="card-chip">{service.category}</span>
                     <span className="mobile-service-icon" aria-hidden="true">
                       <Image
                         alt=""
@@ -101,6 +104,7 @@ export const MobileConnectScreen = ({
                     </span>
                     <span className="mobile-service-name">{service.label}</span>
                     <span className={`mobile-status mobile-status--${status}`}>
+                      <i aria-hidden="true" />
                       {status === "connecting"
                         ? "接続しています…"
                         : STATUS_LABELS[status]}
@@ -108,9 +112,7 @@ export const MobileConnectScreen = ({
                     <span className="mobile-service-identity">
                       {identityLabel}
                     </span>
-                    <span className="mobile-service-meta">
-                      {meta.permission}
-                    </span>
+                    <span className="mobile-service-meta">{meta.target}</span>
                   </KonstaGlass>
                 </button>
               );

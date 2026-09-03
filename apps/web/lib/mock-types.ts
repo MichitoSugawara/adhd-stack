@@ -10,6 +10,18 @@ export interface MockConnection {
 
 export type MessageKind = "command" | "diff" | "text" | "thinking" | "work";
 
+export type DiffLineKind = "add" | "ctx" | "del";
+
+export interface MockDiffLine {
+  kind: DiffLineKind;
+  text: string;
+}
+
+export interface MockDiffHunk {
+  file: string;
+  lines: MockDiffLine[];
+}
+
 export interface MockMessage {
   _id: string;
   body: string;
@@ -20,6 +32,7 @@ export interface MockMessage {
     command?: string;
     deletions?: number;
     files?: string[];
+    hunks?: MockDiffHunk[];
   };
   role: "assistant" | "system" | "user";
 }

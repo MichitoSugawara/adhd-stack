@@ -12,19 +12,10 @@ import { useRouter } from "next/navigation";
 import { connectFontVariables } from "../lib/connect-fonts";
 import { MOCK_REPO } from "../lib/mock-copy";
 import { allConnectedOf, useMockApp } from "../lib/mock-store";
-import { SERVICES } from "../lib/services";
+import { ActivityTimeline } from "./activity-timeline";
 import { DemoBanner } from "./demo-banner";
-
-const NODES = [
-  ...SERVICES.map((service) => ({
-    id: service.id,
-    label: service.label,
-  })),
-  { id: "repo", label: "Repo" },
-  { id: "env", label: "Codex env" },
-  { id: "pages", label: "Pages" },
-  { id: "convex-app", label: "Convex" },
-] as const;
+import { ServiceCanvas } from "./service-canvas";
+import { StageStrip } from "./stage-strip";
 
 export const ProjectsScreen = () => {
   const { hydrated, state } = useMockApp();
@@ -48,11 +39,12 @@ export const ProjectsScreen = () => {
         <section className="projects-page" aria-labelledby="projects-title">
           <div className="projects-heading">
             <div>
-              <p className="eyebrow">MOCK WORKSPACE</p>
+              <p className="eyebrow">02 · WORKSPACE</p>
               <h1 id="projects-title">プロジェクト</h1>
               <p>実データは使いません。全部モックの要約です。</p>
             </div>
           </div>
+          <StageStrip current="PROVISION" />
           <DemoBanner />
           {hydrated && ready ? (
             <>
@@ -66,21 +58,8 @@ export const ProjectsScreen = () => {
                     `https://${MOCK_REPO.project}.convex.cloud`}
                 </p>
               </article>
-              <div className="service-graph" aria-label="サービスの関係">
-                {NODES.map((node, index) => (
-                  <div className="graph-row" key={node.id}>
-                    <span className="graph-node">{node.label}</span>
-                    {index < NODES.length - 1 ? (
-                      <span className="graph-line" aria-hidden="true" />
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-              <ol className="activity-list">
-                <li>デモ接続をそろえた</li>
-                <li>モックの {MOCK_REPO.fullName} を用意した</li>
-                <li>Codex 環境 {MOCK_REPO.envId} を表示した</li>
-              </ol>
+              <ServiceCanvas />
+              <ActivityTimeline />
               <Button onClick={() => router.push("/editor")} variant="primary">
                 エディタを開く
               </Button>
@@ -110,16 +89,21 @@ export const ProjectsScreen = () => {
               className="mobile-title-block"
               aria-labelledby="mobile-projects"
             >
-              <p>DEMO · PROJECTS</p>
+              <p>02 · WORKSPACE</p>
               <h1 id="mobile-projects">プロジェクト</h1>
               <span>モックの要約だけです。</span>
             </section>
+            <StageStrip current="PROVISION" />
             <DemoBanner />
             {hydrated && ready ? (
-              <article className="project-summary">
-                <strong>{MOCK_REPO.fullName}</strong>
-                <small>Repo / Env / Pages / Convex（モック）</small>
-              </article>
+              <>
+                <article className="project-summary">
+                  <strong>{MOCK_REPO.fullName}</strong>
+                  <small>Repo / Env / Pages / Convex（モック）</small>
+                </article>
+                <ServiceCanvas />
+                <ActivityTimeline />
+              </>
             ) : (
               <p>先に4つのデモ接続をしてください。</p>
             )}

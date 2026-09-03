@@ -13,7 +13,9 @@ import { KIND_LABELS } from "../lib/editor-copy";
 import { PROMPT_CHIPS } from "../lib/mock-copy";
 import type { useEditorWorkspace } from "../lib/use-editor-workspace";
 import { DemoBanner } from "./demo-banner";
+import { DiffHunkList } from "./diff-hunk";
 import { EditorProvisionStrip } from "./editor-provision-strip";
+import { StageStrip } from "./stage-strip";
 
 type EditorState = ReturnType<typeof useEditorWorkspace>;
 
@@ -63,6 +65,7 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
             公開
           </KonstaButton>
         </header>
+        <StageStrip current="WORK" />
         <DemoBanner />
         <div className="provision-strip--mobile">
           <EditorProvisionStrip
@@ -98,7 +101,15 @@ export const EditorMobilePane = ({ state }: EditorMobilePaneProperties) => {
                     {KIND_LABELS[message.kind]}
                   </p>
                 )}
-                {message.body}
+                {message.kind === "diff" && message.meta?.hunks ? (
+                  <DiffHunkList
+                    additions={message.meta.additions}
+                    deletions={message.meta.deletions}
+                    hunks={message.meta.hunks}
+                  />
+                ) : (
+                  message.body
+                )}
               </div>
             ))
           )}
