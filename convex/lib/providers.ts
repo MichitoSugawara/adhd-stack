@@ -63,11 +63,9 @@ const DEFINITIONS = {
   },
 } as const satisfies Record<ProviderId, ProviderDefinition>;
 
+type OAuthProviderId = Exclude<ProviderId, "chatgpt">;
+
 const ENV_KEYS = {
-  chatgpt: {
-    id: "CHATGPT_CLIENT_ID",
-    secret: "CHATGPT_CLIENT_SECRET",
-  },
   cloudflare: {
     id: "CLOUDFLARE_CLIENT_ID",
     secret: "CLOUDFLARE_CLIENT_SECRET",
@@ -80,9 +78,12 @@ const ENV_KEYS = {
     id: "GITHUB_CLIENT_ID",
     secret: "GITHUB_CLIENT_SECRET",
   },
-} as const satisfies Record<ProviderId, { id: string; secret: string }>;
+} as const satisfies Record<OAuthProviderId, { id: string; secret: string }>;
 
 export const readProviderEnv = (provider: ProviderId): ProviderEnv => {
+  if (provider === "chatgpt") {
+    return { clientId: undefined, clientSecret: undefined };
+  }
   const keys = ENV_KEYS[provider];
   return {
     clientId: process.env[keys.id],
@@ -91,6 +92,9 @@ export const readProviderEnv = (provider: ProviderId): ProviderEnv => {
 };
 
 export const isProviderConfigured = (provider: ProviderId): boolean => {
+  if (provider === "chatgpt") {
+    return true;
+  }
   const env = readProviderEnv(provider);
   return Boolean(env.clientId && env.clientSecret);
 };
@@ -105,6 +109,9 @@ export const configuredProviders = () => ({
 export const requireProviderEnv = (
   provider: ProviderId
 ): { clientId: string; clientSecret: string } => {
+  if (provider === "chatgpt") {
+    throw new Error("ChatGPT はデバイスログインです");
+  }
   const env = readProviderEnv(provider);
   if (!(env.clientId && env.clientSecret)) {
     throw new Error(

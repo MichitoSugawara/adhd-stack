@@ -24,6 +24,7 @@ export const MobileConnectScreen = ({
   const router = useRouter();
   const {
     allConnected,
+    chatgptDevice,
     connect,
     connectedCount,
     identityFor,
@@ -55,10 +56,28 @@ export const MobileConnectScreen = ({
               {oauthError}
             </p>
           ) : null}
+          {chatgptDevice ? (
+            <p className="chatgpt-device-prompt" role="status">
+              ChatGPT のコードは {chatgptDevice.userCode} です。{" "}
+              <a
+                href={chatgptDevice.verificationUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                入力ページを開く
+              </a>
+            </p>
+          ) : null}
           <div className="mobile-node-grid">
             {SERVICES.map((service) => {
               const status = statusFor(service.id);
               const isConnected = status === "connected";
+              let identityLabel = "タップして接続";
+              if (service.id === "chatgpt" && chatgptDevice) {
+                identityLabel = `コード ${chatgptDevice.userCode}`;
+              } else if (isConnected) {
+                identityLabel = identityFor(service.id);
+              }
               return (
                 <button
                   aria-label={`${service.label}: ${STATUS_LABELS[status]}. ${isConnected ? "切断する" : "接続する"}`}
@@ -93,7 +112,7 @@ export const MobileConnectScreen = ({
                         : STATUS_LABELS[status]}
                     </span>
                     <span className="mobile-service-identity">
-                      {isConnected ? identityFor(service.id) : "タップして接続"}
+                      {identityLabel}
                     </span>
                   </KonstaGlass>
                 </button>

@@ -38,6 +38,7 @@ export default defineConfig({
       files: [
         "convex/auth.ts",
         "convex/http.ts",
+        "convex/lib/codexDevice.ts",
         "convex/lib/oauthExchange.ts",
         "convex/lib/providers.ts",
         "convex/workspaceActions.ts",

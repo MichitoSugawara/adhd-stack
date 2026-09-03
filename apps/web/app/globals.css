@@ -454,6 +454,23 @@ textarea {
   color: #8a1f1f;
 }
 
+.chatgpt-device-link,
+.chatgpt-device-prompt a {
+  color: var(--text-color-kumo-accent, #2563eb);
+  text-decoration: underline;
+}
+
+.chatgpt-device-prompt {
+  width: min(760px, 100%);
+  margin: 12px auto 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-kumo-hairline);
+  border-radius: 12px;
+  background: var(--color-kumo-base);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .publish-result {
   border: 1px solid var(--color-kumo-hairline);
   background: var(--color-kumo-base);

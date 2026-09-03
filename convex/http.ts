@@ -92,6 +92,9 @@ const http = httpRouter();
 auth.addHttpRoutes(http);
 
 for (const provider of PROVIDER_IDS) {
+  if (provider === "chatgpt") {
+    continue;
+  }
   http.route({
     handler: handleCallback,
     method: "GET",

@@ -19,6 +19,7 @@ export const DesktopConnectScreen = ({
   const {
     allConnected,
     authenticated,
+    chatgptDevice,
     configured,
     connect,
     connectedCount,
@@ -112,6 +113,20 @@ export const DesktopConnectScreen = ({
                               <span className="service-identity">
                                 {warningFor(service.id)}
                               </span>
+                            ) : null}
+                            {service.id === "chatgpt" && chatgptDevice ? (
+                              <a
+                                className="service-identity chatgpt-device-link"
+                                href={chatgptDevice.verificationUrl}
+                                rel="noreferrer"
+                                target="_blank"
+                              >
+                                {chatgptDevice.verificationUrl.replace(
+                                  "https://",
+                                  ""
+                                )}{" "}
+                                でコードを入力
+                              </a>
                             ) : null}
                             {status === "disconnected" && !isConfigured ? (
                               <span className="service-identity">
