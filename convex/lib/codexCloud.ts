@@ -31,11 +31,14 @@ export interface CodexTaskSnapshot {
   work?: string;
 }
 
+export const DEFAULT_CODEX_MACHINE_ID = "wham-public/wham-universal";
+
 const headersFor = (auth: CodexCloudAuth): HeadersInit => {
   const headers: Record<string, string> = {
     Accept: "application/json",
     Authorization: `Bearer ${auth.accessToken}`,
     "Content-Type": "application/json",
+    originator: "codex_cli_rs",
   };
   if (auth.accountId) {
     headers["ChatGPT-Account-Id"] = auth.accountId;
@@ -147,6 +150,19 @@ export const formatCodexHttpError = (
   return `Codex Cloud 環境を作成できませんでした: HTTP ${status} ${text}`;
 };
 
+const rowsFromPayload = (
+  payload: Record<string, unknown>,
+  keys: string[]
+): unknown[] => {
+  for (const key of keys) {
+    const rows = asList(payload[key]);
+    if (rows.length > 0) {
+      return rows;
+    }
+  }
+  return Array.isArray(payload) ? payload : [];
+};
+
 const machineIdFrom = (value: unknown): string | undefined => {
   const row = asRecord(value);
   return (
@@ -159,23 +175,16 @@ const machineIdFrom = (value: unknown): string | undefined => {
 
 export const listCodexMachineId = async (
   auth: CodexCloudAuth
-): Promise<{ id?: string; probe: string }> => {
-  const probes: string[] = [];
-  for (const path of ["/wham/machines", "/wham/environments/machines"]) {
-    const response = await request(auth, "GET", path);
-    probes.push(
-      `${path} HTTP ${response.status} ${payloadText(response.payload)}`
-    );
-    if (!response.ok) {
-      continue;
-    }
-    const rows = asList(
-      response.payload.machines ??
-        response.payload.items ??
-        response.payload.data
-    );
-    const source = rows.length > 0 ? rows : asList(response.payload);
-    const preferred = source.find((item) => {
+): Promise<{ id: string; probe: string }> => {
+  const response = await request(auth, "GET", "/wham/machines");
+  const probe = `/wham/machines HTTP ${response.status} ${payloadText(response.payload)}`;
+  if (response.ok) {
+    const rows = rowsFromPayload(response.payload, [
+      "machines",
+      "items",
+      "data",
+    ]);
+    const preferred = rows.find((item) => {
       const row = asRecord(item);
       const label = (
         asString(row.label) ??
@@ -185,8 +194,104 @@ export const listCodexMachineId = async (
       ).toLowerCase();
       return label.includes("default") || label.includes("universal");
     });
-    const id = machineIdFrom(preferred) ?? machineIdFrom(source[0]);
+    const id = machineIdFrom(preferred) ?? machineIdFrom(rows[0]);
     if (id) {
+      return { id, probe };
+    }
+  }
+  return { id: DEFAULT_CODEX_MACHINE_ID, probe };
+};
+
+const githubIdFromPrefixed = (
+  value: string | undefined
+): number | undefined => {
+  if (!value?.startsWith("github-")) {
+    return undefined;
+  }
+  return asNumber(value.slice("github-".length));
+};
+
+const githubIdFromRow = (row: Record<string, unknown>): number | undefined =>
+  asNumber(row.github_repo_id) ??
+  asNumber(row.repository_id) ??
+  asNumber(asRecord(row.repository).id) ??
+  asNumber(row.external_id) ??
+  githubIdFromPrefixed(asString(row.id)) ??
+  githubIdFromPrefixed(asString(row.external_id)) ??
+  asNumber(row.id);
+
+const ownerNameFrom = (
+  ownerValue: unknown,
+  nameValue: unknown
+): string | undefined => {
+  const owner = asString(ownerValue) ?? asString(asRecord(ownerValue).login);
+  const name = asString(nameValue);
+  return owner && name ? `${owner}/${name}` : undefined;
+};
+
+const fullNameFromRow = (row: Record<string, unknown>): string | undefined => {
+  const nested = asRecord(row.repository);
+  return (
+    asString(row.full_name) ??
+    asString(row.fullName) ??
+    asString(row.repo_full_name) ??
+    asString(nested.full_name) ??
+    ownerNameFrom(row.owner, row.name ?? row.repo) ??
+    ownerNameFrom(nested.owner, nested.name)
+  );
+};
+
+const matchInstalledRepoId = (
+  rows: unknown[],
+  owner: string,
+  repo: string
+): number | undefined => {
+  const needle = `${owner}/${repo}`.toLowerCase();
+  const repoLower = repo.toLowerCase();
+  const parsed = rows.map((item) => asRecord(item));
+  const exact = parsed.find(
+    (row) => (fullNameFromRow(row) ?? "").toLowerCase() === needle
+  );
+  if (exact) {
+    return githubIdFromRow(exact);
+  }
+  const byName = parsed.filter((row) => {
+    const full = (fullNameFromRow(row) ?? "").toLowerCase();
+    const name = (asString(row.name) ?? asString(row.repo) ?? "").toLowerCase();
+    return full.endsWith(`/${repoLower}`) || name === repoLower;
+  });
+  const [only] = byName;
+  return byName.length === 1 && only ? githubIdFromRow(only) : undefined;
+};
+
+export const findInstalledGithubRepoId = async (
+  auth: CodexCloudAuth,
+  owner: string,
+  repo: string
+): Promise<{ id?: number; probe: string }> => {
+  const probes: string[] = [];
+  for (const q of [`${owner}/${repo}`, repo]) {
+    const path = `/wham/github/repositories/search/all-installations?${new URLSearchParams({ q }).toString()}`;
+    const response = await request(auth, "GET", path);
+    probes.push(
+      `${path} HTTP ${response.status} ${payloadText(response.payload)}`
+    );
+    if (!response.ok) {
+      continue;
+    }
+    const rows = [
+      ...rowsFromPayload(response.payload, [
+        "repositories",
+        "items",
+        "data",
+        "results",
+      ]),
+      ...asList(response.payload.installations).flatMap((item) =>
+        asList(asRecord(item).repositories)
+      ),
+    ];
+    const id = matchInstalledRepoId(rows, owner, repo);
+    if (id !== undefined) {
       return { id, probe: probes.join(" | ") };
     }
   }
@@ -226,81 +331,45 @@ export const listEnvironmentsForRepo = async (
   });
 };
 
-const createBodies = (
-  machineId: string,
-  owner: string,
-  repo: string,
-  repoId?: number
-): Record<string, unknown>[] => {
-  const repoObject = {
-    default_branch: "main",
-    name: repo,
-    owner,
-    provider: "github",
-    ...(repoId === undefined ? {} : { external_id: String(repoId) }),
-  };
-  return [
-    {
-      label: "adhd-app",
-      machine_id: machineId,
-      repos: [repoObject],
-    },
-    {
-      machine_id: machineId,
-      name: "adhd-app",
-      repos: [repoObject],
-    },
-    {
-      label: "adhd-app",
-      machine_id: machineId,
-      repo: repoObject,
-    },
-  ];
-};
-
 export const createCodexEnvironment = async (
   auth: CodexCloudAuth,
   owner: string,
-  repo: string,
-  repoId?: number
+  repo: string
 ): Promise<CodexEnvironment> => {
-  const machines = await listCodexMachineId(auth);
-  if (!machines.id) {
+  const installed = await findInstalledGithubRepoId(auth, owner, repo);
+  if (installed.id === undefined) {
     throw new Error(
-      `${GITHUB_CONNECT_HINT}（Codex Cloud に machine がありません: ${machines.probe}）`
+      `${GITHUB_CONNECT_HINT}（ChatGPT 側に ${owner}/${repo} が見えません: ${installed.probe}）`
     );
   }
-  const errors: string[] = [];
-  for (const body of createBodies(machines.id, owner, repo, repoId)) {
-    const response = await request(auth, "POST", "/wham/environments", body);
-    if (response.ok) {
-      const created =
-        environmentFrom(response.payload) ??
-        environmentFrom(response.payload.environment) ??
-        environmentsFromPayload(response.payload)[0];
-      if (created) {
-        return created;
-      }
-    }
-    errors.push(formatCodexHttpError(response.status, response.payload));
-    if (response.status === 401 || response.status === 403) {
-      break;
+  const machines = await listCodexMachineId(auth);
+  const response = await request(auth, "POST", "/wham/environments", {
+    label: "adhd-app",
+    machine_id: machines.id,
+    repos: [`github-${installed.id}`],
+  });
+  if (response.ok) {
+    const created =
+      environmentFrom(response.payload) ??
+      environmentFrom(response.payload.environment) ??
+      environmentsFromPayload(response.payload)[0];
+    if (created) {
+      return created;
     }
   }
-  throw new Error(errors.at(-1) ?? "Codex Cloud 環境を作成できませんでした");
+  throw new Error(formatCodexHttpError(response.status, response.payload));
 };
 
 export const ensureCodexEnvironment = async (
   auth: CodexCloudAuth,
   owner: string,
-  repo: string,
-  repoId?: number
+  repo: string
 ): Promise<CodexEnvironment> => {
   const existing = await listEnvironmentsForRepo(auth, owner, repo);
   if (existing[0]) {
     return existing[0];
   }
-  return await createCodexEnvironment(auth, owner, repo, repoId);
+  return await createCodexEnvironment(auth, owner, repo);
 };
 
 export const createCodexTask = async (

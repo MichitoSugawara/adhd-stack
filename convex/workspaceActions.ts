@@ -107,8 +107,7 @@ export const provisionWorkspace = internalAction({
           const environment = await ensureCodexEnvironment(
             { accessToken: chatgpt.accessToken, accountId },
             githubOwner,
-            githubRepoName,
-            githubRepoId
+            githubRepoName
           );
           codexEnvironmentId = environment.id;
           await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
