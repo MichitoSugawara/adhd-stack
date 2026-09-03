@@ -42,6 +42,7 @@ const DEFINITIONS = {
   cloudflare: {
     authorizationUrl: "https://dash.cloudflare.com/oauth2/auth",
     scopes: [
+      "offline_access",
       "user-details.read",
       "account-settings.read",
       "page.read",

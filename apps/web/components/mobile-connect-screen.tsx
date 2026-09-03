@@ -32,6 +32,7 @@ export const MobileConnectScreen = ({
     connectedCount,
     identityFor,
     oauthError,
+    warningFor,
     onDisconnect,
     openChatgptDevice,
     statusFor,
@@ -81,6 +82,8 @@ export const MobileConnectScreen = ({
                 identityLabel = "確認待ち";
               } else if (isConnected) {
                 identityLabel = identityFor(service.id);
+              } else if (warningFor(service.id)) {
+                identityLabel = warningFor(service.id) ?? "タップして接続";
               }
               const canCancelChatgpt =
                 service.id === "chatgpt" && Boolean(chatgptDevice);

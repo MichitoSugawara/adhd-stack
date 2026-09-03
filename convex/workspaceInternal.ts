@@ -115,6 +115,32 @@ export const getConnectionSecret = internalQuery({
   ),
 });
 
+export const expireConnection = internalMutation({
+  args: {
+    provider: providerValidator,
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const row = await ctx.db
+      .query("connections")
+      .withIndex("by_user_and_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", args.provider)
+      )
+      .unique();
+    if (!row) {
+      return null;
+    }
+    await ctx.db.patch(row._id, {
+      accessToken: "",
+      planWarning: undefined,
+      refreshToken: undefined,
+      status: "disconnected",
+    });
+    return null;
+  },
+  returns: v.null(),
+});
+
 export const saveConnectionTokens = internalMutation({
   args: {
     accessToken: v.string(),

@@ -2,7 +2,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
 import type { ProviderId } from "./providers";
-import { refreshConnectionTokens } from "./tokenRefresh";
+import { resolveConnectionTokens } from "./tokenRefresh";
 import type { StoredConnectionSecret } from "./tokenRefresh";
 
 export const loadFreshConnection = async (
@@ -17,21 +17,28 @@ export const loadFreshConnection = async (
   if (!secret) {
     return null;
   }
-  const refreshed = await refreshConnectionTokens(provider, secret);
-  if (!refreshed) {
+  const resolution = await resolveConnectionTokens(provider, secret);
+  if (resolution.status === "current") {
     return secret;
   }
+  if (resolution.status === "expired") {
+    await ctx.runMutation(internal.workspaceInternal.expireConnection, {
+      provider,
+      userId,
+    });
+    return null;
+  }
   await ctx.runMutation(internal.workspaceInternal.saveConnectionTokens, {
-    accessToken: refreshed.accessToken,
-    expiresAt: refreshed.expiresAt,
+    accessToken: resolution.tokens.accessToken,
+    expiresAt: resolution.tokens.expiresAt,
     provider,
-    refreshToken: refreshed.refreshToken,
+    refreshToken: resolution.tokens.refreshToken,
     userId,
   });
   return {
     ...secret,
-    accessToken: refreshed.accessToken,
-    expiresAt: refreshed.expiresAt,
-    refreshToken: refreshed.refreshToken,
+    accessToken: resolution.tokens.accessToken,
+    expiresAt: resolution.tokens.expiresAt,
+    refreshToken: resolution.tokens.refreshToken,
   };
 };

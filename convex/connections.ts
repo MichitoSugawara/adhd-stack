@@ -3,22 +3,29 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUser, getCurrentUserOrNull } from "./lib/auth";
 import { configuredProviders, PROVIDER_IDS } from "./lib/providers";
+import { canKeepConnection, reconnectMessage } from "./lib/tokenRefresh";
 import {
   configuredValidator,
   connectionPublicValidator,
   providerValidator,
 } from "./validators";
 
+const disconnectedConnection = (
+  provider: (typeof PROVIDER_IDS)[number],
+  reconnectHint?: string
+) => ({
+  identity: "アカウント未選択",
+  provider,
+  reconnectHint,
+  status: "disconnected" as const,
+});
+
 const emptyBoard = () =>
-  PROVIDER_IDS.map((provider) => ({
-    identity: "アカウント未選択",
-    provider,
-    status: "disconnected" as const,
-  }));
+  PROVIDER_IDS.map((provider) => disconnectedConnection(provider));
 
 export const getBoard = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { now: v.number() },
+  handler: async (ctx, args) => {
     const configured = configuredProviders();
     const user = await getCurrentUserOrNull(ctx);
     if (!user) {
@@ -36,19 +43,36 @@ export const getBoard = query({
     const byProvider = new Map(rows.map((row) => [row.provider, row]));
     const connections = PROVIDER_IDS.map((provider) => {
       const row = byProvider.get(provider);
-      if (!row || row.status !== "connected") {
+      if (!row) {
+        return disconnectedConnection(provider);
+      }
+      if (
+        canKeepConnection(
+          {
+            accessToken: row.accessToken,
+            expiresAt: row.expiresAt,
+            refreshToken: row.refreshToken,
+            status: row.status,
+          },
+          args.now
+        )
+      ) {
         return {
-          identity: "アカウント未選択",
+          identity: row.identity,
+          planWarning: row.planWarning,
           provider,
-          status: "disconnected" as const,
+          reconnectHint: undefined,
+          status: "connected" as const,
         };
       }
-      return {
-        identity: row.identity,
-        planWarning: row.planWarning,
+      const expired =
+        row.status === "connected" &&
+        Boolean(row.expiresAt) &&
+        !row.refreshToken;
+      return disconnectedConnection(
         provider,
-        status: "connected" as const,
-      };
+        expired ? reconnectMessage(provider) : undefined
+      );
     });
     return {
       allConnected: connections.every((item) => item.status === "connected"),

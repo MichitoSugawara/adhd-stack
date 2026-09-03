@@ -1,5 +1,6 @@
 import { asList, asRecord, asString, payloadText, readJson } from "./httpJson";
 import { looksLikeCfAccountId } from "./jwt";
+import { reconnectMessage } from "./tokenRefresh";
 
 export const ADHD_PAGES_PROJECT = "adhd-app";
 
@@ -35,10 +36,30 @@ const parseProject = (
   return { accountId, name, url: projectUrl(project) };
 };
 
+const isExpiredCloudflareToken = (
+  status: number,
+  payload: Record<string, unknown>
+): boolean => {
+  if (status !== 401 && status !== 403) {
+    return false;
+  }
+  const text =
+    `${payloadText(payload)} ${asString(payload.error) ?? ""}`.toLowerCase();
+  return (
+    text.includes("invalid_token") ||
+    text.includes("token expired") ||
+    text.includes("authentication error") ||
+    text.includes("access token expired")
+  );
+};
+
 const formatCloudflareError = (
   status: number,
   payload: Record<string, unknown>
 ): string => {
+  if (isExpiredCloudflareToken(status, payload)) {
+    return reconnectMessage("cloudflare");
+  }
   const messages = asList(payload.errors)
     .map((item) => asString(asRecord(item).message))
     .filter((item): item is string => item !== undefined);
@@ -80,6 +101,9 @@ export const getCloudflareAccountId = async (
       return fromMemberships;
     }
   } else {
+    if (isExpiredCloudflareToken(memberships.status, membershipPayload)) {
+      throw new Error(reconnectMessage("cloudflare"));
+    }
     console.error("Cloudflare memberships failed", {
       body: payloadText(membershipPayload),
       status: memberships.status,
@@ -98,6 +122,9 @@ export const getCloudflareAccountId = async (
       return fromProfile;
     }
   } else {
+    if (isExpiredCloudflareToken(userinfo.status, profile)) {
+      throw new Error(reconnectMessage("cloudflare"));
+    }
     console.error("Cloudflare userinfo failed", {
       body: payloadText(profile),
       status: userinfo.status,

@@ -12,6 +12,7 @@ import {
 } from "./lib/codexCloud";
 import { ensureConvexProject } from "./lib/convexProject";
 import { ensureAdhdRepo } from "./lib/githubRepo";
+import { reconnectMessage } from "./lib/tokenRefresh";
 
 export const provisionWorkspace = internalAction({
   args: {
@@ -93,7 +94,7 @@ export const provisionWorkspace = internalAction({
           );
         }
       } else {
-        blockers.push("GitHub がつながっていません");
+        blockers.push(reconnectMessage("github"));
       }
 
       const chatgpt = await loadFreshConnection(ctx, args.userId, "chatgpt");
@@ -130,7 +131,7 @@ export const provisionWorkspace = internalAction({
           );
         }
       } else if (!chatgpt) {
-        blockers.push("ChatGPT がつながっていません");
+        blockers.push(reconnectMessage("chatgpt"));
       }
 
       const cloudflare = await loadFreshConnection(
@@ -157,6 +158,8 @@ export const provisionWorkspace = internalAction({
               : "Cloudflare Pages のプロビジョニングに失敗しました"
           );
         }
+      } else if (!cloudflare) {
+        warnings.push(reconnectMessage("cloudflare"));
       }
 
       const convex = await loadFreshConnection(ctx, args.userId, "convex");

@@ -72,6 +72,7 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 - [Create your OAuth client](https://developers.cloudflare.com/fundamentals/oauth/create-an-oauth-client/)
 - 認可: `https://dash.cloudflare.com/oauth2/auth`
 - トークン: `https://dash.cloudflare.com/oauth2/token`
+- OAuth クライアントの Grant type に `refresh_token` を入れてください。こちらは認可で `offline_access` を要求します。
 - ユーザーアプリのフロントは、つながったアカウントの Cloudflare Pages に出します。
 - 新規クライアントは private です。他人のアカウントでも使うなら public 化とドメイン確認が必要です。
 

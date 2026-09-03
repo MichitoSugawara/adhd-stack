@@ -7,9 +7,11 @@ import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import type { EditorRail } from "./editor-copy";
 import { filterThread, isEditorReady, provisionHeadline } from "./editor-copy";
+import { useBoardNow } from "./use-board-now";
 
 export const useEditorWorkspace = () => {
-  const board = useQuery(api.connections.getBoard);
+  const now = useBoardNow();
+  const board = useQuery(api.connections.getBoard, { now });
   const workspace = useQuery(api.workspaces.getMine);
   const ensure = useMutation(api.workspaces.ensure);
   const provision = useAction(api.workspaceProvision.provision);

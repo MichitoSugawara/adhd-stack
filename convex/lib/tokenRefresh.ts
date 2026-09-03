@@ -1,6 +1,10 @@
 import { CODEX_OAUTH_TOKEN_URL, CODEX_PUBLIC_CLIENT_ID } from "./codexDevice";
 import { asNumber, asString, readJson } from "./httpJson";
-import { getProviderDefinition, requireProviderEnv } from "./providers";
+import {
+  getProviderDefinition,
+  PROVIDER_LABELS,
+  requireProviderEnv,
+} from "./providers";
 import type { ProviderId } from "./providers";
 
 export interface StoredConnectionSecret {
@@ -19,12 +23,41 @@ export interface FreshTokens {
 
 const TOKEN_SKEW_MS = 60_000;
 
-export const needsRefresh = (expiresAt?: number): boolean => {
+export const needsRefresh = (expiresAt?: number, now = Date.now()): boolean => {
   if (expiresAt === undefined) {
     return false;
   }
-  return Date.now() >= expiresAt - TOKEN_SKEW_MS;
+  return now >= expiresAt - TOKEN_SKEW_MS;
 };
+
+export const reconnectMessage = (provider: ProviderId): string =>
+  `${PROVIDER_LABELS[provider]} の接続が切れました。つなぎ直してください`;
+
+export const canKeepConnection = (
+  connection: {
+    accessToken: string;
+    expiresAt?: number;
+    refreshToken?: string;
+    status: "connected" | "disconnected";
+  },
+  now = Date.now()
+): boolean => {
+  if (
+    connection.status !== "connected" ||
+    connection.accessToken.length === 0
+  ) {
+    return false;
+  }
+  if (!needsRefresh(connection.expiresAt, now)) {
+    return true;
+  }
+  return Boolean(connection.refreshToken);
+};
+
+export type TokenResolution =
+  | { status: "current" }
+  | { status: "expired" }
+  | { status: "refreshed"; tokens: FreshTokens };
 
 const tokensFromPayload = (
   payload: Record<string, unknown>,
@@ -99,15 +132,22 @@ export const refreshOAuthTokens = async (
   return tokensFromPayload(payload, previous);
 };
 
-export const refreshConnectionTokens = async (
+export const resolveConnectionTokens = async (
   provider: ProviderId,
   previous: StoredConnectionSecret
-): Promise<FreshTokens | undefined> => {
+): Promise<TokenResolution> => {
   if (!needsRefresh(previous.expiresAt) && previous.accessToken.length > 0) {
-    return undefined;
+    return { status: "current" };
   }
-  if (provider === "chatgpt") {
-    return await refreshChatgptTokens(previous);
+  if (previous.accessToken.length === 0) {
+    return { status: "expired" };
   }
-  return await refreshOAuthTokens(provider, previous);
+  const tokens =
+    provider === "chatgpt"
+      ? await refreshChatgptTokens(previous)
+      : await refreshOAuthTokens(provider, previous);
+  if (!tokens) {
+    return { status: "expired" };
+  }
+  return { status: "refreshed", tokens };
 };

@@ -15,6 +15,7 @@ import {
   getConvexProductionDeployment,
 } from "./lib/convexProject";
 import type { PublishResult } from "./lib/publishResult";
+import { reconnectMessage } from "./lib/tokenRefresh";
 
 const publishResultValidator = v.object({
   cloudflarePagesUrl: v.union(v.string(), v.null()),
@@ -105,7 +106,7 @@ export const publishWorkspace = internalAction({
         );
       }
     } else if (!cloudflare) {
-      errors.push("Pages: Cloudflare がつながっていません");
+      errors.push(reconnectMessage("cloudflare"));
     }
 
     const convex = await loadFreshConnection(ctx, args.userId, "convex");

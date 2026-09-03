@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { SERVICES } from "./services";
 import type { ServiceId } from "./services";
+import { useBoardNow } from "./use-board-now";
 
 export type NodeStatus = "connected" | "connecting" | "disconnected";
 
@@ -35,11 +36,13 @@ interface PublicConnection {
   identity: string;
   planWarning?: string;
   provider: ServiceId;
+  reconnectHint?: string;
   status: "connected" | "disconnected";
 }
 
 export const useConnectBoard = () => {
-  const board = useQuery(api.connections.getBoard);
+  const now = useBoardNow();
+  const board = useQuery(api.connections.getBoard, { now });
   const beginConnect = useAction(api.oauth.beginConnect);
   const beginChatgptDevice = useAction(api.oauth.beginChatgptDevice);
   const pollChatgptDevice = useAction(api.oauth.pollChatgptDevice);
@@ -52,6 +55,9 @@ export const useConnectBoard = () => {
   const [oauthError, setOauthError] = useState<string | null>(() =>
     searchParams.get("oauth_error")
   );
+  const expiredHint =
+    board?.connections.find((item) => item.reconnectHint)?.reconnectHint ??
+    null;
   const pollGeneration = useRef(0);
 
   const connections: PublicConnection[] = board?.connections ?? [];
@@ -77,7 +83,7 @@ export const useConnectBoard = () => {
     const row = connections.find(
       (item: PublicConnection) => item.provider === id
     );
-    return row?.planWarning;
+    return row?.planWarning ?? row?.reconnectHint;
   };
   const connectedCount = SERVICES.filter(
     (service) => statusFor(service.id) === "connected"
@@ -191,7 +197,7 @@ export const useConnectBoard = () => {
     connect,
     connectedCount,
     identityFor,
-    oauthError,
+    oauthError: oauthError ?? expiredHint,
     onDisconnect,
     openChatgptDevice,
     signOut,

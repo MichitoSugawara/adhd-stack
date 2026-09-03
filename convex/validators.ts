@@ -37,6 +37,7 @@ export const connectionPublicValidator = v.object({
   identity: v.string(),
   planWarning: v.optional(v.string()),
   provider: providerValidator,
+  reconnectHint: v.optional(v.string()),
   status: connectionStatusValidator,
 });
 
