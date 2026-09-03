@@ -5,8 +5,10 @@ import { ArrowRightIcon, CheckIcon, StackIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+import { connectFontVariables } from "../lib/connect-fonts";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
+import { ChatgptDevicePanel } from "./chatgpt-device-panel";
 
 interface DesktopConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -19,6 +21,7 @@ export const DesktopConnectScreen = ({
   const {
     allConnected,
     authenticated,
+    cancelChatgptDevice,
     chatgptDevice,
     configured,
     connect,
@@ -26,13 +29,14 @@ export const DesktopConnectScreen = ({
     identityFor,
     oauthError,
     onDisconnect,
+    openChatgptDevice,
     signOut,
     statusFor,
     warningFor,
   } = board;
 
   return (
-    <main className="app-shell desktop-experience">
+    <main className={`app-shell desktop-experience ${connectFontVariables}`}>
       <header className="product-header">
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">
@@ -62,6 +66,13 @@ export const DesktopConnectScreen = ({
             {oauthError}
           </p>
         ) : null}
+        {chatgptDevice ? (
+          <ChatgptDevicePanel
+            device={chatgptDevice}
+            onCancel={cancelChatgptDevice}
+            onOpen={openChatgptDevice}
+          />
+        ) : null}
         <div className="flow-shell">
           <div className="flow-heading">
             <div>
@@ -84,6 +95,49 @@ export const DesktopConnectScreen = ({
               {SERVICES.map((service) => {
                 const status = statusFor(service.id);
                 const isConfigured = configured?.[service.id] ?? false;
+                const waitingChatgpt =
+                  service.id === "chatgpt" && Boolean(chatgptDevice);
+                let nodeAction = (
+                  <Button
+                    className="node-action"
+                    loading={status === "connecting"}
+                    onClick={() => {
+                      void connect(service.id);
+                    }}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    接続する
+                  </Button>
+                );
+                if (status === "connected") {
+                  nodeAction = (
+                    <Button
+                      aria-label={`${service.label}を切断`}
+                      className="node-action node-action--connected"
+                      onClick={() => {
+                        void onDisconnect(service.id);
+                      }}
+                      shape="circle"
+                      size="sm"
+                      title={`${service.label}を切断`}
+                      variant="ghost"
+                    >
+                      <CheckIcon size={14} weight="bold" />
+                    </Button>
+                  );
+                } else if (waitingChatgpt) {
+                  nodeAction = (
+                    <Button
+                      className="node-action"
+                      onClick={cancelChatgptDevice}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      やめる
+                    </Button>
+                  );
+                }
                 return (
                   <Flow.Node
                     id={service.id}
@@ -114,26 +168,6 @@ export const DesktopConnectScreen = ({
                                 {warningFor(service.id)}
                               </span>
                             ) : null}
-                            {service.id === "chatgpt" && chatgptDevice ? (
-                              <span className="service-identity chatgpt-device-links">
-                                <a
-                                  className="chatgpt-device-link"
-                                  href={chatgptDevice.verificationUrl}
-                                  rel="noreferrer"
-                                  target="_blank"
-                                >
-                                  入力ページを開く
-                                </a>
-                                <a
-                                  className="chatgpt-device-link"
-                                  href={chatgptDevice.verificationUrlFallback}
-                                  rel="noreferrer"
-                                  target="_blank"
-                                >
-                                  コードを自分で入力
-                                </a>
-                              </span>
-                            ) : null}
                             {status === "disconnected" && !isConfigured ? (
                               <span className="service-identity">
                                 OAuth アプリ未設定
@@ -141,33 +175,7 @@ export const DesktopConnectScreen = ({
                             ) : null}
                           </span>
                         </div>
-                        {status === "connected" ? (
-                          <Button
-                            aria-label={`${service.label}を切断`}
-                            className="node-action node-action--connected"
-                            onClick={() => {
-                              void onDisconnect(service.id);
-                            }}
-                            shape="circle"
-                            size="sm"
-                            title={`${service.label}を切断`}
-                            variant="ghost"
-                          >
-                            <CheckIcon size={14} weight="bold" />
-                          </Button>
-                        ) : (
-                          <Button
-                            className="node-action"
-                            loading={status === "connecting"}
-                            onClick={() => {
-                              void connect(service.id);
-                            }}
-                            size="sm"
-                            variant="secondary"
-                          >
-                            接続する
-                          </Button>
-                        )}
+                        {nodeAction}
                       </div>
                     }
                   />

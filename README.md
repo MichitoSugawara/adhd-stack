@@ -43,7 +43,7 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 
 | サービス | 作る場所 | コールバック | Convex 環境変数 |
 | --- | --- | --- | --- |
-| ChatGPT | 不要（Codex デバイスログイン） | なし。`https://auth.openai.com/codex/device?user_code=<code>` を開く（画面にもコードを表示） | なし |
+| ChatGPT | 不要（Codex デバイスログイン） | なし。画面の大きなコードをコピーし、ログイン後に入力 | なし |
 | GitHub | GitHub → Settings → Developer settings → OAuth Apps | `https://<deployment>.convex.site/oauth/callback/github` | `GITHUB_CLIENT_ID` `GITHUB_CLIENT_SECRET` |
 | Cloudflare | Cloudflare → Manage Account → OAuth clients | `https://<deployment>.convex.site/oauth/callback/cloudflare` | `CLOUDFLARE_CLIENT_ID` `CLOUDFLARE_CLIENT_SECRET` |
 | Convex | Convex → Team Settings → OAuth applications（team scope） | `https://<deployment>.convex.site/oauth/callback/convex` | `CONVEX_OAUTH_CLIENT_ID` `CONVEX_OAUTH_CLIENT_SECRET` |
@@ -55,7 +55,7 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 - Codex CLI と同じデバイスログインです。OpenAI の Sign-in-with-ChatGPT アプリは作りません。
 - 公開クライアント ID は Codex CLI の `app_EMoamEEZ73f0CkXaXp7hrann` です。シークレットではありません。
 - ユーザーコード発行: `https://auth.openai.com/api/accounts/deviceauth/usercode`
-- 入力ページ: `https://auth.openai.com/codex/device?user_code=<code>`（RFC 8628 `verification_uri_complete`）。画面上のコードは確認用。クエリが効かないときは `https://auth.openai.com/codex/device`
+- 入力ページ: `https://auth.openai.com/codex/device`。`?user_code=` はログインで消えるので頼らない。画面のコードが正。ログインしたらこのコードを入力。
 - ポーリング: `https://auth.openai.com/api/accounts/deviceauth/token`
 - トークン交換: `https://auth.openai.com/oauth/token`（`redirect_uri` は `https://auth.openai.com/deviceauth/callback`）
 - Cloud Environments / Codex Cloud は Plus 以上が必要です。Free と Go では足りません。

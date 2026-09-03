@@ -11,8 +11,10 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+import { connectFontVariables } from "../lib/connect-fonts";
 import { SERVICES, STATUS_LABELS } from "../lib/services";
 import type { useConnectBoard } from "../lib/use-connect-board";
+import { ChatgptDevicePanel } from "./chatgpt-device-panel";
 
 interface MobileConnectScreenProperties {
   board: ReturnType<typeof useConnectBoard>;
@@ -24,17 +26,24 @@ export const MobileConnectScreen = ({
   const router = useRouter();
   const {
     allConnected,
+    cancelChatgptDevice,
     chatgptDevice,
     connect,
     connectedCount,
     identityFor,
     oauthError,
     onDisconnect,
+    openChatgptDevice,
     statusFor,
   } = board;
 
   return (
-    <KonstaApp className="mobile-experience" dark={false} safeAreas theme="ios">
+    <KonstaApp
+      className={`mobile-experience ${connectFontVariables}`}
+      dark
+      safeAreas
+      theme="ios"
+    >
       <KonstaPage className="mobile-page mobile-connect-page">
         <div className="mobile-connect-orb" />
         <div className="mobile-scroll-content">
@@ -57,24 +66,11 @@ export const MobileConnectScreen = ({
             </p>
           ) : null}
           {chatgptDevice ? (
-            <p className="chatgpt-device-prompt" role="status">
-              ChatGPT のコードは {chatgptDevice.userCode} です。{" "}
-              <a
-                href={chatgptDevice.verificationUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                入力ページを開く
-              </a>
-              {" · "}
-              <a
-                href={chatgptDevice.verificationUrlFallback}
-                rel="noreferrer"
-                target="_blank"
-              >
-                コードを自分で入力
-              </a>
-            </p>
+            <ChatgptDevicePanel
+              device={chatgptDevice}
+              onCancel={cancelChatgptDevice}
+              onOpen={openChatgptDevice}
+            />
           ) : null}
           <div className="mobile-node-grid">
             {SERVICES.map((service) => {
@@ -82,19 +78,31 @@ export const MobileConnectScreen = ({
               const isConnected = status === "connected";
               let identityLabel = "タップして接続";
               if (service.id === "chatgpt" && chatgptDevice) {
-                identityLabel = `コード ${chatgptDevice.userCode}`;
+                identityLabel = "確認待ち";
               } else if (isConnected) {
                 identityLabel = identityFor(service.id);
               }
+              const canCancelChatgpt =
+                service.id === "chatgpt" && Boolean(chatgptDevice);
+              let actionLabel = "接続する";
+              if (isConnected) {
+                actionLabel = "切断する";
+              } else if (canCancelChatgpt) {
+                actionLabel = "やめる";
+              }
               return (
                 <button
-                  aria-label={`${service.label}: ${STATUS_LABELS[status]}. ${isConnected ? "切断する" : "接続する"}`}
+                  aria-label={`${service.label}: ${STATUS_LABELS[status]}. ${actionLabel}`}
                   className="mobile-card-button"
-                  disabled={status === "connecting"}
+                  disabled={status === "connecting" && !canCancelChatgpt}
                   key={service.id}
                   onClick={() => {
                     if (isConnected) {
                       void onDisconnect(service.id);
+                      return;
+                    }
+                    if (canCancelChatgpt) {
+                      cancelChatgptDevice();
                       return;
                     }
                     void connect(service.id);

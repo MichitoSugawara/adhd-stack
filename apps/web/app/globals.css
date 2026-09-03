@@ -454,27 +454,146 @@ textarea {
   color: #8a1f1f;
 }
 
-.chatgpt-device-link,
-.chatgpt-device-prompt a {
-  color: var(--text-color-kumo-accent, #2563eb);
-  text-decoration: underline;
+.chatgpt-device-panel {
+  width: min(760px, 100%);
+  margin: 28px auto 0;
+  padding: 24px;
+  border: 1px solid var(--connect-border, var(--color-kumo-hairline));
+  border-radius: 16px;
+  background: var(--connect-card, var(--color-kumo-base));
+  box-shadow: var(--shadow-md, 0 4px 6px rgb(0 0 0 / 10%));
+  color: var(--connect-fg, var(--text-color-kumo-default));
 }
 
-.chatgpt-device-links {
+.chatgpt-device-kicker {
+  margin: 0 0 8px;
+  color: var(--connect-accent, var(--text-color-kumo-brand));
+  font-family:
+    var(--font-connect-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chatgpt-device-panel h2 {
+  margin: 0;
+  color: var(--connect-fg, var(--text-color-kumo-strong));
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.chatgpt-device-panel h2:focus {
+  outline: none;
+}
+
+.chatgpt-device-lead {
+  margin: 8px 0 0;
+  color: var(--connect-muted-fg, var(--text-color-kumo-subtle));
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chatgpt-device-code {
+  margin: 20px 0 0;
+  padding: 24px 16px;
+  border: 1px solid var(--connect-border, var(--color-kumo-line));
+  border-radius: 12px;
+  background: var(--connect-bg, #0f172a);
+  color: var(--connect-fg, #f8fafc);
+  font-family:
+    var(--font-connect-mono), "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(32px, 7vw, 56px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-align: center;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
+.chatgpt-device-code:focus-visible {
+  outline: 2px solid var(--connect-ring, #fff);
+  outline-offset: 3px;
+}
+
+.chatgpt-device-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
-.chatgpt-device-prompt {
-  width: min(760px, 100%);
-  margin: 12px auto 0;
-  padding: 12px 14px;
-  border: 1px solid var(--color-kumo-hairline);
-  border-radius: 12px;
-  background: var(--color-kumo-base);
+.chatgpt-device-btn,
+.chatgpt-device-cancel {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    opacity 200ms ease;
+}
+
+.chatgpt-device-btn--primary {
+  border: 0;
+  background: var(--connect-accent, #22c55e);
+  color: var(--connect-on-accent, #0f172a);
+}
+
+.chatgpt-device-btn--primary:hover {
+  opacity: 0.92;
+}
+
+.chatgpt-device-btn--secondary,
+.chatgpt-device-btn--ghost {
+  border: 2px solid var(--connect-border, #475569);
+  background: transparent;
+  color: var(--connect-fg, #f8fafc);
+}
+
+.chatgpt-device-btn--secondary:hover,
+.chatgpt-device-btn--ghost:hover,
+.chatgpt-device-cancel:hover {
+  border-color: var(--connect-accent, #22c55e);
+}
+
+.chatgpt-device-btn:focus-visible,
+.chatgpt-device-cancel:focus-visible {
+  outline: 2px solid var(--connect-ring, #fff);
+  outline-offset: 3px;
+}
+
+.chatgpt-device-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 16px;
+}
+
+.chatgpt-device-footer p {
+  margin: 0;
+  color: var(--connect-muted-fg, var(--text-color-kumo-subtle));
   font-size: 13px;
-  line-height: 1.5;
+}
+
+.chatgpt-device-cancel {
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--connect-muted-fg, #94a3b8);
+  text-decoration: underline;
 }
 
 .publish-result {
@@ -1602,6 +1721,193 @@ textarea {
   color: white;
 }
 
+.desktop-experience,
+.mobile-connect-page {
+  --connect-bg: #0f172a;
+  --connect-fg: #f8fafc;
+  --connect-card: #1b2336;
+  --connect-muted: #272f42;
+  --connect-muted-fg: #94a3b8;
+  --connect-border: #475569;
+  --connect-primary: #1e293b;
+  --connect-accent: #22c55e;
+  --connect-on-accent: #0f172a;
+  --connect-destructive: #ef4444;
+  --connect-ring: #fff;
+  --color-kumo-canvas: #0f172a;
+  --color-kumo-base: #1b2336;
+  --color-kumo-recessed: #272f42;
+  --color-kumo-line: #475569;
+  --color-kumo-hairline: #334155;
+  --color-kumo-brand: #22c55e;
+  --color-kumo-success: #22c55e;
+  --color-kumo-success-tint: rgb(34 197 94 / 16%);
+  --text-color-kumo-default: #f8fafc;
+  --text-color-kumo-strong: #f8fafc;
+  --text-color-kumo-subtle: #94a3b8;
+  --text-color-kumo-brand: #22c55e;
+  --text-color-kumo-success: #4ade80;
+  --text-color-kumo-placeholder: #64748b;
+  font-family:
+    var(--font-connect-body), "IBM Plex Sans", "Hiragino Sans", "Noto Sans JP",
+    sans-serif;
+}
+
+.desktop-experience {
+  background:
+    radial-gradient(circle at 50% 18%, rgb(34 197 94 / 10%), transparent 28rem),
+    var(--connect-bg);
+  color: var(--connect-fg);
+}
+
+.desktop-experience .product-header {
+  background: color-mix(in oklab, var(--connect-card) 92%, transparent);
+  border-bottom-color: var(--connect-border);
+}
+
+.desktop-experience .hero-copy h1 {
+  font-weight: 600;
+}
+
+.desktop-experience .oauth-error {
+  border-color: color-mix(
+    in oklab,
+    var(--connect-destructive) 50%,
+    transparent
+  );
+  background: color-mix(in oklab, var(--connect-destructive) 12%, #0f172a);
+  color: #fecaca;
+}
+
+.desktop-experience .node-action {
+  min-height: 44px;
+}
+
+.mobile-connect-page {
+  background: var(--connect-bg);
+  color: var(--connect-fg);
+}
+
+.mobile-connect-page .mobile-connect-orb {
+  background: radial-gradient(
+    circle at 58% 45%,
+    rgb(34 197 94 / 18%),
+    transparent 68%
+  );
+}
+
+.mobile-connect-page .mobile-account-pill {
+  border-color: var(--connect-border);
+  background: var(--connect-primary);
+  color: var(--connect-fg);
+  box-shadow: none;
+}
+
+.mobile-connect-page .mobile-title-block p {
+  color: var(--connect-accent);
+}
+
+.mobile-connect-page .mobile-title-block h1 {
+  color: var(--connect-fg);
+}
+
+.mobile-connect-page .mobile-title-block > span {
+  color: var(--connect-muted-fg);
+}
+
+.mobile-connect-page .oauth-error {
+  border-color: color-mix(
+    in oklab,
+    var(--connect-destructive) 50%,
+    transparent
+  );
+  background: color-mix(in oklab, var(--connect-destructive) 12%, #0f172a);
+  color: #fecaca;
+}
+
+.mobile-connect-page .mobile-service-card {
+  border-color: var(--connect-border);
+  background: var(--connect-card);
+  box-shadow: var(--shadow-md, 0 4px 6px rgb(0 0 0 / 18%));
+  backdrop-filter: none;
+}
+
+.mobile-connect-page .mobile-service-card--connected {
+  border-color: color-mix(
+    in oklab,
+    var(--connect-accent) 45%,
+    var(--connect-border)
+  );
+}
+
+.mobile-connect-page .mobile-service-card--connecting {
+  border-color: color-mix(
+    in oklab,
+    var(--connect-accent) 55%,
+    var(--connect-border)
+  );
+}
+
+.mobile-connect-page .mobile-service-icon {
+  border-color: var(--connect-border);
+  background: var(--connect-muted);
+  color: var(--connect-fg);
+}
+
+.mobile-connect-page .mobile-service-identity,
+.mobile-connect-page .mobile-status {
+  color: var(--connect-muted-fg);
+}
+
+.mobile-connect-page .mobile-status--connected {
+  color: #4ade80;
+}
+
+.mobile-connect-page .mobile-status--connecting {
+  color: var(--connect-accent);
+}
+
+.mobile-connect-page .mobile-progress {
+  color: var(--connect-muted-fg);
+}
+
+.mobile-connect-page .mobile-progress strong {
+  color: var(--connect-fg);
+}
+
+.mobile-connect-page .mobile-glass-bar {
+  border-color: var(--connect-border);
+  background: color-mix(in oklab, var(--connect-card) 92%, transparent);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 28%);
+  backdrop-filter: blur(16px);
+}
+
+.mobile-connect-page .mobile-glass-bar span {
+  color: var(--connect-muted-fg);
+}
+
+.mobile-connect-page .mobile-primary-action {
+  background: var(--connect-accent);
+  color: var(--connect-on-accent);
+}
+
+.mobile-connect-page .mobile-primary-action:disabled {
+  background: var(--connect-muted);
+  color: var(--connect-muted-fg);
+}
+
+.mobile-connect-page .chatgpt-device-panel {
+  margin-top: 20px;
+}
+
+.mobile-connect-page .chatgpt-device-actions {
+  flex-direction: column;
+}
+
+.mobile-connect-page .chatgpt-device-btn {
+  width: 100%;
+}
+
 @media (max-width: 760px) {
   .desktop-experience {
     display: none;
@@ -1618,7 +1924,15 @@ textarea {
     animation: none;
   }
 
-  .service-node {
+  .service-node,
+  .chatgpt-device-btn,
+  .chatgpt-device-cancel,
+  .mobile-card-button,
+  .mobile-service-card {
     transition: none;
+  }
+
+  .mobile-card-button:active {
+    transform: none;
   }
 }

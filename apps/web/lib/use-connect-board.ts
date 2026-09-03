@@ -66,7 +66,7 @@ export const useConnectBoard = () => {
   };
   const identityFor = (id: ServiceId): string => {
     if (id === "chatgpt" && chatgptDevice) {
-      return `コード ${chatgptDevice.userCode}`;
+      return "確認待ち";
     }
     const row = connections.find(
       (item: PublicConnection) => item.provider === id
@@ -139,10 +139,6 @@ export const useConnectBoard = () => {
           ...device,
           startedAt: Date.now(),
         });
-        openChatgptDevicePage(
-          device.verificationUrl,
-          device.verificationUrlFallback
-        );
       } catch (error) {
         setPending(null);
         setOauthError(
@@ -162,12 +158,26 @@ export const useConnectBoard = () => {
     }
   };
 
+  const cancelChatgptDevice = () => {
+    pollGeneration.current += 1;
+    setChatgptDevice(null);
+    setPending(null);
+  };
+
+  const openChatgptDevice = () => {
+    if (!chatgptDevice) {
+      return;
+    }
+    openChatgptDevicePage(
+      chatgptDevice.verificationUrl,
+      chatgptDevice.verificationUrlFallback
+    );
+  };
+
   const onDisconnect = async (serviceId: ServiceId) => {
     setOauthError(null);
     if (serviceId === "chatgpt") {
-      pollGeneration.current += 1;
-      setChatgptDevice(null);
-      setPending(null);
+      cancelChatgptDevice();
     }
     await disconnect({ provider: serviceId });
   };
@@ -175,6 +185,7 @@ export const useConnectBoard = () => {
   return {
     allConnected,
     authenticated: Boolean(board?.authenticated),
+    cancelChatgptDevice,
     chatgptDevice,
     configured: board?.configured,
     connect,
@@ -182,6 +193,7 @@ export const useConnectBoard = () => {
     identityFor,
     oauthError,
     onDisconnect,
+    openChatgptDevice,
     signOut,
     statusFor,
     warningFor,
