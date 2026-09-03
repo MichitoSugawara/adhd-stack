@@ -85,7 +85,6 @@ export const DesktopConnectScreen = ({
                 const isConfigured = configured?.[service.id] ?? false;
                 return (
                   <Flow.Node
-                    disabled={status === "disconnected"}
                     id={service.id}
                     key={service.id}
                     render={

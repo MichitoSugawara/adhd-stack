@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { EditorLocked } from "./editor-locked";
 
 export const EditorScreen = () => {
   const board = useQuery(api.connections.getBoard);
@@ -88,27 +89,8 @@ export const EditorScreen = () => {
 
   const thread: Doc<"messages">[] = messages?.page ?? [];
 
-  if (board && !board.allConnected) {
-    return (
-      <main className="login-shell">
-        <section className="login-card" aria-labelledby="editor-locked-title">
-          <p className="eyebrow">EDITOR LOCKED</p>
-          <h1 id="editor-locked-title">まだエディタは開けません</h1>
-          <p className="login-description">
-            4つそろうまで、接続の画面でノードをつないでください。
-          </p>
-          <Button
-            className="back-button"
-            icon={ArrowLeftIcon}
-            onClick={() => router.push("/")}
-            size="sm"
-            variant="ghost"
-          >
-            接続へ戻る
-          </Button>
-        </section>
-      </main>
-    );
+  if (!board?.allConnected) {
+    return <EditorLocked waiting={board === undefined} />;
   }
 
   return (
