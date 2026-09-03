@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Cloudflare quick tunnels use a random *.trycloudflare.com host.
-  // Next.js 16 blocks cross-origin /_next/hmr unless the host is listed.
+  // Client-only mock — static HTML so Cloudflare Pages can host it.
+  output: "export",
+  images: {
+    unoptimized: true,
+  },
+  // next dev / cloudflared still need these when serving locally.
   allowedDevOrigins: ["*.trycloudflare.com", "adhd.gawarago.com"],
 };
 
