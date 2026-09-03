@@ -42,10 +42,12 @@ const DEFINITIONS = {
   cloudflare: {
     authorizationUrl: "https://dash.cloudflare.com/oauth2/auth",
     scopes: [
-      "account.read",
-      "user.read",
-      "workers-platform.read",
-      "workers-platform.write",
+      "user-details.read",
+      "account-settings.read",
+      "page.read",
+      "page.write",
+      "workers-scripts.read",
+      "workers-scripts.write",
     ],
     tokenUrl: "https://dash.cloudflare.com/oauth2/token",
   },
