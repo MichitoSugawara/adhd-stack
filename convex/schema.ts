@@ -25,7 +25,10 @@ export default defineSchema({
     userId: v.id("users"),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_provider", ["userId", "provider"]),
+    .index("by_user_and_provider", ["userId", "provider"])
+    .index("by_provider", ["provider"])
+    .index("by_account_id", ["accountId"])
+    .index("by_identity", ["identity"]),
   messages: defineTable({
     body: v.string(),
     createdAt: v.number(),
@@ -55,6 +58,7 @@ export default defineSchema({
     .index("by_expires", ["expiresAt"]),
   oauthTickets: defineTable({
     accountKey: v.string(),
+    connectionAccountId: v.optional(v.string()),
     consumed: v.boolean(),
     email: v.optional(v.string()),
     expiresAt: v.number(),
@@ -90,5 +94,7 @@ export default defineSchema({
     provisionStatus: provisionStatusValidator,
     updatedAt: v.number(),
     userId: v.id("users"),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_github_owner", ["githubOwner"]),
 });

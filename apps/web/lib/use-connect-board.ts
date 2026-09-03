@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -47,6 +47,9 @@ export const useConnectBoard = () => {
   const beginChatgptDevice = useAction(api.oauth.beginChatgptDevice);
   const pollChatgptDevice = useAction(api.oauth.pollChatgptDevice);
   const disconnect = useMutation(api.connections.disconnect);
+  const attachTicket = useMutation(api.accountMerge.attachTicket);
+  const mergeMyDuplicates = useMutation(api.accountMerge.mergeMyDuplicates);
+  const { isAuthenticated } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
   const searchParams = useSearchParams();
   const [pending, setPending] = useState<ServiceId | null>(null);
@@ -59,6 +62,7 @@ export const useConnectBoard = () => {
     board?.connections.find((item) => item.reconnectHint)?.reconnectHint ??
     null;
   const pollGeneration = useRef(0);
+  const mergeStarted = useRef(false);
 
   const connections: PublicConnection[] = board?.connections ?? [];
   const statusFor = (id: ServiceId): NodeStatus => {
@@ -111,7 +115,9 @@ export const useConnectBoard = () => {
           return;
         }
         if (result.ticket) {
-          await signIn("ticket", { ticket: result.ticket });
+          await (isAuthenticated
+            ? attachTicket({ ticket: result.ticket })
+            : signIn("ticket", { ticket: result.ticket }));
         }
         setChatgptDevice(null);
         setPending(null);
@@ -132,7 +138,22 @@ export const useConnectBoard = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [chatgptDevice, pollChatgptDevice, signIn]);
+  }, [attachTicket, chatgptDevice, isAuthenticated, pollChatgptDevice, signIn]);
+
+  useEffect(() => {
+    if (!isAuthenticated || mergeStarted.current) {
+      return;
+    }
+    mergeStarted.current = true;
+    const run = async () => {
+      try {
+        await mergeMyDuplicates({});
+      } catch {
+        mergeStarted.current = false;
+      }
+    };
+    void run();
+  }, [isAuthenticated, mergeMyDuplicates]);
 
   const connect = async (serviceId: ServiceId) => {
     setOauthError(null);

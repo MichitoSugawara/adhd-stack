@@ -38,9 +38,12 @@ export default defineConfig({
     },
     {
       files: [
+        "convex/accountMerge.ts",
         "convex/auth.ts",
         "convex/chatActions.ts",
         "convex/http.ts",
+        "convex/lib/accountLinking.ts",
+        "convex/lib/accountMatch.ts",
         "convex/lib/actionAuth.ts",
         "convex/lib/cloudflarePages.ts",
         "convex/lib/codexCloud.ts",
@@ -52,6 +55,7 @@ export default defineConfig({
         "convex/lib/oauthExchange.ts",
         "convex/lib/providers.ts",
         "convex/lib/tokenRefresh.ts",
+        "convex/oauthInternal.ts",
         "convex/publishActions.ts",
         "convex/workspaceActions.ts",
       ],

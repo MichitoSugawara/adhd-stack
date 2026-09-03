@@ -66,6 +66,11 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 - [Creating an OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
 - スコープ: `repo` `read:user` `user:email`
 - リポジトリのホストです。接続後、アカウント側に作業用リポジトリを用意します。
+- メールは `user:email` で `/user/emails` から取り、Convex ユーザーに残します。ChatGPT デバイスログインが同じ人に繋がるようにするためです。
+
+接続画面を開くと、同じ人の分割アカウント（GitHub 先行と ChatGPT メールなど）をまとめます。ログイン中の次のプロバイダは、今のユーザーに付けます。新しいユーザーは作りません。
+
+まとまらないときは Convex ダッシュボードで `internal.oauthInternal.mergeUsers` を実行してください。`keepUserId` は残すユーザー、`absorbUserId` は吸収するユーザーです。今のセッションを残すなら、ログイン中のユーザーを keep にしてください。ワークスペース `app` を残すなら、その owner を keep にしてください。absorb 側の行は消しません（email だけ外します）。
 
 ### Cloudflare
 

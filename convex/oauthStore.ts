@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { internalMutation } from "./_generated/server";
+import { rememberEmailForUser } from "./lib/accountLinking";
 import { providerValidator } from "./validators";
 
 export const saveState = internalMutation({
@@ -47,6 +48,19 @@ export const takeState = internalMutation({
   ),
 });
 
+export const rememberUserEmail = internalMutation({
+  args: {
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await rememberEmailForUser(ctx, args);
+    return null;
+  },
+  returns: v.null(),
+});
+
 export const upsertConnection = internalMutation({
   args: {
     accessToken: v.string(),
@@ -90,6 +104,7 @@ export const upsertConnection = internalMutation({
 export const createTicket = internalMutation({
   args: {
     accountKey: v.string(),
+    connectionAccountId: v.optional(v.string()),
     email: v.optional(v.string()),
     identity: v.string(),
     name: v.optional(v.string()),

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as accountMerge from "../accountMerge.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as chatActions from "../chatActions.js";
@@ -25,6 +26,7 @@ import type * as workspaces from "../workspaces.js";
 import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  accountMerge: typeof accountMerge;
   auth: typeof auth;
   chat: typeof chat;
   chatActions: typeof chatActions;

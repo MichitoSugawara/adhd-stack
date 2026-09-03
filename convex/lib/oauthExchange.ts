@@ -111,20 +111,48 @@ const chatgptIdentity = (tokens: TokenSet): ProviderIdentity => {
   };
 };
 
+const githubHeaders = (token: string): HeadersInit => ({
+  Accept: "application/vnd.github+json",
+  Authorization: `Bearer ${token}`,
+  "User-Agent": "adhd-stack",
+});
+
+const fetchGithubEmail = async (token: string): Promise<string | undefined> => {
+  const response = await fetch("https://api.github.com/user/emails", {
+    headers: githubHeaders(token),
+  });
+  if (!response.ok) {
+    return undefined;
+  }
+  const payload: unknown = await response.json();
+  const rows = asList(payload).map((item) => {
+    const row = asRecord(item);
+    return {
+      email: asString(row.email),
+      primary: row.primary === true,
+      verified: row.verified === true,
+    };
+  });
+  const usable = rows.filter((row) => row.email);
+  return (
+    usable.find((row) => row.primary && row.verified)?.email ??
+    usable.find((row) => row.verified)?.email ??
+    usable.find((row) => row.primary)?.email ??
+    usable[0]?.email
+  );
+};
+
 const githubIdentity = async (tokens: TokenSet): Promise<ProviderIdentity> => {
   const userResponse = await fetch("https://api.github.com/user", {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${tokens.accessToken}`,
-      "User-Agent": "adhd-stack",
-    },
+    headers: githubHeaders(tokens.accessToken),
   });
   if (!userResponse.ok) {
     throw new Error("GitHub のユーザー情報を取得できませんでした");
   }
   const user = (await userResponse.json()) as Record<string, unknown>;
   const login = asString(user.login);
-  const email = asString(user.email);
+  const email =
+    (await fetchGithubEmail(tokens.accessToken)) ?? asString(user.email);
   const { id } = user;
   return {
     accountKey: `github:${String(id ?? login ?? "unknown")}`,

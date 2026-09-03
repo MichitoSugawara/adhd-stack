@@ -112,11 +112,17 @@ export const pollChatgptDevice = action({
         refreshToken: tokens.refreshToken,
         userId,
       });
+      await ctx.runMutation(internal.oauthStore.rememberUserEmail, {
+        email: identity.email,
+        name: identity.name,
+        userId,
+      });
       return { status: "authorized" as const };
     }
     const ticket = randomUrlSafe(32);
     await ctx.runMutation(internal.oauthStore.createTicket, {
       accountKey: identity.accountKey,
+      connectionAccountId: identity.connectionAccountId,
       email: identity.email,
       identity: identity.identity,
       name: identity.name,

@@ -1,10 +1,20 @@
 import { v } from "convex/values";
 
 import { internalMutation, internalQuery } from "./_generated/server";
+import {
+  findExistingUserIdForTicket,
+  findMatchingUserId,
+  findMatchingUserIdForTicket,
+  finalizeTicketForUser,
+  linkTicketAccountFor,
+  mergeUserPair,
+  readLiveTicket,
+} from "./lib/accountLinking";
 import { providerValidator } from "./validators";
 
 const ticketDocValidator = v.object({
   accountKey: v.string(),
+  connectionAccountId: v.optional(v.string()),
   email: v.optional(v.string()),
   identity: v.string(),
   name: v.optional(v.string()),
@@ -22,25 +32,49 @@ export const getTicket = internalQuery({
     now: v.number(),
     ticket: v.string(),
   },
-  handler: async (ctx, args) => {
-    const row = await ctx.db
-      .query("oauthTickets")
-      .withIndex("by_ticket", (q) => q.eq("ticket", args.ticket))
-      .unique();
-    if (!row || row.consumed || row.expiresAt <= args.now) {
-      return null;
-    }
-    return {
-      accountKey: row.accountKey,
-      email: row.email,
-      identity: row.identity,
-      name: row.name,
-      pendingProvider: row.pendingProvider,
-      planWarning: row.planWarning,
-      tokens: row.tokens,
-    };
-  },
+  handler: async (ctx, args) =>
+    await readLiveTicket(ctx, args.ticket, args.now),
   returns: v.union(ticketDocValidator, v.null()),
+});
+
+export const findExistingUserForTicket = internalQuery({
+  args: {
+    accountId: v.optional(v.string()),
+    accountKey: v.string(),
+    email: v.optional(v.string()),
+  },
+  handler: async (ctx, args) =>
+    await findExistingUserIdForTicket(ctx, {
+      accountId: args.accountId ?? args.accountKey,
+      accountKey: args.accountKey,
+      email: args.email,
+    }),
+  returns: v.union(v.id("users"), v.null()),
+});
+
+export const findMatchingUserForTicket = internalQuery({
+  args: {
+    accountKey: v.string(),
+    connectionAccountId: v.optional(v.string()),
+    email: v.optional(v.string()),
+    identity: v.string(),
+    name: v.optional(v.string()),
+    pendingProvider: providerValidator,
+  },
+  handler: async (ctx, args) => await findMatchingUserIdForTicket(ctx, args),
+  returns: v.union(v.id("users"), v.null()),
+});
+
+export const linkTicketAccount = internalMutation({
+  args: {
+    accountKey: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await linkTicketAccountFor(ctx, args);
+    return null;
+  },
+  returns: v.null(),
 });
 
 export const finalizeTicket = internalMutation({
@@ -49,37 +83,26 @@ export const finalizeTicket = internalMutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const row = await ctx.db
-      .query("oauthTickets")
-      .withIndex("by_ticket", (q) => q.eq("ticket", args.ticket))
-      .unique();
-    if (!row || row.consumed) {
-      throw new Error("Sign-in ticket is invalid");
-    }
-    await ctx.db.patch(row._id, { consumed: true });
-    const existing = await ctx.db
-      .query("connections")
-      .withIndex("by_user_and_provider", (q) =>
-        q.eq("userId", args.userId).eq("provider", row.pendingProvider)
-      )
-      .unique();
-    const payload = {
-      accessToken: row.tokens.accessToken,
-      accountId: row.accountKey,
-      connectedAt: Date.now(),
-      expiresAt: row.tokens.expiresAt,
-      identity: row.identity,
-      planWarning: row.planWarning,
-      provider: row.pendingProvider,
-      refreshToken: row.tokens.refreshToken,
-      status: "connected" as const,
-      userId: args.userId,
-    };
-    if (existing) {
-      await ctx.db.patch(existing._id, payload);
-      return;
-    }
-    await ctx.db.insert("connections", payload);
+    await finalizeTicketForUser(ctx, args);
+    return null;
   },
   returns: v.null(),
+});
+
+export const mergeUsers = internalMutation({
+  args: {
+    absorbUserId: v.id("users"),
+    keepUserId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await mergeUserPair(ctx, args);
+    return null;
+  },
+  returns: v.null(),
+});
+
+export const findMatchingUser = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => await findMatchingUserId(ctx, args.userId),
+  returns: v.union(v.id("users"), v.null()),
 });
