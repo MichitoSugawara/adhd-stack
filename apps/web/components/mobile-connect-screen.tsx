@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightIcon, StackIcon } from "@phosphor-icons/react";
+import { StackIcon } from "@phosphor-icons/react";
 import {
   App as KonstaApp,
   Button as KonstaButton,
@@ -154,13 +154,13 @@ export const MobileConnectScreen = ({
               </span>
             </div>
             <KonstaButton
-              aria-label="エディタへ"
+              aria-label="エディタを開く"
               className="mobile-primary-action"
               disabled={!allConnected}
               onClick={() => router.push("/editor")}
               rounded
             >
-              <ArrowRightIcon size={19} weight="bold" />
+              エディタを開く
             </KonstaButton>
           </KonstaGlass>
         </div>

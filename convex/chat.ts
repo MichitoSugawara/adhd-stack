@@ -1,6 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
+import { internal } from "./_generated/api";
 import { authedMutation, authedQuery } from "./lib/customFunctions";
 import { messageKindValidator, messageRoleValidator } from "./validators";
 
@@ -9,6 +10,7 @@ const messageValidator = v.object({
   _id: v.id("messages"),
   body: v.string(),
   createdAt: v.number(),
+  externalId: v.optional(v.string()),
   kind: messageKindValidator,
   meta: v.optional(
     v.object({
@@ -63,6 +65,11 @@ export const send = authedMutation({
     if (text.length === 0) {
       throw new Error("Message is empty");
     }
+    if (!(workspace.githubRepoUrl && workspace.codexEnvironmentId)) {
+      throw new Error(
+        "リポジトリと Codex Cloud 環境の準備が終わるまで送れません"
+      );
+    }
     const createdAt = Date.now();
     await ctx.db.insert("messages", {
       body: text,
@@ -71,20 +78,10 @@ export const send = authedMutation({
       role: "user",
       workspaceId: args.workspaceId,
     });
-    await ctx.db.insert("messages", {
-      body: "指示を受けました。Codex Cloud 環境が使えると、thinking・作業・コマンド・差分がここに流れます。",
-      createdAt: createdAt + 1,
-      kind: "thinking",
-      role: "assistant",
-      workspaceId: args.workspaceId,
-    });
-    await ctx.db.insert("messages", {
-      body: workspace.githubRepoFullName
-        ? `${workspace.githubRepoFullName} を対象に進めます。`
-        : "リポジトリの用意を待っています。",
-      createdAt: createdAt + 2,
-      kind: "work",
-      role: "assistant",
+    await ctx.scheduler.runAfter(0, internal.chatActions.runCodexTurn, {
+      createdAt,
+      prompt: text,
+      userId: ctx.user._id,
       workspaceId: args.workspaceId,
     });
     return null;

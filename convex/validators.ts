@@ -15,6 +15,7 @@ export const connectionStatusValidator = v.union(
 export const provisionStatusValidator = v.union(
   v.literal("error"),
   v.literal("pending"),
+  v.literal("provisioning"),
   v.literal("ready")
 );
 

@@ -191,15 +191,23 @@ export const DesktopConnectScreen = ({
                     <span className="editor-label">NEXT</span>
                     <strong>エディタ</strong>
                   </div>
-                  <Button
-                    aria-label="エディタへ"
-                    disabled={!allConnected}
-                    icon={ArrowRightIcon}
-                    onClick={() => router.push("/editor")}
-                    shape="circle"
-                    title="エディタへ"
-                    variant="primary"
-                  />
+                  {allConnected ? (
+                    <Button
+                      onClick={() => router.push("/editor")}
+                      variant="primary"
+                    >
+                      エディタを開く
+                    </Button>
+                  ) : (
+                    <Button
+                      aria-label="エディタへ"
+                      disabled
+                      icon={ArrowRightIcon}
+                      shape="circle"
+                      title="4つつながると開けます"
+                      variant="primary"
+                    />
+                  )}
                 </li>
               }
             />

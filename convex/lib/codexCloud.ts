@@ -1,0 +1,447 @@
+import { asList, asNumber, asRecord, asString, readJson } from "./httpJson";
+
+export const CODEX_CLOUD_BASE = "https://chatgpt.com/backend-api";
+
+export interface CodexCloudAuth {
+  accessToken: string;
+  accountId?: string;
+}
+
+export interface CodexEnvironment {
+  id: string;
+  label?: string;
+}
+
+export interface CodexTaskSnapshot {
+  commands: string[];
+  diff?: string;
+  error?: string;
+  files: string[];
+  status?: string;
+  texts: string[];
+  thinking: string[];
+  work?: string;
+}
+
+const headersFor = (auth: CodexCloudAuth): HeadersInit => {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    Authorization: `Bearer ${auth.accessToken}`,
+    "Content-Type": "application/json",
+  };
+  if (auth.accountId) {
+    headers["ChatGPT-Account-Id"] = auth.accountId;
+  }
+  return headers;
+};
+
+const request = async (
+  auth: CodexCloudAuth,
+  method: string,
+  path: string,
+  body?: Record<string, unknown>
+): Promise<{
+  ok: boolean;
+  payload: Record<string, unknown>;
+  status: number;
+}> => {
+  const response = await fetch(`${CODEX_CLOUD_BASE}${path}`, {
+    body: body ? JSON.stringify(body) : undefined,
+    headers: headersFor(auth),
+    method,
+  });
+  return {
+    ok: response.ok,
+    payload: await readJson(response),
+    status: response.status,
+  };
+};
+
+const environmentFrom = (value: unknown): CodexEnvironment | undefined => {
+  const row = asRecord(value);
+  const id = asString(row.id) ?? asString(row.environment_id);
+  if (!id) {
+    return undefined;
+  }
+  return { id, label: asString(row.label) ?? asString(row.name) };
+};
+
+const environmentsFromPayload = (
+  payload: Record<string, unknown>
+): CodexEnvironment[] => {
+  const rows = asList(payload.environments ?? payload.items ?? payload.data);
+  const source = rows.length > 0 ? rows : asList(payload);
+  return source
+    .map((item) => environmentFrom(item))
+    .filter((item): item is CodexEnvironment => item !== undefined);
+};
+
+export const resolveCodexAccountId = async (
+  accessToken: string
+): Promise<string | undefined> => {
+  const response = await request(
+    { accessToken },
+    "GET",
+    "/wham/accounts/check"
+  );
+  if (!response.ok) {
+    return undefined;
+  }
+  const defaultId = asString(response.payload.default_account_id);
+  if (defaultId) {
+    return defaultId;
+  }
+  const accounts = asList(response.payload.accounts);
+  const first = asRecord(accounts[0]);
+  return (
+    asString(first.id) ??
+    asString(asRecord(first.account).account_id) ??
+    asString(asRecord(first.account).id)
+  );
+};
+
+export const listEnvironmentsForRepo = async (
+  auth: CodexCloudAuth,
+  owner: string,
+  repo: string
+): Promise<CodexEnvironment[]> => {
+  const byRepo = await request(
+    auth,
+    "GET",
+    `/wham/environments/by-repo/github/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`
+  );
+  if (byRepo.ok) {
+    const direct =
+      environmentFrom(byRepo.payload) ??
+      environmentFrom(byRepo.payload.environment);
+    if (direct) {
+      return [direct];
+    }
+    const found = environmentsFromPayload(byRepo.payload);
+    if (found.length > 0) {
+      return found;
+    }
+  }
+  const all = await request(auth, "GET", "/wham/environments");
+  if (!all.ok) {
+    return [];
+  }
+  const needle = `${owner}/${repo}`.toLowerCase();
+  return environmentsFromPayload(all.payload).filter((env) => {
+    const label = env.label?.toLowerCase() ?? "";
+    return label.includes(needle) || label.includes(repo.toLowerCase());
+  });
+};
+
+const createBodies = (
+  owner: string,
+  repo: string,
+  repoId?: number
+): Record<string, unknown>[] => {
+  const label = "adhd-app";
+  return [
+    {
+      default_branch: "main",
+      label,
+      repo: {
+        default_branch: "main",
+        name: repo,
+        owner,
+        provider: "github",
+      },
+    },
+    {
+      defaultBranch: "main",
+      label,
+      repository: {
+        owner,
+        repo,
+        vcs: "github",
+      },
+    },
+    {
+      git_repo: `${owner}/${repo}`,
+      label,
+      provider: "github",
+    },
+    ...(repoId
+      ? [
+          {
+            label,
+            repo: {
+              external_id: String(repoId),
+              name: repo,
+              owner,
+              vcs_provider: "github",
+            },
+          },
+        ]
+      : []),
+  ];
+};
+
+export const createCodexEnvironment = async (
+  auth: CodexCloudAuth,
+  owner: string,
+  repo: string,
+  repoId?: number
+): Promise<CodexEnvironment> => {
+  const errors: string[] = [];
+  for (const body of createBodies(owner, repo, repoId)) {
+    const response = await request(auth, "POST", "/wham/environments", body);
+    if (response.ok) {
+      const created =
+        environmentFrom(response.payload) ??
+        environmentFrom(response.payload.environment) ??
+        environmentsFromPayload(response.payload)[0];
+      if (created) {
+        return created;
+      }
+    }
+    const detail =
+      asString(response.payload.message) ??
+      asString(response.payload.error) ??
+      asString(response.payload.raw) ??
+      `HTTP ${response.status}`;
+    errors.push(detail);
+    if (response.status === 401 || response.status === 403) {
+      break;
+    }
+  }
+  throw new Error(
+    `Codex Cloud 環境を作成できませんでした: ${errors.at(-1) ?? "不明なエラー"}`
+  );
+};
+
+export const ensureCodexEnvironment = async (
+  auth: CodexCloudAuth,
+  owner: string,
+  repo: string,
+  repoId?: number
+): Promise<CodexEnvironment> => {
+  const existing = await listEnvironmentsForRepo(auth, owner, repo);
+  if (existing[0]) {
+    return existing[0];
+  }
+  return await createCodexEnvironment(auth, owner, repo, repoId);
+};
+
+export const createCodexTask = async (
+  auth: CodexCloudAuth,
+  environmentId: string,
+  prompt: string,
+  branch = "main"
+): Promise<string> => {
+  const response = await request(auth, "POST", "/wham/tasks", {
+    input_items: [
+      {
+        content: [{ content_type: "text", text: prompt }],
+        role: "user",
+        type: "message",
+      },
+    ],
+    new_task: {
+      branch,
+      environment_id: environmentId,
+      run_environment_in_qa_mode: false,
+    },
+  });
+  if (!response.ok) {
+    const detail =
+      asString(response.payload.message) ??
+      asString(response.payload.error) ??
+      `HTTP ${response.status}`;
+    throw new Error(`Codex Cloud に送れませんでした: ${detail}`);
+  }
+  const task = asRecord(response.payload.task);
+  const id =
+    asString(task.id) ??
+    asString(response.payload.id) ??
+    asString(response.payload.task_id);
+  if (!id) {
+    throw new Error("Codex Cloud のタスク ID を受け取れませんでした");
+  }
+  return id;
+};
+
+const textFromContent = (value: unknown): string[] => {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return [value];
+  }
+  return asList(value).flatMap((part) => {
+    if (typeof part === "string" && part.trim().length > 0) {
+      return [part];
+    }
+    const row = asRecord(part);
+    const text = asString(row.text) ?? asString(row.content);
+    return text ? [text] : [];
+  });
+};
+
+const collectFromItems = (
+  items: unknown[]
+): Pick<CodexTaskSnapshot, "commands" | "diff" | "files" | "texts"> => {
+  const commands: string[] = [];
+  const files: string[] = [];
+  const texts: string[] = [];
+  let diff: string | undefined;
+  for (const item of items) {
+    const row = asRecord(item);
+    const kind = asString(row.type) ?? asString(row.kind) ?? "";
+    const command =
+      asString(row.command) ??
+      asString(row.cmd) ??
+      asString(asRecord(row.function).name);
+    if (command) {
+      commands.push(command);
+    }
+    const itemDiff =
+      asString(row.diff) ?? asString(asRecord(row.output_diff).diff);
+    if (itemDiff && (kind === "output_diff" || kind === "pr" || !diff)) {
+      diff = itemDiff;
+    }
+    const itemFiles = asList(row.files).flatMap((file) => {
+      if (typeof file === "string") {
+        return [file];
+      }
+      const path =
+        asString(asRecord(file).path) ?? asString(asRecord(file).filename);
+      return path ? [path] : [];
+    });
+    files.push(...itemFiles);
+    if (kind === "message" || kind === "reasoning" || kind === "thinking") {
+      texts.push(...textFromContent(row.content));
+    }
+  }
+  return { commands, diff, files, texts };
+};
+
+export const getCodexTaskSnapshot = async (
+  auth: CodexCloudAuth,
+  taskId: string
+): Promise<CodexTaskSnapshot> => {
+  const response = await request(auth, "GET", `/wham/tasks/${taskId}`);
+  if (!response.ok) {
+    throw new Error(
+      `Codex Cloud の進捗を取れませんでした: HTTP ${response.status}`
+    );
+  }
+  const assistant = asRecord(response.payload.current_assistant_turn);
+  const diffTurn = asRecord(response.payload.current_diff_task_turn);
+  const userTurn = asRecord(response.payload.current_user_turn);
+  const turns = [assistant, diffTurn, userTurn].filter(
+    (turn) => Object.keys(turn).length > 0
+  );
+  const commands: string[] = [];
+  const files: string[] = [];
+  const texts: string[] = [];
+  const thinking: string[] = [];
+  let diff: string | undefined;
+  let work: string | undefined;
+  for (const turn of turns) {
+    const status = asString(turn.turn_status);
+    if (status) {
+      work = status;
+    }
+    const collected = collectFromItems([
+      ...asList(turn.output_items),
+      ...asList(turn.input_items),
+    ]);
+    const {
+      commands: nextCommands,
+      diff: nextDiff,
+      files: nextFiles,
+      texts: nextTexts,
+    } = collected;
+    commands.push(...nextCommands);
+    files.push(...nextFiles);
+    texts.push(...nextTexts);
+    if (nextDiff) {
+      diff = nextDiff;
+    }
+    const { worklog } = turn;
+    const log = asRecord(worklog);
+    for (const message of asList(log.messages)) {
+      const row = asRecord(message);
+      const parts = textFromContent(asRecord(row.content).parts);
+      const author = asString(asRecord(row.author).role) ?? "";
+      if (author === "assistant" || author === "system") {
+        thinking.push(...parts);
+      } else {
+        thinking.push(...parts);
+      }
+    }
+    const error = asRecord(turn.error);
+    if (asString(error.message)) {
+      return {
+        commands: [...new Set(commands)],
+        diff,
+        error: asString(error.message),
+        files: [...new Set(files)],
+        status,
+        texts,
+        thinking,
+        work,
+      };
+    }
+  }
+  const display = asRecord(
+    assistant.latest_turn_status_display ??
+      response.payload.latest_turn_status_display
+  );
+  const stats = asRecord(display.diff_stats);
+  const additions = asNumber(stats.additions);
+  const deletions = asNumber(stats.deletions);
+  if (!work && (additions !== undefined || deletions !== undefined)) {
+    work = `+${additions ?? 0} / -${deletions ?? 0}`;
+  }
+  return {
+    commands: [...new Set(commands)],
+    diff,
+    files: [...new Set(files)],
+    status: asString(assistant.turn_status) ?? asString(diffTurn.turn_status),
+    texts: [...new Set(texts)],
+    thinking,
+    work,
+  };
+};
+
+export const isCodexTaskDone = (snapshot: CodexTaskSnapshot): boolean => {
+  const status = snapshot.status?.toLowerCase() ?? "";
+  if (snapshot.error) {
+    return true;
+  }
+  if (status.length === 0) {
+    return Boolean(snapshot.diff || snapshot.texts.length > 0);
+  }
+  return [
+    "completed",
+    "complete",
+    "success",
+    "failed",
+    "error",
+    "cancelled",
+  ].some((value) => status.includes(value));
+};
+
+export const summarizeDiff = (
+  diff: string
+): { additions: number; deletions: number; files: string[] } => {
+  const files: string[] = [];
+  let additions = 0;
+  let deletions = 0;
+  for (const line of diff.split("\n")) {
+    if (line.startsWith("diff --git ")) {
+      const parts = line.split(" ");
+      const path = parts.at(-1)?.replace(/^b\//u, "");
+      if (path) {
+        files.push(path);
+      }
+    } else if (line.startsWith("+") && !line.startsWith("+++")) {
+      additions += 1;
+    } else if (line.startsWith("-") && !line.startsWith("---")) {
+      deletions += 1;
+    }
+  }
+  return { additions, deletions, files };
+};

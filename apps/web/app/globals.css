@@ -861,6 +861,7 @@ textarea {
 .sidebar-item {
   display: flex;
   width: 100%;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
   padding: 9px 10px;
@@ -886,7 +887,7 @@ textarea {
 .chat-panel {
   display: grid;
   min-width: 0;
-  grid-template-rows: 64px 1fr auto;
+  grid-template-rows: 64px auto auto 1fr auto;
 }
 
 .chat-header {
@@ -1722,7 +1723,8 @@ textarea {
 }
 
 .desktop-experience,
-.mobile-connect-page {
+.mobile-connect-page,
+.mobile-editor-page {
   --connect-bg: #0f172a;
   --connect-fg: #f8fafc;
   --connect-card: #1b2336;
@@ -1906,6 +1908,139 @@ textarea {
 
 .mobile-connect-page .chatgpt-device-btn {
   width: 100%;
+}
+
+.provision-strip {
+  display: grid;
+  gap: 8px;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--connect-border, var(--color-kumo-line));
+  background: var(--connect-card, var(--color-kumo-base));
+}
+
+.provision-strip p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--connect-fg, var(--text-color-kumo-default));
+  font-family:
+    var(--font-connect-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provision-strip .editor-label {
+  color: var(--connect-muted-fg, var(--text-color-kumo-subtle));
+}
+
+.provision-strip--mobile {
+  margin: 0 16px 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--connect-border, #475569);
+  border-radius: 16px;
+}
+
+.chat-command,
+.chat-file-list {
+  margin: 0;
+  font-family:
+    var(--font-connect-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.chat-file-list {
+  padding-left: 18px;
+}
+
+.chat-diff-stats {
+  margin: 0 0 6px;
+  color: var(--connect-accent, #22c55e);
+  font-family:
+    var(--font-connect-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+}
+
+.chat-message--thinking,
+.chat-message--work,
+.chat-message--command,
+.chat-message--diff {
+  background: var(--connect-card, var(--color-kumo-base));
+}
+
+.mobile-editor-page {
+  background: var(--connect-bg, #0f172a);
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-editor-page .mobile-editor-nav {
+  background: color-mix(
+    in oklab,
+    var(--connect-card, #1b2336) 92%,
+    transparent
+  );
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-editor-page .mobile-circle-button,
+.mobile-editor-page .mobile-publish-button {
+  min-height: 44px;
+  min-width: 44px;
+  border-color: var(--connect-border, #475569);
+  background: var(--connect-primary, #1e293b);
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-editor-page .mobile-publish-button {
+  width: auto;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--connect-accent, #22c55e);
+  color: var(--connect-on-accent, #0f172a);
+}
+
+.mobile-editor-page .mobile-user-message {
+  background: var(--connect-muted, #272f42);
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-editor-page .mobile-assistant-copy,
+.mobile-editor-page .mobile-tool-summary {
+  color: var(--connect-muted-fg, #94a3b8);
+}
+
+.mobile-editor-page .mobile-composer-glass {
+  border-color: var(--connect-border, #475569);
+  background: color-mix(
+    in oklab,
+    var(--connect-card, #1b2336) 92%,
+    transparent
+  );
+}
+
+.mobile-editor-page .mobile-composer-glass textarea {
+  flex: 1;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-editor-page .publish-result {
+  width: calc(100% - 32px);
+  margin: 8px 16px 0;
+  border-color: var(--connect-border, #475569);
+  background: var(--connect-card, #1b2336);
+  color: var(--connect-fg, #f8fafc);
+}
+
+.mobile-connect-page .mobile-primary-action {
+  min-width: 132px;
+  padding: 0 16px;
 }
 
 @media (max-width: 760px) {

@@ -29,6 +29,7 @@ export default defineSchema({
   messages: defineTable({
     body: v.string(),
     createdAt: v.number(),
+    externalId: v.optional(v.string()),
     kind: messageKindValidator,
     meta: v.optional(
       v.object({
@@ -40,7 +41,9 @@ export default defineSchema({
     ),
     role: messageRoleValidator,
     workspaceId: v.id("workspaces"),
-  }).index("by_workspace_and_created", ["workspaceId", "createdAt"]),
+  })
+    .index("by_workspace_and_created", ["workspaceId", "createdAt"])
+    .index("by_workspace_and_external", ["workspaceId", "externalId"]),
   oauthStates: defineTable({
     codeVerifier: v.string(),
     expiresAt: v.number(),
@@ -69,9 +72,18 @@ export default defineSchema({
     .index("by_ticket", ["ticket"])
     .index("by_account_key", ["accountKey"]),
   workspaces: defineTable({
+    cloudflareAccountId: v.optional(v.string()),
     cloudflarePagesUrl: v.optional(v.string()),
+    cloudflareProjectName: v.optional(v.string()),
+    codexEnvironmentId: v.optional(v.string()),
+    convexDeploymentName: v.optional(v.string()),
+    convexProjectSlug: v.optional(v.string()),
+    convexTeamSlug: v.optional(v.string()),
     convexUrl: v.optional(v.string()),
+    githubOwner: v.optional(v.string()),
     githubRepoFullName: v.optional(v.string()),
+    githubRepoId: v.optional(v.number()),
+    githubRepoName: v.optional(v.string()),
     githubRepoUrl: v.optional(v.string()),
     name: v.string(),
     provisionError: v.optional(v.string()),

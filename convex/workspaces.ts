@@ -6,6 +6,7 @@ import { provisionStatusValidator } from "./validators";
 const workspacePublicValidator = v.object({
   _id: v.id("workspaces"),
   cloudflarePagesUrl: v.optional(v.string()),
+  codexEnvironmentId: v.optional(v.string()),
   convexUrl: v.optional(v.string()),
   githubRepoFullName: v.optional(v.string()),
   githubRepoUrl: v.optional(v.string()),
@@ -27,6 +28,7 @@ export const getMine = authedQuery({
     return {
       _id: workspace._id,
       cloudflarePagesUrl: workspace.cloudflarePagesUrl,
+      codexEnvironmentId: workspace.codexEnvironmentId,
       convexUrl: workspace.convexUrl,
       githubRepoFullName: workspace.githubRepoFullName,
       githubRepoUrl: workspace.githubRepoUrl,
@@ -56,25 +58,4 @@ export const ensure = authedMutation({
     });
   },
   returns: v.id("workspaces"),
-});
-
-export const publish = authedMutation({
-  args: {},
-  handler: async (ctx) => {
-    const workspace = await ctx.db
-      .query("workspaces")
-      .withIndex("by_user", (q) => q.eq("userId", ctx.user._id))
-      .unique();
-    if (!workspace) {
-      throw new Error("Workspace not found");
-    }
-    return {
-      cloudflarePagesUrl: workspace.cloudflarePagesUrl ?? null,
-      convexUrl: workspace.convexUrl ?? null,
-    };
-  },
-  returns: v.object({
-    cloudflarePagesUrl: v.union(v.string(), v.null()),
-    convexUrl: v.union(v.string(), v.null()),
-  }),
 });
