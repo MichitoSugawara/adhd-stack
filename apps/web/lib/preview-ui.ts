@@ -23,12 +23,16 @@ export const usageBarColor = (usage: number): string => {
 
 export const connectTagClass = (
   on: boolean,
+  busy: boolean,
   failed: boolean
-): "tag tag-accent" | "tag tag-accent-2" => {
-  if (on || !failed) {
+): "tag tag-accent" | "tag tag-accent-2" | "tag tag-neutral" => {
+  if (on || busy) {
     return "tag tag-accent";
   }
-  return "tag tag-accent-2";
+  if (failed) {
+    return "tag tag-accent-2";
+  }
+  return "tag tag-neutral";
 };
 
 export const connectTagText = (

@@ -42,7 +42,7 @@ const ServiceCard = ({
   const failed = state.failed === id || row.status === "failed";
   const busy = row.status === "connecting";
   const on = row.status === "connected";
-  const tagClass = connectTagClass(on, failed);
+  const tagClass = connectTagClass(on, busy, failed);
   const tagText = connectTagText(on, busy, failed);
   const next = !(on || busy);
   return (
