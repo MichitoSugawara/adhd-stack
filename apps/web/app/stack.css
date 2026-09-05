@@ -1333,6 +1333,13 @@ tbody tr:hover {
   display: none;
 }
 
+.hand-login {
+  flex-direction: column;
+  min-height: 100svh;
+  min-height: 100dvh;
+  min-height: var(--vvh, 100dvh);
+}
+
 .hand-login-hero,
 .hand-login-panel {
   display: flex;
@@ -1450,10 +1457,14 @@ tbody tr:hover {
     display: block;
   }
 
-  .hand-login {
+  .hand.hand-login {
     display: flex;
     flex-direction: column;
     min-height: 100svh;
     min-height: 100dvh;
+    min-height: var(--vvh, 100dvh);
+    height: 100svh;
+    height: 100dvh;
+    height: var(--vvh, 100dvh);
   }
 }
