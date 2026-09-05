@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { fontVariables } from "../lib/fonts";
 import { useMockApp } from "../lib/mock-store";
+import type { Connection } from "../lib/mock-types";
 import {
   connectHeading,
   connectIdentity,
@@ -16,7 +17,6 @@ import {
   nextTitle,
 } from "../lib/preview-ui";
 import { SERVICES } from "../lib/services";
-import type { ServiceId } from "../lib/services";
 import { BrandMark } from "./brand-mark";
 import { MobileNav } from "./mobile-nav";
 import { NeedSession } from "./need-session";
@@ -24,30 +24,32 @@ import { StackChrome } from "./stack-chrome";
 import { Toast } from "./toast";
 
 const ServiceCard = ({
-  id,
+  connection,
+  failed,
+  onCancel,
   onConnect,
   onDisconnect,
+  openaiKey,
+  service,
 }: {
-  id: ServiceId;
+  connection: Connection;
+  failed: boolean;
+  onCancel: () => void;
   onConnect: (key?: string) => void;
   onDisconnect: () => void;
+  openaiKey: string;
+  service: (typeof SERVICES)[number];
 }) => {
-  const { cancelConnect, state } = useMockApp();
-  const service = SERVICES.find((item) => item.id === id);
-  const row = state.connections[id];
-  const [key, setKey] = useState(state.openaiKey);
-  if (!service) {
-    return null;
-  }
-  const failed = state.failed === id || row.status === "failed";
-  const busy = row.status === "connecting";
-  const on = row.status === "connected";
-  const tagClass = connectTagClass(on, busy, failed);
-  const tagText = connectTagText(on, busy, failed);
+  const [key, setKey] = useState(openaiKey);
+  const busy = connection.status === "connecting";
+  const on = connection.status === "connected";
+  const broken = failed || connection.status === "failed";
+  const tagClass = connectTagClass(on, busy, broken);
+  const tagText = connectTagText(on, busy, broken);
   const next = !(on || busy);
   return (
     <article
-      className={`service-card${next ? " is-next" : ""}${failed ? " is-fail" : ""}`}
+      className={`service-card${next ? " is-next" : ""}${broken ? " is-fail" : ""}`}
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <BrandMark alt="" size={32} src={service.logo} />
@@ -57,12 +59,12 @@ const ServiceCard = ({
         <div className="card-title">{service.label}</div>
         <p
           className="card-body"
-          style={failed ? { color: "var(--color-accent-2-700)" } : undefined}
+          style={broken ? { color: "var(--color-accent-2-700)" } : undefined}
         >
-          {failed ? "認可が拒否されました（access_denied）" : service.body}
+          {broken ? "認可が拒否されました（access_denied）" : service.body}
         </p>
       </div>
-      {id === "openai" && !on ? (
+      {service.id === "openai" && !on ? (
         <label>
           <span className="sr-only">APIキー</span>
           <input
@@ -81,7 +83,7 @@ const ServiceCard = ({
         }}
       >
         <span style={{ color: "var(--color-neutral-600)", fontSize: 12 }}>
-          {connectIdentity(on, busy, row.identity)}
+          {connectIdentity(on, busy, connection.identity)}
         </span>
         {on ? (
           <button
@@ -93,21 +95,17 @@ const ServiceCard = ({
           </button>
         ) : null}
         {busy ? (
-          <button
-            className="btn btn-ghost"
-            onClick={cancelConnect}
-            type="button"
-          >
+          <button className="btn btn-ghost" onClick={onCancel} type="button">
             やめる
           </button>
         ) : null}
         {on || busy ? null : (
           <button
             className="btn btn-primary"
-            onClick={() => onConnect(id === "openai" ? key : undefined)}
+            onClick={() => onConnect(service.id === "openai" ? key : undefined)}
             type="button"
           >
-            {failed ? "もう一度" : service.cta}
+            {broken ? "もう一度" : service.cta}
           </button>
         )}
       </div>
@@ -181,12 +179,16 @@ export const ConnectScreen = () => {
             <div className="connect-grid">
               {SERVICES.map((service) => (
                 <ServiceCard
-                  id={service.id}
+                  connection={app.state.connections[service.id]}
+                  failed={app.state.failed === service.id}
                   key={service.id}
+                  onCancel={app.cancelConnect}
                   onConnect={(key) => {
                     void app.connectService(service.id, key);
                   }}
                   onDisconnect={() => app.disconnectService(service.id)}
+                  openaiKey={app.state.openaiKey}
+                  service={service}
                 />
               ))}
             </div>
@@ -256,12 +258,16 @@ export const ConnectScreen = () => {
           <div className="connect-grid connect-grid-hand">
             {SERVICES.map((service) => (
               <ServiceCard
-                id={service.id}
+                connection={app.state.connections[service.id]}
+                failed={app.state.failed === service.id}
                 key={service.id}
+                onCancel={app.cancelConnect}
                 onConnect={(key) => {
                   void app.connectService(service.id, key);
                 }}
                 onDisconnect={() => app.disconnectService(service.id)}
+                openaiKey={app.state.openaiKey}
+                service={service}
               />
             ))}
           </div>

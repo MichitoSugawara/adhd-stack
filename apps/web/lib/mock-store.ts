@@ -117,7 +117,9 @@ export const readState = (): AppState => {
 
 export const writeState = (state: AppState): void => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  window.dispatchEvent(new Event(EVENT));
+  queueMicrotask(() => {
+    window.dispatchEvent(new Event(EVENT));
+  });
 };
 
 export const connectedCount = (connections: AppState["connections"]): number =>
