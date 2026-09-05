@@ -6,15 +6,16 @@ import type { Message, Preview, Project } from "../lib/mock-types";
 import { MessageView } from "./message-view";
 import { MobileNav } from "./mobile-nav";
 
-export type HandTab = "changes" | "chat" | "screen";
+export type HandTab = "changes" | "chat" | "history" | "screen";
 
 interface EditorHandProperties {
   composer: ReactNode;
-  onApprove: () => void;
+  onApprove: (ok: boolean) => void;
+  onChanges: () => void;
   onHand: (tab: HandTab) => void;
-  onOverlap: () => void;
+  onLimit: (reset: boolean) => void;
   onPick: (option: string) => void;
-  onSecret: () => void;
+  onSecret: (ok: boolean) => void;
   preview: Preview | undefined;
   project: Project;
   tab: HandTab;
@@ -24,8 +25,9 @@ interface EditorHandProperties {
 export const EditorHand = ({
   composer,
   onApprove,
+  onChanges,
   onHand,
-  onOverlap,
+  onLimit,
   onPick,
   onSecret,
   preview,
@@ -36,28 +38,24 @@ export const EditorHand = ({
   <div className="hand">
     <header className="topbar">
       <strong>{project.name}</strong>
-      <div className="filters">
-        <button
-          className={`btn ${tab === "chat" ? "btn-solid" : "btn-ghost"}`}
-          onClick={() => onHand("chat")}
-          type="button"
-        >
-          会話
-        </button>
-        <button
-          className={`btn ${tab === "screen" ? "btn-solid" : "btn-ghost"}`}
-          onClick={() => onHand("screen")}
-          type="button"
-        >
-          画面
-        </button>
-        <button
-          className={`btn ${tab === "changes" ? "btn-solid" : "btn-ghost"}`}
-          onClick={() => onHand("changes")}
-          type="button"
-        >
-          変更
-        </button>
+      <div className="seg">
+        {(
+          [
+            ["chat", "チャット"],
+            ["screen", "画面"],
+            ["changes", "変更"],
+            ["history", "履歴"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            className={`seg-opt ${tab === id ? "is-on" : ""}`}
+            key={id}
+            onClick={() => onHand(id)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </header>
     <section className="hand-page">
@@ -67,27 +65,24 @@ export const EditorHand = ({
               key={message.id}
               message={message}
               onApprove={onApprove}
-              onOverlap={onOverlap}
+              onChanges={onChanges}
+              onLimit={onLimit}
               onPick={onPick}
               onSecret={onSecret}
+              previewName={preview?.title ?? project.name}
             />
           ))
         : null}
       {tab === "screen" ? (
-        <div className="browser">
-          <div className="browser-bar">
-            <i />
-            <i />
-            <i />
-            <code>{preview?.url ?? "まだありません"}</code>
-          </div>
-          <div className="browser-page">
-            <h2>{preview?.title ?? project.name}</h2>
-            <p>{preview?.url}</p>
-          </div>
+        <div className="phone">
+          <h2>{preview?.title ?? project.name}</h2>
+          <p className="mono">{preview?.url}</p>
         </div>
       ) : null}
       {tab === "changes" ? <p>会話の変更カードを見てください。</p> : null}
+      {tab === "history" ? (
+        <p>デスクトップの履歴タブと同じ保存ポイントです。</p>
+      ) : null}
     </section>
     <div className="hand-composer">{composer}</div>
     <MobileNav current="editor" />

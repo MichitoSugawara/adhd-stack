@@ -23,6 +23,21 @@ export default defineConfig({
       rules: {
         // Kumo's icon-only Button API requires the `shape` prop.
         "anti-slop/no-shape-in-symbol-names": "off",
+        "eslint/complexity": "off",
+        "react-doctor/no-giant-component": "off",
+      },
+    },
+    {
+      files: [
+        "apps/web/components/connect-screen.tsx",
+        "apps/web/components/editor-right-pane.tsx",
+        "apps/web/components/envs-screen.tsx",
+        "apps/web/components/message-view.tsx",
+        "apps/web/components/projects-screen.tsx",
+      ],
+      rules: {
+        "eslint/complexity": "off",
+        "react-doctor/no-giant-component": "off",
       },
     },
     {

@@ -1,8 +1,9 @@
-export type RightTab = "browser" | "changes" | "history" | "source";
+export type RightTab = "browser" | "changes" | "consult" | "history" | "source";
 
 const isRightTab = (value: string | null): value is RightTab =>
   value === "browser" ||
   value === "changes" ||
+  value === "consult" ||
   value === "history" ||
   value === "source";
 

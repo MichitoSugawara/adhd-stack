@@ -5,16 +5,19 @@ import { useState } from "react";
 
 import { fontVariables } from "../lib/fonts";
 import { useMockApp } from "../lib/mock-store";
+import { previewTagClass } from "../lib/preview-ui";
 import { MobileNav } from "./mobile-nav";
 import { NeedSession } from "./need-session";
 import { StackChrome } from "./stack-chrome";
+import { Toast } from "./toast";
 
-type Filter = "all" | "creating" | "ready";
+type Filter = "all" | "wait" | "work";
 
 export const ProjectsScreen = () => {
   const app = useMockApp();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
 
@@ -22,121 +25,233 @@ export const ProjectsScreen = () => {
     return <NeedSession />;
   }
 
-  const rows = app.state.projects.filter((project) =>
-    filter === "all" ? true : project.status === filter
-  );
-  const readyCount = app.state.projects.filter(
-    (project) => project.status === "ready"
-  ).length;
-  const [last] = app.state.projects;
+  const working: typeof app.state.previews = [];
+  const waiting: typeof app.state.previews = [];
+  for (const item of app.state.previews) {
+    if (item.state === "要確認") {
+      waiting.push(item);
+    } else if (item.state === "作業中" || item.state === "反映済み") {
+      working.push(item);
+    }
+  }
+  let reviewWait = 0;
+  for (const project of app.state.projects) {
+    if (project.rowState === "検証待ち") {
+      reviewWait += 1;
+    }
+  }
+  const liveThisWeek = app.state.prodHistory.length > 0 ? 1 : 0;
+
+  const rows: typeof app.state.projects = [];
+  for (const project of app.state.projects) {
+    if (filter === "work" && project.rowState !== "作業中") {
+      continue;
+    }
+    if (filter === "wait" && project.rowState !== "要確認") {
+      continue;
+    }
+    if (
+      query.trim().length > 0 &&
+      !project.name.toLowerCase().includes(query.trim().toLowerCase())
+    ) {
+      continue;
+    }
+    rows.push(project);
+  }
+
+  const openProject = (id: string, creating: boolean) => {
+    router.push(creating ? `/p/${id}/creating` : `/p/${id}`);
+  };
 
   return (
     <main className={`stack ${fontVariables}`}>
       <div className="desk">
-        <StackChrome progress={`${app.connectedCount}/4`} />
+        <StackChrome current="projects" />
         <section className="page">
-          <p className="kicker">プロジェクト</p>
-          <h1>一覧</h1>
-          <div className="stats">
-            <article className="stat">
-              <span>件数</span>
-              <strong>{app.state.projects.length}</strong>
-            </article>
-            <article className="stat">
-              <span>本番あり</span>
-              <strong>{readyCount}</strong>
-            </article>
-            <article className="stat">
-              <span>作成中</span>
-              <strong>{app.state.projects.length - readyCount}</strong>
-            </article>
-          </div>
-          {last ? (
-            <p className="resume">
-              前回は「{last.name}」を見ていました。
+          {app.state.returnSummary ? (
+            <>
+              <p className="kicker">
+                おかえりなさい · 最後に見たのは昨日 18:12
+              </p>
+              <h1>留守中に、2つ進みました。</h1>
+              <div className="resume-list">
+                <button
+                  className="card elev-sm resume-card resume-wait"
+                  onClick={() => {
+                    app.dismissSummary();
+                    app.askQuestion("task-board", "login");
+                    router.push("/p/task-board?preview=login");
+                  }}
+                  type="button"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span style={{ display: "flex", gap: 10 }}>
+                      <span className="card-title" style={{ fontSize: 18 }}>
+                        ログイン導線
+                      </span>
+                      <span className="tag tag-accent-2">あなたの返事待ち</span>
+                    </span>
+                    <span className="lede">task-board · 昨日 18:40</span>
+                  </div>
+                  <span>
+                    どのログイン方法を足しますか？ — GitHub / メール / 両方
+                  </span>
+                  <span style={{ color: "var(--color-accent-700)" }}>
+                    答える →
+                  </span>
+                </button>
+                <button
+                  className="card elev-sm resume-card"
+                  onClick={() => {
+                    app.dismissSummary();
+                    router.push("/p/task-board?preview=mobile");
+                  }}
+                  type="button"
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span style={{ display: "flex", gap: 10 }}>
+                      <span className="card-title" style={{ fontSize: 18 }}>
+                        モバイルUI
+                      </span>
+                      <span className="tag tag-accent">できました</span>
+                    </span>
+                    <span className="lede">task-board · 5分前</span>
+                  </div>
+                  <span>一覧を「今日やること」と「完了」に分けました。</span>
+                  <span style={{ color: "var(--color-accent-700)" }}>
+                    開く →
+                  </span>
+                </button>
+              </div>
               <button
                 className="btn btn-ghost"
-                onClick={() =>
-                  router.push(
-                    last.status === "creating"
-                      ? `/p/${last.id}/creating`
-                      : `/p/${last.id}`
-                  )
-                }
+                onClick={app.dismissSummary}
                 type="button"
               >
-                戻る
+                すべてのプロジェクトを見る →
               </button>
-            </p>
-          ) : null}
-          <div className="filters">
-            {(
-              [
-                ["all", "すべて"],
-                ["ready", "本番あり"],
-                ["creating", "作成中"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                className={`btn ${filter === id ? "btn-solid" : "btn-ghost"}`}
-                key={id}
-                onClick={() => setFilter(id)}
-                type="button"
-              >
-                {label}
-              </button>
-            ))}
-            <button
-              className="btn btn-solid"
-              onClick={() => setOpen(true)}
-              type="button"
-            >
-              新規
-            </button>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>名前</th>
-                  <th>状態</th>
-                  <th>最後の会話</th>
-                  <th>本番</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4}>まだありません。新規から作れます。</td>
-                  </tr>
-                ) : null}
-                {rows.map((project) => (
-                  <tr key={project.id}>
-                    <td>
-                      <button
-                        className="btn btn-ghost"
-                        onClick={() =>
-                          router.push(
-                            project.status === "creating"
-                              ? `/p/${project.id}/creating`
-                              : `/p/${project.id}`
-                          )
-                        }
-                        type="button"
-                      >
-                        {project.name}
-                      </button>
-                    </td>
-                    <td>
-                      {project.status === "creating" ? "作成中" : "使える"}
-                    </td>
-                    <td>{project.lastTalk}</td>
-                    <td>{project.liveUrl || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="page-head">
+                <div>
+                  <h1>プロジェクト</h1>
+                  <p className="lede">
+                    開いて話すだけ。あとはこちらで用意します。
+                  </p>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setOpen(true)}
+                  type="button"
+                >
+                  ＋ 新しいプロジェクト
+                </button>
+              </div>
+              <div className="stats">
+                <article className="stat">
+                  <span>作業中</span>
+                  <strong>{working.length}</strong>
+                </article>
+                <article className="stat">
+                  <span>要確認</span>
+                  <strong>{waiting.length}</strong>
+                </article>
+                <article className="stat">
+                  <span>検証待ち</span>
+                  <strong>{reviewWait}</strong>
+                </article>
+                <article className="stat">
+                  <span>今週の本番反映</span>
+                  <strong>{liveThisWeek}</strong>
+                </article>
+              </div>
+              <div className="filters">
+                <div className="seg">
+                  {(
+                    [
+                      ["all", "すべて"],
+                      ["work", "作業中"],
+                      ["wait", "要確認"],
+                    ] as const
+                  ).map(([id, label]) => (
+                    <button
+                      className={`seg-opt ${filter === id ? "is-on" : ""}`}
+                      key={id}
+                      onClick={() => setFilter(id)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  className="input"
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="検索"
+                  value={query}
+                />
+              </div>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>プロジェクト</th>
+                      <th>最新のプレビュー</th>
+                      <th>状態</th>
+                      <th>本番URL</th>
+                      <th>更新</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={6}>まだありません。新規から作れます。</td>
+                      </tr>
+                    ) : null}
+                    {rows.map((project) => (
+                      <tr key={project.id}>
+                        <td>{project.name}</td>
+                        <td>{project.latestPreview}</td>
+                        <td>
+                          <span className={previewTagClass(project.rowState)}>
+                            {project.rowState}
+                          </span>
+                        </td>
+                        <td className="mono">{project.liveUrl || "—"}</td>
+                        <td>{project.updated}</td>
+                        <td>
+                          <button
+                            className="btn btn-ghost"
+                            onClick={() =>
+                              openProject(
+                                project.id,
+                                project.status === "creating"
+                              )
+                            }
+                            type="button"
+                          >
+                            開く →
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </section>
       </div>
       <div className="hand">
@@ -144,17 +259,15 @@ export const ProjectsScreen = () => {
           <p className="kicker">一覧</p>
           <h1>プロジェクト</h1>
           {rows.map((project) => (
-            <article className="service-card" key={project.id}>
+            <article className="card" key={project.id}>
               <h2>{project.name}</h2>
-              <p>{project.status === "creating" ? "作成中" : "使える"}</p>
+              <span className={previewTagClass(project.rowState)}>
+                {project.rowState}
+              </span>
               <button
-                className="btn btn-solid"
+                className="btn btn-primary"
                 onClick={() =>
-                  router.push(
-                    project.status === "creating"
-                      ? `/p/${project.id}/creating`
-                      : `/p/${project.id}`
-                  )
+                  openProject(project.id, project.status === "creating")
                 }
                 type="button"
               >
@@ -163,11 +276,11 @@ export const ProjectsScreen = () => {
             </article>
           ))}
           <button
-            className="btn btn-solid"
+            className="btn btn-primary btn-block"
             onClick={() => setOpen(true)}
             type="button"
           >
-            新規
+            ＋ 新しいプロジェクト
           </button>
         </section>
         <MobileNav current="projects" />
@@ -188,9 +301,9 @@ export const ProjectsScreen = () => {
               router.push(`/p/${id}/creating`);
             }}
           >
-            <h2>新しいプロジェクト</h2>
+            <h2 className="dialog-title">新しいプロジェクト</h2>
             <p className="lede">名前だけ。あとはこちらで用意します。</p>
-            <p className="lede">自動で用意されるもの</p>
+            <p className="kicker">自動で用意されるもの</p>
             <ul className="lede">
               <li>ソース置き場 owner/名前</li>
               <li>実行環境</li>
@@ -198,23 +311,27 @@ export const ProjectsScreen = () => {
               <li>データ置き場 team/名前</li>
             </ul>
             <input
+              className="input"
               onChange={(event) => setName(event.target.value)}
-              placeholder="お店の予約"
+              placeholder="task-board"
               value={name}
             />
-            <button className="btn btn-solid" type="submit">
-              作ってエディタへ
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() => setOpen(false)}
-              type="button"
-            >
-              やめる
-            </button>
+            <div className="dialog-actions">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setOpen(false)}
+                type="button"
+              >
+                やめる
+              </button>
+              <button className="btn btn-primary" type="submit">
+                作ってエディタへ
+              </button>
+            </div>
           </form>
         </div>
       ) : null}
+      <Toast />
     </main>
   );
 };

@@ -1,6 +1,5 @@
 "use client";
 
-import { StackIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
@@ -10,13 +9,13 @@ import { applyTheme, readChoice, subscribeTheme } from "../lib/theme";
 import type { ThemeChoice } from "../lib/theme";
 
 interface StackChromeProperties {
-  progress?: string;
+  current?: "connect" | "projects";
 }
 
 const choiceSnapshot = (): ThemeChoice => readChoice();
 const choiceServer = (): ThemeChoice => "auto";
 
-export const StackChrome = ({ progress }: StackChromeProperties) => {
+export const StackChrome = ({ current }: StackChromeProperties) => {
   const { loadDemo, signOut, state } = useMockApp();
   const router = useRouter();
   const choice = useSyncExternalStore(
@@ -24,17 +23,35 @@ export const StackChrome = ({ progress }: StackChromeProperties) => {
     choiceSnapshot,
     choiceServer
   );
+  const email = state.session?.email ?? "michito@gmail.com";
+  const initials = state.session?.name ?? "MS";
 
   return (
-    <header className="topbar">
-      <Link className="brand" href={state.session ? "/projects" : "/"}>
-        <i aria-hidden="true">
-          <StackIcon size={16} weight="duotone" />
-        </i>
+    <header className="nav">
+      <Link className="nav-brand" href={state.session ? "/projects" : "/"}>
         ADHD Stack
       </Link>
+      {state.session ? (
+        <>
+          <Link
+            aria-current={current === "connect" ? "page" : undefined}
+            href="/connect"
+          >
+            接続
+          </Link>
+          <Link
+            aria-current={current === "projects" ? "page" : undefined}
+            href="/projects"
+          >
+            プロジェクト
+          </Link>
+          <span className="nav-user">
+            {email}
+            <span className="avatar">{initials}</span>
+          </span>
+        </>
+      ) : null}
       <div className="topbar-actions">
-        {progress ? <span className="progress-pill">{progress}</span> : null}
         <div className="seg" aria-label="配色">
           <button
             className={`seg-opt ${choice === "light" ? "is-on" : ""}`}
@@ -60,20 +77,6 @@ export const StackChrome = ({ progress }: StackChromeProperties) => {
         </div>
         {state.session ? (
           <>
-            <button
-              className="btn btn-ghost"
-              onClick={() => router.push("/connect")}
-              type="button"
-            >
-              接続
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() => router.push("/projects")}
-              type="button"
-            >
-              プロジェクト
-            </button>
             <button
               className="btn btn-ghost"
               onClick={() => {

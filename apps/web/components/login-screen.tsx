@@ -6,6 +6,7 @@ import { fontVariables } from "../lib/fonts";
 import { useMockApp } from "../lib/mock-store";
 import { SERVICES } from "../lib/services";
 import { BrandMark } from "./brand-mark";
+import { Toast } from "./toast";
 
 export const LoginScreen = () => {
   const { signIn, state } = useMockApp();
@@ -37,9 +38,12 @@ export const LoginScreen = () => {
               </p>
               <div className="logo-row" aria-label="つなぐサービス">
                 {SERVICES.map((service) => (
-                  <span key={service.id}>
-                    <BrandMark alt="" size={28} src={service.logo} />
-                  </span>
+                  <BrandMark
+                    alt=""
+                    key={service.id}
+                    size={28}
+                    src={service.logo}
+                  />
                 ))}
                 <span className="lede">4つの接続で完結</span>
               </div>
@@ -53,7 +57,11 @@ export const LoginScreen = () => {
                 Google
                 アカウントでログインします。続けて4つのサービスを接続します。
               </p>
-              <button className="btn btn-solid" onClick={enter} type="button">
+              <button
+                className="btn btn-secondary btn-block"
+                onClick={enter}
+                type="button"
+              >
                 <BrandMark alt="" size={18} src="/brands/google.svg" />
                 Googleで続ける
               </button>
@@ -74,17 +82,20 @@ export const LoginScreen = () => {
           </p>
           <div className="logo-row" aria-label="つなぐサービス">
             {SERVICES.map((service) => (
-              <span key={service.id}>
-                <BrandMark alt="" size={22} src={service.logo} />
-              </span>
+              <BrandMark alt="" key={service.id} size={22} src={service.logo} />
             ))}
           </div>
-          <button className="btn btn-solid" onClick={enter} type="button">
+          <button
+            className="btn btn-secondary btn-block"
+            onClick={enter}
+            type="button"
+          >
             <BrandMark alt="" size={18} src="/brands/google.svg" />
             Googleで続ける
           </button>
         </section>
       </div>
+      <Toast />
     </main>
   );
 };
