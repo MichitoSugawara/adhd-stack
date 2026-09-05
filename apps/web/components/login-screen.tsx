@@ -73,26 +73,48 @@ export const LoginScreen = () => {
           </div>
         </section>
       </div>
-      <div className="hand">
-        <section className="hand-page">
-          <p className="kicker">Connect once. Build anything.</p>
-          <h1>何も考えずに、始める。</h1>
-          <p className="lede">
-            Googleで入って、4つつなぐだけ。IDEは開きません。
-          </p>
-          <div className="logo-row" aria-label="つなぐサービス">
-            {SERVICES.map((service) => (
-              <BrandMark alt="" key={service.id} size={22} src={service.logo} />
-            ))}
+      <div className="hand hand-login">
+        <section className="hand-login-hero">
+          <p className="nav-brand">ADHD Stack</p>
+          <div>
+            <p className="kicker">Connect once. Build anything.</p>
+            <h1>
+              何も考えずに、
+              <br />
+              始める。
+            </h1>
+            <div className="logo-row" aria-label="つなぐサービス">
+              {SERVICES.map((service) => (
+                <BrandMark
+                  alt=""
+                  key={service.id}
+                  size={22}
+                  src={service.logo}
+                />
+              ))}
+            </div>
           </div>
-          <button
-            className="btn btn-secondary btn-block"
-            onClick={enter}
-            type="button"
-          >
-            <BrandMark alt="" size={18} src="/brands/google.svg" />
-            Googleで続ける
-          </button>
+        </section>
+        <section className="hand-login-panel">
+          <div className="login-card">
+            <h2>サインイン</h2>
+            <p className="lede">
+              Google
+              アカウントでログインします。続けて4つのサービスを接続します。
+            </p>
+            <button
+              className="btn btn-secondary btn-block"
+              onClick={enter}
+              type="button"
+            >
+              <BrandMark alt="" size={18} src="/brands/google.svg" />
+              Googleで続ける
+            </button>
+            <p className="lede">
+              続行すると利用規約に同意したことになります。モック ·
+              認証情報は保存されません。
+            </p>
+          </div>
         </section>
       </div>
       <Toast />
