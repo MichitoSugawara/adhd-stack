@@ -92,7 +92,7 @@ export const MessageView = ({
       </button>
     ) : null}
     {message.kind === "published" ? (
-      <p className="mono">https://yoyaku-demo.pages.dev</p>
+      <p className="mono">https://adhd.gawarago.com</p>
     ) : null}
   </article>
 );

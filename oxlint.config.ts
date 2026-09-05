@@ -14,6 +14,7 @@ export default defineConfig({
     ".cursor/skills/**",
     "convex/_generated/**",
     "design-system/**",
+    "design_handoff/**",
   ],
   jsPlugins: jsPlugins.jsPlugins,
   overrides: [

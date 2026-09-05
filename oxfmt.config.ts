@@ -7,5 +7,6 @@ export default defineConfig({
     ...ultracite.ignorePatterns,
     ".cursor/skills/**",
     "design-system/**",
+    "design_handoff/**",
   ],
 });

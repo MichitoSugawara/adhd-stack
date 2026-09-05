@@ -51,38 +51,42 @@ export const CreatingScreen = ({ projectId }: CreatingScreenProperties) => {
   return (
     <main className={`stack ${fontVariables}`}>
       <StackChrome />
-      <section className="page">
-        <p className="kicker">作成中</p>
-        <h1>{project.name}</h1>
-        <p className="lede">5つの用意が終わるまで、指示を予約できます。</p>
-        <ol className="steps">
-          {CREATE_STEPS.map((label, index) => (
-            <li
-              className={index < project.creatingStep ? "is-done" : undefined}
-              key={label}
-            >
-              {index < project.creatingStep ? "済" : "待"} {label}
-            </li>
-          ))}
-        </ol>
+      <section className="page creating">
+        <div>
+          <p className="kicker">用意しています</p>
+          <h1>{project.name} をつくっています。</h1>
+          <ol className="steps">
+            {CREATE_STEPS.map((label, index) => (
+              <li
+                className={index < project.creatingStep ? "is-done" : undefined}
+                key={label}
+              >
+                {index < project.creatingStep ? "✓" : "○"} {label}
+              </li>
+            ))}
+          </ol>
+          <p className="lede">
+            この画面を閉じても進みます。終わったら通知します。
+          </p>
+        </div>
         {ready ? (
           <Link className="btn btn-solid" href={`/p/${project.id}`}>
             作業を開く
           </Link>
         ) : (
           <label className="dialog">
-            指示の予約
+            待っている間に、最初の指示を書いておけます
             <textarea
               onChange={(event) => setNote(event.target.value)}
-              rows={3}
+              rows={5}
               value={note}
             />
             <button
-              className="btn btn-ghost"
+              className="btn btn-solid"
               onClick={() => app.reservePrompt(project.id, note)}
               type="button"
             >
-              予約する
+              予約して始める
             </button>
           </label>
         )}

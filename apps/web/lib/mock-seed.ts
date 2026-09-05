@@ -43,12 +43,12 @@ const shopChanges = [
 
 const shopMessages: Message[] = [
   {
-    body: "予約の画面を作って。名前と人数と日時。",
+    body: "タスク一覧をモバイルで見やすくして。完了したものは下に。",
     id: "m1",
     kind: "user",
   },
   {
-    body: "席の取り方を組み立てています。",
+    body: "page.tsx の一覧を done で2つに分け、完了側は薄く。CSS は1ファイルで足りる。",
     id: "m2",
     kind: "thinking",
   },
@@ -59,10 +59,10 @@ const shopMessages: Message[] = [
     meta: { command: "pnpm check" },
   },
   {
-    body: "予約フォームと見出しを足しました。",
+    body: "一覧を「今日やること」と「完了」に分けました。",
     id: "m4",
     kind: "changes",
-    meta: { additions: 18, deletions: 2, files: shopChanges },
+    meta: { additions: 27, deletions: 6, files: shopChanges },
   },
   {
     body: "営業時間の外は受けますか？",
@@ -95,10 +95,10 @@ const shopMessages: Message[] = [
 export const INITIAL_PROJECTS: Project[] = [
   {
     creatingStep: 5,
-    id: "yoyaku",
-    lastTalk: "予約の画面を作って",
-    liveUrl: "https://yoyaku-demo.pages.dev",
-    name: "お店の予約",
+    id: "task-board",
+    lastTalk: "タスク一覧をモバイルで",
+    liveUrl: "https://adhd.gawarago.com",
+    name: "task-board",
     reservedPrompt: "",
     status: "ready",
   },
@@ -115,25 +115,39 @@ export const INITIAL_PROJECTS: Project[] = [
 
 export const INITIAL_PREVIEWS: Preview[] = [
   {
-    id: "yoyaku-draft",
+    id: "mobile",
     kind: "draft",
-    projectId: "yoyaku",
-    title: "予約フォーム",
-    url: "https://yoyaku-draft.pages.dev",
+    projectId: "task-board",
+    title: "モバイルUI",
+    url: "https://mobile-ui.preview.adhd.gawarago.com",
   },
   {
-    id: "yoyaku-review",
+    id: "login",
+    kind: "draft",
+    projectId: "task-board",
+    title: "ログイン導線",
+    url: "https://login.preview.adhd.gawarago.com",
+  },
+  {
+    id: "dark",
+    kind: "draft",
+    projectId: "task-board",
+    title: "ダークモード実験",
+    url: "https://dark.preview.adhd.gawarago.com",
+  },
+  {
+    id: "task-review",
     kind: "review",
-    projectId: "yoyaku",
-    title: "検証版",
-    url: "https://yoyaku-review.pages.dev",
+    projectId: "task-board",
+    title: "検証 v13",
+    url: "https://staging.adhd.gawarago.com",
   },
   {
-    id: "yoyaku-live",
+    id: "task-live",
     kind: "live",
-    projectId: "yoyaku",
-    title: "本番",
-    url: "https://yoyaku-demo.pages.dev",
+    projectId: "task-board",
+    title: "本番 v12",
+    url: "https://adhd.gawarago.com",
   },
 ];
 
@@ -156,10 +170,18 @@ export const initialState = (): AppState => ({
   banner: null,
   connections: emptyConnections(),
   history: [
-    { id: "h1", title: "予約フォームを保存", when: "今日 11:20" },
-    { id: "h2", title: "見出しを保存", when: "今日 11:08" },
+    {
+      id: "h1",
+      title: "完了を下に寄せた",
+      when: "今",
+    },
+    {
+      id: "h2",
+      title: "見出しを2段に分けた",
+      when: "昨日 18:20",
+    },
   ],
-  messages: { yoyaku: shopMessages },
+  messages: { "task-board": shopMessages },
   openaiKey: "",
   overlap: null,
   previews: INITIAL_PREVIEWS,

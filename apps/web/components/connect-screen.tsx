@@ -12,6 +12,16 @@ import { MobileNav } from "./mobile-nav";
 import { NeedSession } from "./need-session";
 import { StackChrome } from "./stack-chrome";
 
+const connectTitle = (count: number, ready: boolean): string => {
+  if (ready) {
+    return "4つそろいました。";
+  }
+  if (count === 0) {
+    return "ようこそ。まず4つをつなぎます。";
+  }
+  return "つなぎながら、先へ進みます。";
+};
+
 const STATUS_COPY = {
   connected: "つながった",
   connecting: "確認中",
@@ -58,8 +68,8 @@ const ServiceCard = ({
         </label>
       ) : null}
       {row.status === "connected" ? (
-        <button className="btn btn-danger" onClick={onDisconnect} type="button">
-          外す
+        <button className="btn btn-ghost" onClick={onDisconnect} type="button">
+          切断
         </button>
       ) : (
         <button
@@ -68,7 +78,7 @@ const ServiceCard = ({
           onClick={() => onConnect(id === "openai" ? key : undefined)}
           type="button"
         >
-          {id === "openai" ? "キーを入れる" : "つなぐ"}
+          {id === "openai" ? "キーを入れる" : "接続する"}
         </button>
       )}
     </article>
@@ -102,10 +112,19 @@ export const ConnectScreen = () => {
         <section className="connect">
           <div>
             <p className="kicker">接続</p>
-            <h1>4つつなぐ</h1>
+            <h1>{connectTitle(app.connectedCount, app.allConnected)}</h1>
             <p className="lede">
-              OpenAI は APIキー。ほかはつなぐだけ。実サービスには届きません。
+              OpenAI は APIキー。ほかは接続するだけ。実サービスには届きません。
             </p>
+            <div>
+              <p className="lede">
+                準備の進捗
+                <span> {app.connectedCount} / 4</span>
+              </p>
+              <div className="bar" aria-hidden="true">
+                <i style={{ width: `${(app.connectedCount / 4) * 100}%` }} />
+              </div>
+            </div>
             <div className="connect-grid">
               {SERVICES.map((service) => (
                 <ServiceCard
@@ -121,10 +140,10 @@ export const ConnectScreen = () => {
           </div>
           <aside className="next-card">
             <p className="kicker">次</p>
-            <h2>一覧へ</h2>
+            <h2>次のステップ</h2>
             <p className="lede">
               {app.allConnected
-                ? "そろいました。プロジェクトを開けます。"
+                ? "4つそろいました。プロジェクトへ進めます。"
                 : `あと${4 - app.connectedCount}つ。`}
             </p>
             <ol className="lede next-steps">
@@ -139,7 +158,7 @@ export const ConnectScreen = () => {
               onClick={() => router.push("/projects")}
               type="button"
             >
-              {app.allConnected ? "一覧へ" : "4つそろうと進む"}
+              {app.allConnected ? "プロジェクトへ進む" : "4つそろうと進む"}
             </button>
           </aside>
         </section>
@@ -169,7 +188,7 @@ export const ConnectScreen = () => {
             onClick={() => router.push("/projects")}
             type="button"
           >
-            {app.allConnected ? "一覧へ" : "4つそろうと進む"}
+            {app.allConnected ? "プロジェクトへ進む" : "4つそろうと進む"}
           </button>
         </section>
         <MobileNav current="connect" />

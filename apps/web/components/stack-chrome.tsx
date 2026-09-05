@@ -1,33 +1,29 @@
 "use client";
 
-import { MoonIcon, StackIcon, SunIcon } from "@phosphor-icons/react";
+import { StackIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
 import { useMockApp } from "../lib/mock-store";
-import { applyTheme, readTheme, subscribeTheme } from "../lib/theme";
-import type { ThemeName } from "../lib/theme";
+import { applyTheme, readChoice, subscribeTheme } from "../lib/theme";
+import type { ThemeChoice } from "../lib/theme";
 
 interface StackChromeProperties {
   progress?: string;
 }
 
-const themeSnapshot = (): ThemeName => readTheme();
-const themeServer = (): ThemeName => "light";
+const choiceSnapshot = (): ThemeChoice => readChoice();
+const choiceServer = (): ThemeChoice => "auto";
 
 export const StackChrome = ({ progress }: StackChromeProperties) => {
   const { loadDemo, signOut, state } = useMockApp();
   const router = useRouter();
-  const theme = useSyncExternalStore(
+  const choice = useSyncExternalStore(
     subscribeTheme,
-    themeSnapshot,
-    themeServer
+    choiceSnapshot,
+    choiceServer
   );
-
-  const toggle = () => {
-    applyTheme(theme === "dark" ? "light" : "dark");
-  };
 
   return (
     <header className="topbar">
@@ -39,18 +35,29 @@ export const StackChrome = ({ progress }: StackChromeProperties) => {
       </Link>
       <div className="topbar-actions">
         {progress ? <span className="progress-pill">{progress}</span> : null}
-        <button
-          aria-label="配色を切り替える"
-          className="btn btn-ghost"
-          onClick={toggle}
-          type="button"
-        >
-          {theme === "dark" ? (
-            <SunIcon size={16} weight="duotone" />
-          ) : (
-            <MoonIcon size={16} weight="duotone" />
-          )}
-        </button>
+        <div className="seg" aria-label="配色">
+          <button
+            className={`seg-opt ${choice === "light" ? "is-on" : ""}`}
+            onClick={() => applyTheme("light")}
+            type="button"
+          >
+            明
+          </button>
+          <button
+            className={`seg-opt ${choice === "dark" ? "is-on" : ""}`}
+            onClick={() => applyTheme("dark")}
+            type="button"
+          >
+            暗
+          </button>
+          <button
+            className={`seg-opt ${choice === "auto" ? "is-on" : ""}`}
+            onClick={() => applyTheme("auto")}
+            type="button"
+          >
+            自動
+          </button>
+        </div>
         {state.session ? (
           <>
             <button
@@ -65,7 +72,7 @@ export const StackChrome = ({ progress }: StackChromeProperties) => {
               onClick={() => router.push("/projects")}
               type="button"
             >
-              一覧
+              プロジェクト
             </button>
             <button
               className="btn btn-ghost"
@@ -78,7 +85,7 @@ export const StackChrome = ({ progress }: StackChromeProperties) => {
               デモ一式
             </button>
             <button className="btn btn-ghost" onClick={signOut} type="button">
-              出る
+              ログアウト
             </button>
           </>
         ) : null}

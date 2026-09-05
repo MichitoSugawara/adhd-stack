@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 
-import { applyTheme, readTheme } from "../lib/theme";
+import { applyTheme, readChoice } from "../lib/theme";
 
 export const ThemeBoot = () => {
   useEffect(() => {
-    applyTheme(readTheme());
+    applyTheme(readChoice());
   }, []);
   return null;
 };

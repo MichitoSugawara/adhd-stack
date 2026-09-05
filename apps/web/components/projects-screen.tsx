@@ -188,8 +188,15 @@ export const ProjectsScreen = () => {
               router.push(`/p/${id}/creating`);
             }}
           >
-            <h2>新規プロジェクト</h2>
+            <h2>新しいプロジェクト</h2>
             <p className="lede">名前だけ。あとはこちらで用意します。</p>
+            <p className="lede">自動で用意されるもの</p>
+            <ul className="lede">
+              <li>ソース置き場 owner/名前</li>
+              <li>実行環境</li>
+              <li>名前.pages.dev</li>
+              <li>データ置き場 team/名前</li>
+            </ul>
             <input
               onChange={(event) => setName(event.target.value)}
               placeholder="お店の予約"

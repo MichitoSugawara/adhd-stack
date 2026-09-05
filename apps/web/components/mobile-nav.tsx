@@ -22,7 +22,7 @@ export const MobileNav = ({ current }: MobileNavProperties) => (
     </Link>
     <Link
       className={`btn ${current === "editor" ? "btn-solid" : "btn-ghost"}`}
-      href="/p/yoyaku"
+      href="/p/task-board"
     >
       作業
     </Link>

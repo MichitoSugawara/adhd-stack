@@ -1,31 +1,65 @@
 :root,
 [data-theme="light"] {
-  --paper: #f3f5f2;
-  --surface: #e8ece7;
-  --ink: #1a201a;
-  --muted: #5b655b;
-  --line: #c7cfc6;
-  --accent: #0b7d24;
-  --accent-ink: #f3f5f2;
-  --btn: #0b7d24;
-  --danger: #c9432a;
-  --ok: #0b7d24;
-  --shadow: 0 1px 0 rgb(26 32 26 / 6%), 0 12px 32px rgb(26 32 26 / 6%);
+  --color-bg: #f3f5f2;
+  --color-surface: #e8ece7;
+  --color-text: #1a201a;
+  --color-accent: #0b7d24;
+  --color-accent-2: #c9432a;
+  --color-divider: color-mix(in srgb, #1a201a 16%, transparent);
+  --color-neutral-600: #787f77;
+  --color-neutral-700: #5c635b;
+  --color-accent-100: #e6f7e8;
+  --color-accent-700: #086e1f;
+  --color-accent-800: #065418;
+  --color-accent-2-100: #fdf0ec;
+  --color-accent-2-700: #a5301c;
+  --color-accent-2-800: #7c2414;
+  --btn-primary-bg: #0b7d24;
+  --btn-primary-fg: #f3f5f2;
+  --paper: var(--color-bg);
+  --surface: var(--color-surface);
+  --ink: var(--color-text);
+  --muted: var(--color-neutral-600);
+  --line: var(--color-divider);
+  --accent: var(--color-accent);
+  --accent-ink: var(--btn-primary-fg);
+  --btn: var(--btn-primary-bg);
+  --danger: var(--color-accent-2);
+  --ok: var(--color-accent);
+  --shadow: 0 3px 10px color-mix(in srgb, #1a201a 16%, transparent);
+  --radius: 2px;
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --paper: #121712;
-  --surface: #0c150c;
-  --ink: #cfd4cf;
-  --muted: #8b948b;
-  --line: color-mix(in oklab, #0e9c2d 40%, #121712);
-  --accent: #1fbf3a;
-  --accent-ink: #041006;
-  --btn: #077015;
-  --danger: #ef6a5c;
-  --ok: #1fbf3a;
-  --shadow: 0 1px 0 rgb(0 0 0 / 35%), 0 16px 40px rgb(0 0 0 / 35%);
+  --color-bg: #121712;
+  --color-surface: #0c150c;
+  --color-text: #cfd4cf;
+  --color-accent: #1fbf3a;
+  --color-accent-2: #ef6a5c;
+  --color-divider: color-mix(in srgb, #0e9c2d 40%, transparent);
+  --color-neutral-600: #8b968b;
+  --color-neutral-700: #a9b2a9;
+  --color-accent-100: #0c270c;
+  --color-accent-700: #4fd463;
+  --color-accent-800: #8ce88f;
+  --color-accent-2-100: #2c1512;
+  --color-accent-2-700: #f5897a;
+  --color-accent-2-800: #ffb0a4;
+  --btn-primary-bg: #077015;
+  --btn-primary-fg: #f2f6f2;
+  --paper: var(--color-bg);
+  --surface: var(--color-surface);
+  --ink: var(--color-text);
+  --muted: var(--color-neutral-600);
+  --line: var(--color-divider);
+  --accent: var(--color-accent);
+  --accent-ink: var(--btn-primary-fg);
+  --btn: var(--btn-primary-bg);
+  --danger: var(--color-accent-2);
+  --ok: var(--color-accent);
+  --shadow: 0 0 0 1px rgb(14 156 45 / 18%), 0 3px 10px rgb(0 0 0 / 55%);
+  --radius: 2px;
   color-scheme: dark;
 }
 
@@ -72,7 +106,7 @@
   justify-content: center;
   padding: 8px 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
@@ -110,11 +144,13 @@
   background: color-mix(in oklab, var(--surface) 88%, transparent);
 }
 
-.brand {
+.brand,
+.nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   color: inherit;
+  font-size: 18px;
   font-weight: 600;
   text-decoration: none;
 }
@@ -148,25 +184,45 @@
 .login {
   display: grid;
   min-height: 100svh;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr 480px;
 }
 
 .login-hero,
 .login-panel {
-  display: grid;
-  align-content: center;
-  padding: clamp(24px, 6vw, 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(24px, 6vw, 64px);
 }
 
 .login-hero {
+  background: var(--paper);
+}
+
+.login-panel {
+  justify-content: center;
   background: var(--surface);
 }
 
 .login h1 {
   max-width: 10ch;
-  margin: 12px 0 16px;
-  font-size: clamp(44px, 7vw, 76px);
+  margin: 16px 0 0;
+  font-size: clamp(44px, 7vw, 64px);
   line-height: 1.05;
+}
+
+.bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
 }
 
 .kicker {
@@ -220,11 +276,6 @@
   display: grid;
   gap: 16px;
   width: min(420px, 100%);
-  padding: 28px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--paper);
-  box-shadow: var(--shadow);
 }
 
 .login-card .btn-solid {
@@ -313,7 +364,7 @@
   min-width: 0;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
 }
@@ -333,6 +384,13 @@
   margin: 28px auto 64px;
 }
 
+.creating {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -350,6 +408,33 @@
 .stat strong {
   display: block;
   font-size: 28px;
+}
+
+.seg {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.seg-opt {
+  min-height: 32px;
+  padding: 4px 9px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.seg-opt + .seg-opt {
+  border-left: 1px solid var(--line);
+}
+
+.seg-opt.is-on {
+  background: var(--btn);
+  color: var(--accent-ink);
 }
 
 .filters {
@@ -418,7 +503,7 @@ tr:last-child td {
 .dialog input {
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
 }
@@ -564,7 +649,7 @@ tr:last-child td {
   justify-content: flex-start;
   padding: 0 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -753,6 +838,7 @@ tr:last-child td {
   .connect,
   .stats,
   .envs,
+  .creating,
   .editor {
     grid-template-columns: 1fr;
   }
