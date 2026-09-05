@@ -18,12 +18,7 @@ export default defineConfig({
   jsPlugins: jsPlugins.jsPlugins,
   overrides: [
     {
-      files: [
-        "apps/web/components/desktop-connect-screen.tsx",
-        "apps/web/components/editor-desktop-pane.tsx",
-        "apps/web/components/editor-screen.tsx",
-        "apps/web/components/editor-sidebar.tsx",
-      ],
+      files: ["apps/web/components/editor-screen.tsx"],
       rules: {
         // Kumo's icon-only Button API requires the `shape` prop.
         "anti-slop/no-shape-in-symbol-names": "off",
@@ -59,8 +54,6 @@ export default defineConfig({
         "convex/publishActions.ts",
         "convex/workspaceActions.ts",
         "apps/web/lib/mock-store.ts",
-        "apps/web/lib/use-connect-board.ts",
-        "apps/web/lib/use-editor-workspace.ts",
       ],
       rules: {
         // Third-party OAuth / platform JSON is parsed at the HTTP boundary.

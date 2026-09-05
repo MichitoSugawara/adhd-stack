@@ -1,5 +1,5 @@
-import { EditorScreen } from "../../components/editor-screen";
+import { redirect } from "next/navigation";
 
-export default function EditorPage() {
-  return <EditorScreen />;
+export default function LegacyEditorPage() {
+  redirect("/p/yoyaku");
 }

@@ -1,24 +1,28 @@
 export const SERVICES = [
   {
-    category: "Agent",
-    id: "chatgpt",
-    label: "ChatGPT",
+    category: "会話",
+    hint: "APIキーを入れる",
+    id: "openai",
+    label: "OpenAI Codex",
     logo: "/brands/chatgpt.png",
   },
   {
-    category: "Source",
+    category: "ソース",
+    hint: "つなぐだけ",
     id: "github",
     label: "GitHub",
     logo: "/brands/github.ico",
   },
   {
-    category: "Publish",
+    category: "公開",
+    hint: "つなぐだけ",
     id: "cloudflare",
     label: "Cloudflare",
     logo: "/brands/cloudflare.ico",
   },
   {
-    category: "Data",
+    category: "データ",
+    hint: "つなぐだけ",
     id: "convex",
     label: "Convex",
     logo: "/brands/convex.ico",
@@ -26,9 +30,3 @@ export const SERVICES = [
 ] as const;
 
 export type ServiceId = (typeof SERVICES)[number]["id"];
-
-export const STATUS_LABELS = {
-  connected: "デモ接続",
-  connecting: "接続中（デモ）",
-  disconnected: "未接続",
-} as const;

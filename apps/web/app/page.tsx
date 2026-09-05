@@ -1,5 +1,5 @@
-import { ConnectScreen } from "../components/connect-screen";
+import { LoginScreen } from "../components/login-screen";
 
-export default function Home() {
-  return <ConnectScreen />;
+export default function HomePage() {
+  return <LoginScreen />;
 }

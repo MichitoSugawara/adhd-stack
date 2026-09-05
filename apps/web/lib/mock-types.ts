@@ -1,72 +1,121 @@
 import type { ServiceId } from "./services";
 
-export type ConnectionStatus = "connected" | "disconnected";
+export type ConnectionStatus =
+  | "connected"
+  | "connecting"
+  | "disconnected"
+  | "failed";
 
-export interface MockConnection {
-  connectedAt?: number;
+export interface Connection {
+  error?: string;
   identity: string;
   status: ConnectionStatus;
 }
 
-export type MessageKind = "command" | "diff" | "text" | "thinking" | "work";
+export type Connections = Record<ServiceId, Connection>;
 
-export type DiffLineKind = "add" | "ctx" | "del";
+export type ProjectStatus = "creating" | "ready";
 
-export interface MockDiffLine {
-  kind: DiffLineKind;
+export interface Project {
+  creatingStep: number;
+  id: string;
+  lastTalk: string;
+  liveUrl: string;
+  name: string;
+  reservedPrompt: string;
+  status: ProjectStatus;
+}
+
+export type PreviewKind = "draft" | "live" | "review";
+
+export interface Preview {
+  id: string;
+  kind: PreviewKind;
+  projectId: string;
+  title: string;
+  url: string;
+}
+
+export type MessageKind =
+  | "approval"
+  | "changes"
+  | "cmd"
+  | "limit"
+  | "published"
+  | "question"
+  | "secret"
+  | "thinking"
+  | "user";
+
+export interface ChangeLine {
+  kind: "add" | "ctx" | "del";
   text: string;
 }
 
-export interface MockDiffHunk {
+export interface ChangeFile {
   file: string;
-  lines: MockDiffLine[];
+  lines: ChangeLine[];
 }
 
-export interface MockMessage {
-  _id: string;
+export interface Message {
   body: string;
-  createdAt: number;
+  id: string;
   kind: MessageKind;
   meta?: {
     additions?: number;
     command?: string;
     deletions?: number;
-    files?: string[];
-    hunks?: MockDiffHunk[];
+    files?: ChangeFile[];
+    options?: string[];
   };
-  role: "assistant" | "system" | "user";
 }
 
-export type ProvisionStatus = "error" | "idle" | "provisioning" | "ready";
+export type EnvLane = "draft" | "live" | "review";
 
-export interface MockWorkspace {
-  cloudflarePagesUrl?: string;
-  cloudflareProjectName?: string;
-  codexEnvironmentId?: string;
-  convexProjectSlug?: string;
-  convexUrl?: string;
-  githubOwner: string;
-  githubRepoFullName: string;
-  githubRepoId: number;
-  githubRepoName: string;
-  githubRepoUrl: string;
+export interface SecretRow {
+  key: string;
+  lane: EnvLane;
+  value: string;
+}
+
+export interface Overlap {
+  file: string;
+  left: string;
+  right: string;
+}
+
+export interface Banner {
+  text: string;
+  tone: "disconnect" | "fail";
+}
+
+export interface Session {
+  email: string;
   name: string;
-  provisionError?: string;
-  provisionStatus: ProvisionStatus;
 }
 
-export interface MockPublish {
-  at?: number;
-  convexUrl?: string;
-  pagesUrl?: string;
-  status: "idle" | "published" | "publishing";
+export interface TerminalLine {
+  text: string;
+  tone: "err" | "ok" | "plain";
 }
 
-export type MockConnections = Record<ServiceId, MockConnection>;
+export interface HistoryPoint {
+  id: string;
+  title: string;
+  when: string;
+}
 
-export interface MockState {
-  connections: MockConnections;
-  messages: MockMessage[];
-  publish: MockPublish;
-  workspace: MockWorkspace | null;
+export interface AppState {
+  banner: Banner | null;
+  connections: Connections;
+  history: HistoryPoint[];
+  messages: Record<string, Message[]>;
+  openaiKey: string;
+  overlap: Overlap | null;
+  previews: Preview[];
+  projects: Project[];
+  reservedPrompt: string;
+  secrets: SecretRow[];
+  session: Session | null;
+  terminal: TerminalLine[];
 }
