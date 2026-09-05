@@ -4,11 +4,6 @@
 @import "konsta/react/theme.css";
 @import "./stack.css";
 
-:root {
-  --vvh: 100dvh;
-  --vv-bottom: 0px;
-}
-
 * {
   box-sizing: border-box;
 }

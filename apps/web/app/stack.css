@@ -1333,62 +1333,6 @@ tbody tr:hover {
   display: none;
 }
 
-.hand-login {
-  flex-direction: column;
-  min-height: 100svh;
-  min-height: 100dvh;
-  min-height: var(--vvh, 100dvh);
-}
-
-.hand-login-hero,
-.hand-login-panel {
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-.hand-login-hero {
-  flex: 1 1 auto;
-  justify-content: space-between;
-  min-height: 0;
-  padding: calc(28px + env(safe-area-inset-top, 0px)) 20px 32px;
-  background: var(--paper);
-}
-
-.hand-login-hero .nav-brand {
-  margin-right: 0;
-}
-
-.hand-login-hero h1 {
-  max-width: 12em;
-  margin: 12px 0 0;
-  font-size: clamp(36px, 11vw, 48px);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-
-.hand-login-hero .logo-row {
-  gap: 18px;
-  margin-top: 28px;
-}
-
-.hand-login-panel {
-  flex: 0 0 auto;
-  justify-content: center;
-  padding: 28px 20px calc(28px + env(safe-area-inset-bottom, 0px));
-  background: var(--surface);
-}
-
-.hand-login-panel .login-card {
-  width: 100%;
-}
-
-.hand-login-panel h2 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.2;
-}
-
 .hand-nav {
   position: fixed;
   z-index: 20;
@@ -1457,14 +1401,49 @@ tbody tr:hover {
     display: block;
   }
 
-  .hand.hand-login {
-    display: flex;
-    flex-direction: column;
+  .login {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(340px, 1fr) auto;
     min-height: 100svh;
     min-height: 100dvh;
-    min-height: var(--vvh, 100dvh);
-    height: 100svh;
-    height: 100dvh;
-    height: var(--vvh, 100dvh);
+  }
+
+  .login-hero {
+    min-height: 340px;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) 20px 32px;
+  }
+
+  .login-hero .nav-brand {
+    margin-right: 0;
+  }
+
+  .login-hero h1 {
+    margin-top: 12px;
+    font-size: clamp(36px, 11vw, 48px);
+    line-height: 1.08;
+  }
+
+  .login-hero .lede {
+    font-size: 14px;
+  }
+
+  .login-hero .logo-row {
+    gap: 18px;
+    margin-top: 24px;
+  }
+
+  .login-hero .logo-row .brand-mark {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .login-panel {
+    padding: 28px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .login-panel h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
   }
 }
