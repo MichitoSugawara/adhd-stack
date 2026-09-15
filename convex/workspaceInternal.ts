@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
-import { nextUniqueSlug, slugFromName } from "./lib/appSlug";
 import { internalMutation, internalQuery } from "./_generated/server";
+import { nextUniqueSlug, slugFromName } from "./lib/appSlug";
 import {
   codingBackendValidator,
   messageKindValidator,
@@ -15,9 +15,9 @@ const workspaceFields = {
   cloudflareAccountId: v.optional(v.string()),
   cloudflarePagesUrl: v.optional(v.string()),
   cloudflareProjectName: v.optional(v.string()),
+  codexEnvironmentId: v.optional(v.string()),
   codingBackend: v.optional(codingBackendValidator),
   codingEnvironmentId: v.optional(v.string()),
-  codexEnvironmentId: v.optional(v.string()),
   convexDeploymentName: v.optional(v.string()),
   convexProjectSlug: v.optional(v.string()),
   convexTeamSlug: v.optional(v.string()),
@@ -55,10 +55,10 @@ export const getWorkspace = internalQuery({
       cloudflareAccountId: workspace.cloudflareAccountId,
       cloudflarePagesUrl: workspace.cloudflarePagesUrl,
       cloudflareProjectName: workspace.cloudflareProjectName,
+      codexEnvironmentId: workspace.codexEnvironmentId,
       codingBackend: workspace.codingBackend,
       codingEnvironmentId:
         workspace.codingEnvironmentId ?? workspace.codexEnvironmentId,
-      codexEnvironmentId: workspace.codexEnvironmentId,
       convexDeploymentName: workspace.convexDeploymentName,
       convexProjectSlug: workspace.convexProjectSlug,
       convexTeamSlug: workspace.convexTeamSlug,
@@ -149,8 +149,8 @@ export const createNamedForUser = internalMutation({
     slug: v.string(),
     userId: v.id("users"),
   },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("workspaces", {
+  handler: async (ctx, args) =>
+    await ctx.db.insert("workspaces", {
       codingBackend: args.codingBackend,
       name: args.name,
       provisionStatus: "pending",
@@ -164,8 +164,7 @@ export const createNamedForUser = internalMutation({
       slug: args.slug,
       updatedAt: Date.now(),
       userId: args.userId,
-    });
-  },
+    }),
   returns: v.id("workspaces"),
 });
 

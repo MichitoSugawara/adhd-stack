@@ -1,5 +1,5 @@
-import type { CodingBackend, CodingBackendKind } from "./codingBackend";
 import { codexCloudBackend } from "./codexCloudBackend";
+import type { CodingBackend, CodingBackendKind } from "./codingBackend";
 import { cursorCloudBackend } from "./cursorCloudBackend";
 
 export const getCodingBackend = (

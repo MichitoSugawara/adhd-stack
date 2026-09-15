@@ -10,7 +10,11 @@ import ToolChips from "@/components/primitives/ToolChips";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { toChatView } from "@/lib/chat-view";
-import { useChatMessages, useSendChat, useWorkspaceBySlug } from "@/lib/coding-port";
+import {
+  useChatMessages,
+  useSendChat,
+  useWorkspaceBySlug,
+} from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
@@ -19,7 +23,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
-  const [error, setError] = useState<string | null>(null);
+  const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
   if (workspace === undefined) {
@@ -48,15 +52,15 @@ const EditorLive = ({ slug }: { slug: string }) => {
       return;
     }
     if (!ready) {
-      setError("リポジトリと実行環境の準備が終わるまで送れません");
+      setFailNote("リポジトリと実行環境の準備が終わるまで送れません");
       return;
     }
     setSending(true);
-    setError(null);
+    setFailNote(null);
     try {
       await sendChat({ text: trimmed, workspaceId: workspace._id });
-    } catch (caught) {
-      setError(connectErrorMessage(caught));
+    } catch (error) {
+      setFailNote(connectErrorMessage(error));
     } finally {
       setSending(false);
     }
@@ -88,19 +92,19 @@ const EditorLive = ({ slug }: { slug: string }) => {
       </header>
       <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
-          {!ready ? (
+          {ready ? (
+            <p className="shell-note">
+              指示は実行環境に送られます。公開 URL はまだ返しません。
+            </p>
+          ) : (
             <p className="shell-note">
               実行環境の準備が終わるまで送れません。
               {workspace.provisionError
                 ? ` ${workspace.provisionError}`
                 : " 作成中の画面で進捗を確認してください。"}
             </p>
-          ) : (
-            <p className="shell-note">
-              指示は実行環境に送られます。公開 URL はまだ返しません。
-            </p>
           )}
-          {error ? <p className="text-red text-[13px]">{error}</p> : null}
+          {failNote ? <p className="text-red text-[13px]">{failNote}</p> : null}
           {view.length === 0 ? (
             <p className="text-ink-2 text-[14px]">
               最初の指示を書いてください。偽の成功は出しません。
@@ -170,9 +174,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
             onSend={(text) => {
               void send(text);
             }}
-            placeholder={
-              ready ? "指示を書く" : "準備が終わるまで送れません"
-            }
+            placeholder={ready ? "指示を書く" : "準備が終わるまで送れません"}
           />
         </div>
       </div>

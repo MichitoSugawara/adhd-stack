@@ -1,6 +1,3 @@
-import type { CodingBackend } from "./codingBackend";
-import { statusFromWorkspace } from "./codingBackend";
-import type { NormalizedTurn } from "./codingEvents";
 import {
   createCodexTask,
   ensureCodexEnvironment,
@@ -8,6 +5,9 @@ import {
   isCodexTaskDone,
   resolveCodexAccountId,
 } from "./codexCloud";
+import type { CodingBackend } from "./codingBackend";
+import { statusFromWorkspace } from "./codingBackend";
+import type { NormalizedTurn } from "./codingEvents";
 
 const toAuth = async (input: {
   chatgptAccessToken: string;
@@ -21,8 +21,8 @@ const toAuth = async (input: {
 };
 
 export const codexCloudBackend: CodingBackend = {
-  kind: "codex_cloud",
   isTurnDone: (snapshot) => isCodexTaskDone(snapshot),
+  kind: "codex_cloud",
   pollTurn: async (input): Promise<NormalizedTurn> => {
     const auth = await toAuth(input);
     return await getCodexTaskSnapshot(auth, input.taskId);

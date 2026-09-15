@@ -29,7 +29,7 @@ export const listMine = authedQuery({
       .withIndex("by_user", (q) => q.eq("userId", ctx.user._id))
       .take(50);
     return rows
-      .sort((left, right) => right.updatedAt - left.updatedAt)
+      .toSorted((left, right) => right.updatedAt - left.updatedAt)
       .map((row) => toPublic(row));
   },
   returns: v.array(workspacePublicValidator),
@@ -85,7 +85,10 @@ export const ensure = authedMutation({
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", ctx.user._id))
       .take(50);
-    const slug = nextUniqueSlug("workspace", new Set(rows.map((row) => row.slug ?? slugFromName(row.name))));
+    const slug = nextUniqueSlug(
+      "workspace",
+      new Set(rows.map((row) => row.slug ?? slugFromName(row.name)))
+    );
     return await ctx.db.insert("workspaces", {
       codingBackend: "codex_cloud",
       name: "アプリ",

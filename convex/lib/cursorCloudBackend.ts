@@ -1,15 +1,13 @@
 import type { CodingBackend } from "./codingBackend";
 import { statusFromWorkspace } from "./codingBackend";
 
-const notReady = (): never => {
-  throw new Error("この実行環境はまだ使えません");
-};
+const notReadyError = (): Error => new Error("この実行環境はまだ使えません");
 
 export const cursorCloudBackend: CodingBackend = {
-  kind: "cursor_cloud",
   isTurnDone: () => true,
-  pollTurn: async () => notReady(),
-  provisionEnvironment: async () => notReady(),
-  startTurn: async () => notReady(),
+  kind: "cursor_cloud",
+  pollTurn: () => Promise.reject(notReadyError()),
+  provisionEnvironment: () => Promise.reject(notReadyError()),
+  startTurn: () => Promise.reject(notReadyError()),
   status: statusFromWorkspace,
 };

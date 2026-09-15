@@ -103,7 +103,7 @@ export const listRecent = authedQuery({
       )
       .order("desc")
       .take(80);
-    return rows.reverse();
+    return rows.toReversed();
   },
   returns: v.array(messageValidator),
 });

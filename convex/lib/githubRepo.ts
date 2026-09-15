@@ -73,7 +73,7 @@ export const utf8ToBase64 = (text: string): string => {
   const bytes = new TextEncoder().encode(text);
   let binary = "";
   for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+    binary += String.fromCodePoint(byte);
   }
   return btoa(binary);
 };

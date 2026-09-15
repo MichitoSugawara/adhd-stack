@@ -50,11 +50,15 @@ export const createAndProvision = authedMutation({
       updatedAt: Date.now(),
       userId: ctx.user._id,
     });
-    await ctx.scheduler.runAfter(0, internal.workspaceActions.provisionWorkspace, {
-      force: true,
-      userId: ctx.user._id,
-      workspaceId,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.workspaceActions.provisionWorkspace,
+      {
+        force: true,
+        userId: ctx.user._id,
+        workspaceId,
+      }
+    );
     return { slug, workspaceId };
   },
   returns: createdValidator,
@@ -81,12 +85,19 @@ export const retryProvision = authedMutation({
     if (!workspace) {
       throw new Error("アプリが見つかりません");
     }
-    await ctx.scheduler.runAfter(0, internal.workspaceActions.provisionWorkspace, {
-      force: true,
-      userId: ctx.user._id,
+    await ctx.scheduler.runAfter(
+      0,
+      internal.workspaceActions.provisionWorkspace,
+      {
+        force: true,
+        userId: ctx.user._id,
+        workspaceId: workspace._id,
+      }
+    );
+    return {
+      slug: workspace.slug ?? slugFromName(workspace.name),
       workspaceId: workspace._id,
-    });
-    return { slug: workspace.slug ?? slugFromName(workspace.name), workspaceId: workspace._id };
+    };
   },
   returns: createdValidator,
 });
@@ -101,16 +112,19 @@ export const provision = action({
     if (!userId) {
       throw new Error("Not authenticated");
     }
-    const workspaceId: Id<"workspaces"> | null = args.slug
-      ? await ctx.runQuery(internal.workspaceInternal.getIdBySlug, {
-          slug: args.slug,
-          userId,
-        })
-      : ((
-          await ctx.runQuery(internal.workspaceInternal.listIdsForUser, {
-            userId,
-          })
-        )[0] ?? null);
+    let workspaceId: Id<"workspaces"> | null = null;
+    if (args.slug) {
+      workspaceId = await ctx.runQuery(internal.workspaceInternal.getIdBySlug, {
+        slug: args.slug,
+        userId,
+      });
+    } else {
+      const ids = await ctx.runQuery(
+        internal.workspaceInternal.listIdsForUser,
+        { userId }
+      );
+      workspaceId = ids[0] ?? null;
+    }
     if (!workspaceId) {
       throw new Error("アプリを先に作ってください");
     }

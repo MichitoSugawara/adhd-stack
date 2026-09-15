@@ -17,9 +17,6 @@ export const useRetryProvision = () =>
   useMutation(api.workspaceProvision.retryProvision);
 
 export const useChatMessages = (workspaceId?: Id<"workspaces">) =>
-  useQuery(
-    api.chat.listRecent,
-    workspaceId ? { workspaceId } : "skip"
-  );
+  useQuery(api.chat.listRecent, workspaceId ? { workspaceId } : "skip");
 
 export const useSendChat = () => useMutation(api.chat.send);

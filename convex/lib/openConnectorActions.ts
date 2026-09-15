@@ -1,8 +1,5 @@
-import {
-  busyHttpMessage,
-  withHttpRetries,
-} from "./httpRetry";
 import { asRecord, asString, readJson } from "./httpJson";
+import { busyHttpMessage, withHttpRetries } from "./httpRetry";
 import { publicConnectError } from "./openConnectorParse";
 
 export interface OpenConnectorActionResult {
@@ -46,7 +43,9 @@ const runtimeFetch = async (
   };
 };
 
-const unwrapData = (payload: Record<string, unknown>): Record<string, unknown> => {
+const unwrapData = (
+  payload: Record<string, unknown>
+): Record<string, unknown> => {
   const data = asRecord(payload.data);
   const nested = asRecord(data.data);
   if (Object.keys(nested).length > 0) {
@@ -144,7 +143,9 @@ export const proxyOpenConnector = async (args: {
   if (result.status >= 400) {
     throw new Error(
       publicConnectError(
-        new Error(asString(result.payload.message) ?? `HTTP ${String(result.status)}`),
+        new Error(
+          asString(result.payload.message) ?? `HTTP ${String(result.status)}`
+        ),
         "接続アプリの実行に失敗しました"
       )
     );

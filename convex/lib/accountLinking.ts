@@ -1,7 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { slugFromName } from "./appSlug";
 import { fingerprintsFor, shouldMergeUsers } from "./accountMatch";
+import { slugFromName } from "./appSlug";
 import type { ProviderId } from "./providers";
 
 type DbCtx = MutationCtx | QueryCtx;
@@ -543,14 +543,15 @@ export const mergeUserPair = async (
         keepWorkspace.cloudflareProjectName,
         absorbWorkspace.cloudflareProjectName
       ),
-      codingBackend: keepWorkspace.codingBackend ?? absorbWorkspace.codingBackend,
-      codingEnvironmentId: preferText(
-        keepWorkspace.codingEnvironmentId,
-        absorbWorkspace.codingEnvironmentId
-      ),
       codexEnvironmentId: preferText(
         keepWorkspace.codexEnvironmentId,
         absorbWorkspace.codexEnvironmentId
+      ),
+      codingBackend:
+        keepWorkspace.codingBackend ?? absorbWorkspace.codingBackend,
+      codingEnvironmentId: preferText(
+        keepWorkspace.codingEnvironmentId,
+        absorbWorkspace.codingEnvironmentId
       ),
       convexDeploymentName: preferText(
         keepWorkspace.convexDeploymentName,

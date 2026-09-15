@@ -21,7 +21,9 @@ export const userHasAllConnections = async (
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(8),
   ]);
-  const customByProvider = new Map(customRows.map((row) => [row.provider, row]));
+  const customByProvider = new Map(
+    customRows.map((row) => [row.provider, row])
+  );
   const connectorByProvider = new Map(
     connectorRows.map((row) => [row.provider, row])
   );
@@ -34,15 +36,15 @@ export const userHasAllConnections = async (
       const legacy = customByProvider.get(provider);
       return Boolean(
         legacy &&
-          canKeepConnection(
-            {
-              accessToken: legacy.accessToken,
-              expiresAt: legacy.expiresAt,
-              refreshToken: legacy.refreshToken,
-              status: legacy.status,
-            },
-            now
-          )
+        canKeepConnection(
+          {
+            accessToken: legacy.accessToken,
+            expiresAt: legacy.expiresAt,
+            refreshToken: legacy.refreshToken,
+            status: legacy.status,
+          },
+          now
+        )
       );
     }
     const row = customByProvider.get(provider);

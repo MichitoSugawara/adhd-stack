@@ -5,8 +5,12 @@ const sleep = async (ms: number): Promise<void> => {
 };
 
 export const isRetryableHttpStatus = (status: number): boolean =>
-  status === 408 || status === 425 || status === 429 || status === 502 ||
-  status === 503 || status === 504;
+  status === 408 ||
+  status === 425 ||
+  status === 429 ||
+  status === 502 ||
+  status === 503 ||
+  status === 504;
 
 export const isRetryableError = (error: unknown): boolean => {
   const message = error instanceof Error ? error.message.toLowerCase() : "";

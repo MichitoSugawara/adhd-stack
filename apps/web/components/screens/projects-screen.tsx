@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { useCreateNamedApp, useWorkspaceList } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
-import { useCreateNamedApp, useWorkspaceList } from "@/lib/coding-port";
 import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
 
@@ -44,23 +45,18 @@ const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
 const ProjectsReadyNote = () => {
   const port = useConnectionsPort();
   if (!port.board) {
-    return (
-      <p className="shell-note max-w-3xl">
-        接続状態を確認しています。
-      </p>
-    );
+    return <p className="shell-note max-w-3xl">接続状態を確認しています。</p>;
   }
   if (port.board.allConnected) {
     return (
       <p className="shell-note max-w-3xl">
-        4つの接続は揃っています。名前を付けると GitHub リポジトリと実行環境を作ります。
+        4つの接続は揃っています。名前を付けると GitHub
+        リポジトリと実行環境を作ります。
       </p>
     );
   }
   return (
-    <p className="shell-note max-w-3xl">
-      接続が揃うまで作成は始めません。
-    </p>
+    <p className="shell-note max-w-3xl">接続が揃うまで作成は始めません。</p>
   );
 };
 
@@ -131,7 +127,7 @@ const ProjectsLive = () => {
   const [manualOpen, setManualOpen] = useState(false);
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failNote, setFailNote] = useState<string | null>(null);
   const open = manualOpen || searchParams.get("new") === "1";
 
   const closeDialog = () => {
@@ -147,18 +143,59 @@ const ProjectsLive = () => {
       return;
     }
     setPending(true);
-    setError(null);
+    setFailNote(null);
     try {
       const created = await createApp({ name: trimmed });
       setManualOpen(false);
       setName("");
       router.push(`/p/${created.slug}/creating`);
-    } catch (caught) {
-      setError(connectErrorMessage(caught));
+    } catch (error) {
+      setFailNote(connectErrorMessage(error));
     } finally {
       setPending(false);
     }
   };
+
+  let listBody: ReactNode = (
+    <p className="text-ink-2 text-[14px]">読み込んでいます…</p>
+  );
+  if (apps !== undefined && apps.length === 0) {
+    listBody = (
+      <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
+        まだありません。名前を付けて作成してください。
+      </div>
+    );
+  } else if (apps !== undefined) {
+    listBody = (
+      <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
+        {apps.map((app) => (
+          <li key={app._id}>
+            <button
+              className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              onClick={() => {
+                router.push(
+                  app.provisionStatus === "ready"
+                    ? `/p/${app.slug}`
+                    : `/p/${app.slug}/creating`
+                );
+              }}
+              type="button"
+            >
+              <span>
+                <span className="block text-[14px] font-medium">
+                  {app.name}
+                </span>
+                <span className="text-ink-3 block text-[12px]">{app.slug}</span>
+              </span>
+              <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
+                {statusLabel(app.provisionStatus)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <>
@@ -181,44 +218,10 @@ const ProjectsLive = () => {
         />
       </div>
       <ProjectsReadyNote />
-      {error ? <p className="text-red max-w-3xl text-[13px]">{error}</p> : null}
-      {apps === undefined ? (
-        <p className="text-ink-2 text-[14px]">読み込んでいます…</p>
-      ) : apps.length === 0 ? (
-        <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
-          まだありません。名前を付けて作成してください。
-        </div>
-      ) : (
-        <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
-          {apps.map((app) => (
-            <li key={app._id}>
-              <button
-                className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                onClick={() => {
-                  router.push(
-                    app.provisionStatus === "ready"
-                      ? `/p/${app.slug}`
-                      : `/p/${app.slug}/creating`
-                  );
-                }}
-                type="button"
-              >
-                <span>
-                  <span className="block text-[14px] font-medium">
-                    {app.name}
-                  </span>
-                  <span className="text-ink-3 block text-[12px]">
-                    {app.slug}
-                  </span>
-                </span>
-                <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
-                  {statusLabel(app.provisionStatus)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {failNote ? (
+        <p className="text-red max-w-3xl text-[13px]">{failNote}</p>
+      ) : null}
+      {listBody}
       {open ? (
         <CreateDialog
           name={name}
@@ -286,7 +289,8 @@ const ProjectsSkeleton = () => {
         </button>
       </div>
       <p className="shell-note max-w-3xl">
-        Convex 未設定です。一覧はブラウザ内の骨格だけで、リポジトリは作りません。
+        Convex
+        未設定です。一覧はブラウザ内の骨格だけで、リポジトリは作りません。
       </p>
       {shell.state.apps.length === 0 ? (
         <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
@@ -311,9 +315,7 @@ const ProjectsSkeleton = () => {
                   <span className="block text-[14px] font-medium">
                     {app.name}
                   </span>
-                  <span className="text-ink-3 block text-[12px]">
-                    {app.id}
-                  </span>
+                  <span className="text-ink-3 block text-[12px]">{app.id}</span>
                 </span>
                 <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
                   {app.status === "creating" ? "作成中" : "シェル"}

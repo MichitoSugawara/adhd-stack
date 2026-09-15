@@ -1,4 +1,3 @@
-import { busyHttpMessage, withHttpRetries } from "./httpRetry";
 import {
   asList,
   asNumber,
@@ -7,6 +6,7 @@ import {
   payloadText,
   readJson,
 } from "./httpJson";
+import { busyHttpMessage, withHttpRetries } from "./httpRetry";
 import { chatgptAccountIdFromToken, isUsableCodexAccountId } from "./jwt";
 
 export const CODEX_CLOUD_BASE = "https://chatgpt.com/backend-api";

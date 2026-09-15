@@ -7,14 +7,13 @@ import type { Id } from "./_generated/dataModel";
 import { internalAction } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
 import { loadFreshConnection } from "./lib/actionAuth";
-import { getCodingBackend } from "./lib/codingBackends";
+import type { TemplateKind } from "./lib/appTemplate";
 import { ensurePagesProject } from "./lib/cloudflarePages";
+import { getCodingBackend } from "./lib/codingBackends";
 import { convexProjectName, ensureConvexProject } from "./lib/convexProject";
 import { provisionGithubViaOpenConnector } from "./lib/githubFromOpenConnector";
 import { provisionGithubViaToken } from "./lib/githubProvision";
 import { reconnectMessage } from "./lib/tokenRefresh";
-import type { TemplateKind } from "./lib/appTemplate";
-import type { GitHubRepo } from "./lib/githubRepo";
 
 const emptySteps = () => ({
   backend: "pending" as const,
@@ -151,31 +150,28 @@ export const provisionWorkspace = internalAction({
       const github = await githubHandle(ctx, args.userId);
       if (github) {
         try {
-          let repo: GitHubRepo;
-          if (github.mode === "token") {
-            const result = await provisionGithubViaToken({
-              existingFullName: githubRepoFullName,
-              name: appName,
-              slug,
-              token: github.token,
-            });
-            repo = result.repo;
-            templateKind = result.templateKind;
-          } else {
-            const result = await provisionGithubViaOpenConnector({
-              connectionName: github.connectionName,
-              existingFullName: githubRepoFullName,
-              name: appName,
-              slug,
-            });
-            repo = result.repo;
-            templateKind = result.templateKind;
-          }
-          githubOwner = repo.owner;
-          githubRepoFullName = repo.fullName;
-          githubRepoId = repo.id;
-          githubRepoName = repo.repo;
-          githubRepoUrl = repo.htmlUrl;
+          const result =
+            github.mode === "token"
+              ? await provisionGithubViaToken({
+                  existingFullName: githubRepoFullName,
+                  name: appName,
+                  slug,
+                  token: github.token,
+                })
+              : await provisionGithubViaOpenConnector({
+                  connectionName: github.connectionName,
+                  existingFullName: githubRepoFullName,
+                  name: appName,
+                  slug,
+                });
+          const { repo, templateKind: seededKind } = result;
+          const { fullName, htmlUrl, id, owner, repo: repoName } = repo;
+          templateKind = seededKind;
+          githubOwner = owner;
+          githubRepoFullName = fullName;
+          githubRepoId = id;
+          githubRepoName = repoName;
+          githubRepoUrl = htmlUrl;
           steps.repo = "done";
           steps.template = "done";
           await patch(ctx, args.workspaceId, {
@@ -220,9 +216,9 @@ export const provisionWorkspace = internalAction({
           codingEnvironmentId = environment.environmentId;
           steps.backend = "done";
           await patch(ctx, args.workspaceId, {
+            codexEnvironmentId: environment.environmentId,
             codingBackend: backend.kind,
             codingEnvironmentId,
-            codexEnvironmentId: environment.environmentId,
             provisionSteps: { ...steps },
           });
           await note(
@@ -301,9 +297,7 @@ export const provisionWorkspace = internalAction({
         }
       } else {
         steps.convex = "skipped";
-        warnings.push(
-          "Convex は接続カタログ経由です。公開は次の段階です"
-        );
+        warnings.push("Convex は接続カタログ経由です。公開は次の段階です");
       }
 
       const ready = Boolean(githubRepoUrl && codingEnvironmentId);
@@ -312,9 +306,9 @@ export const provisionWorkspace = internalAction({
         cloudflareAccountId,
         cloudflarePagesUrl,
         cloudflareProjectName,
+        codexEnvironmentId: codingEnvironmentId,
         codingBackend: existing?.codingBackend ?? "codex_cloud",
         codingEnvironmentId,
-        codexEnvironmentId: codingEnvironmentId,
         convexDeploymentName,
         convexProjectSlug,
         convexTeamSlug,

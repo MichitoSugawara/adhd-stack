@@ -2,12 +2,12 @@ import { tahcodeSeedFiles, templateRepoFromEnv } from "./appTemplate";
 import type { TemplateKind } from "./appTemplate";
 import { repoFromPayload, utf8ToBase64 } from "./githubRepo";
 import type { GitHubRepo } from "./githubRepo";
+import { asRecord, asString } from "./httpJson";
 import {
   invokeOpenConnectorAction,
   invokeOpenConnectorActionIds,
   proxyOpenConnector,
 } from "./openConnectorActions";
-import { asRecord, asString } from "./httpJson";
 
 const envAction = (key: string, fallback: string): string =>
   process.env[key]?.trim() || fallback;
@@ -24,7 +24,8 @@ const userFromPayload = (payload: Record<string, unknown>): string => {
 };
 
 const requireRepo = (payload: Record<string, unknown>): GitHubRepo => {
-  const repo = repoFromPayload(payload) ?? repoFromPayload(asRecord(payload.data));
+  const repo =
+    repoFromPayload(payload) ?? repoFromPayload(asRecord(payload.data));
   if (!repo) {
     throw new Error("GitHub リポジトリの応答を読めませんでした");
   }

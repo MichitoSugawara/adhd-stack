@@ -114,16 +114,19 @@ export const toChatView = (
     toolMessages = [];
   };
 
-  messages.forEach((message, index) => {
+  for (const [index, message] of messages.entries()) {
+    if (!message) {
+      continue;
+    }
     if (message.role === "user") {
       flushTools();
       items.push({ body: message.body, id: message._id, type: "user" });
-      return;
+      continue;
     }
     if (message.role === "system") {
       flushTools();
       items.push({ body: message.body, id: message._id, type: "system" });
-      return;
+      continue;
     }
     if (message.kind === "thinking") {
       flushTools();
@@ -133,15 +136,15 @@ export const toChatView = (
         id: message._id,
         type: "thinking",
       });
-      return;
+      continue;
     }
     if (message.kind === "text") {
       flushTools();
       items.push({ body: message.body, id: message._id, type: "text" });
-      return;
+      continue;
     }
     toolMessages.push(message);
-  });
+  }
   flushTools();
   return items;
 };

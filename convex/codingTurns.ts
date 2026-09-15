@@ -72,7 +72,7 @@ export const runTurn = internalAction({
         environmentId,
         prompt: args.prompt,
       });
-      taskId = started.taskId;
+      ({ taskId } = started);
     } catch (error) {
       await ctx.runMutation(internal.workspaceInternal.upsertArtifact, {
         body:

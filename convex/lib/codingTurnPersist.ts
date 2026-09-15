@@ -1,8 +1,8 @@
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
-import type { NormalizedTurn } from "./codingEvents";
 import { summarizeDiff } from "./codexCloud";
+import type { NormalizedTurn } from "./codingEvents";
 
 export const persistNormalizedTurn = async (
   ctx: ActionCtx,
@@ -28,16 +28,18 @@ export const persistNormalizedTurn = async (
       workspaceId,
     });
   }
-  for (const command of snapshot.commands) {
-    await ctx.runMutation(internal.workspaceInternal.upsertArtifact, {
-      body: command,
-      externalId: `${taskId}:command:${command}`,
-      kind: "command",
-      meta: { command },
-      role: "assistant",
-      workspaceId,
-    });
-  }
+  await Promise.all(
+    snapshot.commands.map(async (command) => {
+      await ctx.runMutation(internal.workspaceInternal.upsertArtifact, {
+        body: command,
+        externalId: `${taskId}:command:${command}`,
+        kind: "command",
+        meta: { command },
+        role: "assistant",
+        workspaceId,
+      });
+    })
+  );
   if (snapshot.diff || snapshot.files.length > 0) {
     const stats = snapshot.diff
       ? summarizeDiff(snapshot.diff)

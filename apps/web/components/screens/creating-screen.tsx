@@ -8,8 +8,8 @@ import TaskRows from "@/components/primitives/TaskRows";
 import type { TaskRow } from "@/components/primitives/TaskRows";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
-import { connectErrorMessage } from "@/lib/connect-error";
 import { useRetryProvision, useWorkspaceBySlug } from "@/lib/coding-port";
+import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
 
@@ -43,9 +43,7 @@ const rowsForTick = (tick: number): TaskRow[] => {
   return rows;
 };
 
-const statusOf = (
-  value: string | undefined
-): TaskRow["status"] => {
+const statusOf = (value: string | undefined): TaskRow["status"] => {
   if (value === "done") {
     return "done";
   }
@@ -70,33 +68,42 @@ const rowsFromSteps = (
     | undefined,
   provisionStatus: string
 ): TaskRow[] => {
-  const values: Record<StepKey, string> = {
-    backend: steps?.backend ?? (provisionStatus === "pending" ? "pending" : "running"),
-    convex: steps?.convex ?? "pending",
-    pages: steps?.pages ?? "pending",
-    repo: steps?.repo ?? "pending",
-    template: steps?.template ?? "pending",
+  const stepValue = (key: StepKey): string => {
+    if (steps) {
+      return steps[key];
+    }
+    if (key === "backend" && provisionStatus !== "pending") {
+      return "running";
+    }
+    return "pending";
   };
-  return STEPS.map((step, index) => ({
-    amount: values[step.key] === "pending" ? "待ち" : step.meta,
-    details: [{ label: step.label, meta: values[step.key] }],
-    key: step.key,
-    label: step.label,
-    status:
-      values[step.key] === "pending" && provisionStatus === "pending"
-        ? "running"
-        : values[step.key] === "skipped"
-          ? "done"
-          : statusOf(values[step.key]),
-    step: index + 1,
-  }));
+  const rowStatus = (value: string): TaskRow["status"] => {
+    if (value === "pending" && provisionStatus === "pending") {
+      return "running";
+    }
+    if (value === "skipped") {
+      return "done";
+    }
+    return statusOf(value);
+  };
+  return STEPS.map((step, index) => {
+    const value = stepValue(step.key);
+    return {
+      amount: value === "pending" ? "待ち" : step.meta,
+      details: [{ label: step.label, meta: value }],
+      key: step.key,
+      label: step.label,
+      status: rowStatus(value),
+      step: index + 1,
+    };
+  });
 };
 
 const CreatingLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
   const retry = useRetryProvision();
   const [retrying, setRetrying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [failNote, setFailNote] = useState<string | null>(null);
 
   if (workspace === undefined) {
     return (
@@ -115,6 +122,17 @@ const CreatingLive = ({ slug }: { slug: string }) => {
 
   const complete = workspace.provisionStatus === "ready";
   const failed = workspace.provisionStatus === "error";
+  const handleRetry = async () => {
+    setRetrying(true);
+    setFailNote(null);
+    try {
+      await retry({ slug });
+    } catch (error) {
+      setFailNote(connectErrorMessage(error));
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
@@ -135,13 +153,20 @@ const CreatingLive = ({ slug }: { slug: string }) => {
       <TaskRows
         className="max-w-xl"
         labels={{ completed: "済", failed: "失敗" }}
-        rows={rowsFromSteps(workspace.provisionSteps, workspace.provisionStatus)}
+        rows={rowsFromSteps(
+          workspace.provisionSteps,
+          workspace.provisionStatus
+        )}
         variant="List"
       />
       {workspace.provisionError ? (
-        <p className="text-red max-w-2xl text-[13px]">{workspace.provisionError}</p>
+        <p className="text-red max-w-2xl text-[13px]">
+          {workspace.provisionError}
+        </p>
       ) : null}
-      {error ? <p className="text-red max-w-2xl text-[13px]">{error}</p> : null}
+      {failNote ? (
+        <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
+      ) : null}
       {complete ? (
         <Link
           className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
@@ -155,15 +180,7 @@ const CreatingLive = ({ slug }: { slug: string }) => {
           className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] font-medium disabled:opacity-40"
           disabled={retrying}
           onClick={() => {
-            setRetrying(true);
-            setError(null);
-            void retry({ slug })
-              .catch((caught: unknown) => {
-                setError(connectErrorMessage(caught));
-              })
-              .finally(() => {
-                setRetrying(false);
-              });
+            void handleRetry();
           }}
           type="button"
         >
@@ -238,7 +255,11 @@ export const CreatingScreen = ({ appId }: { appId: string }) => {
   return (
     <ShellGate>
       <AppFrame>
-        {live ? <CreatingLive slug={appId} /> : <CreatingSkeleton appId={appId} />}
+        {live ? (
+          <CreatingLive slug={appId} />
+        ) : (
+          <CreatingSkeleton appId={appId} />
+        )}
       </AppFrame>
     </ShellGate>
   );
