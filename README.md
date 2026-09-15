@@ -10,7 +10,7 @@ v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（
 
 このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。
 
-現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` も手渡し IA を辿る移行用モックで、偽の接続を本番に出してはいけません。`convex/` には以前の実 OAuth / Codex Cloud 実験が残っていますが、トークン保管と公開名は後続フェーズで ConnectionsPort / CodingBackend に合わせます。GitHub / Cloudflare / Convex のカスタム OAuth は OpenConnector が使えるまでの interim です。ChatGPT は Codex のデバイスログインのままです（OpenAI API キー物語は使いません）。このリポジトリにシークレットは入れていません。
+現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。接続カードは未接続のまま、Google ログインと API キーカードはありません。ローカル状態で画面を辿れますが、OAuth 成功は装いません。`convex/` の実接続は Phase 2 以降です。このリポジトリにシークレットは入れていません。
 
 ## 動かし方
 
@@ -103,10 +103,10 @@ GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actio
 ## 構成
 
 ```
-apps/web          Next.js App Router + OpenNext
-convex            Convex Auth・接続・チャット
-.cursor/skills    ui-ux-pro-max
-design-system     スキルが出したデザイン方針
+apps/web          Next.js App Router + Beautiful UI + OpenNext
+convex            Convex Auth・接続・チャット（Phase 2 以降）
+docs              要件の正本
+design_handoff    移行用 IA 参考
 ```
 
-`apps/web` のモック画面（接続ノード UI / エディタ）を残し、偽の接続状態を本物の OAuth に差し替えています。プロジェクト一覧は補助画面です。品質ツールは ultracite（oxlint / oxfmt）のままです。
+`apps/web` は Beautiful UI のシェルです。品質ツールは ultracite（oxlint / oxfmt）のままです。

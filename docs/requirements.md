@@ -1,10 +1,8 @@
 # ADHD Stack 要件（v1+ 正本）
 
-プロダクトオーナー合意の方向。以降の実装・調査・検証は本ファイルを単一の正本とする。
-`design_handoff/`・旧モック・現行 `convex/` 実験は証拠や移行用参考であり、本ファイルと矛盾したら本ファイルが勝つ。
+プロダクトオーナー合意の方向。以降の実装・調査・検証は本ファイルを単一の正本とする。 `design_handoff/`・旧モック・現行 `convex/` 実験は証拠や移行用参考であり、本ファイルと矛盾したら本ファイルが勝つ。
 
-対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。
-この PR は **Phase 0（ドキュメント）** のみ。アプリ実装・OAuth 配線・デプロイは後続フェーズ。
+対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。Phase 0 で本ファイルを正本にした。Phase 1 はこの PR の Beautiful UI シェル。OAuth / 公開 / デプロイは後続フェーズ。
 
 ---
 
@@ -38,15 +36,15 @@ IDE は開かない。エディタ GUI を埋め込まない。構成やホス�
 
 Phase 1 で最低限マップする部品:
 
-| 部品 | 役割 |
-| --- | --- |
-| PromptBar | チャット入力（composer） |
-| Thinking / ThinkingState | 思考・作業中 |
-| ToolChips | ツール呼び出し・差分のチップ |
-| Approval Card | 確認待ち |
-| Streaming Text / Chat | 本文ストリーム |
-| SidebarNav / harness | 左レール・アプリ枠 |
-| Task Rows / Loading State | 作成中・公開中の進捗 |
+| 部品                      | 役割                         |
+| ------------------------- | ---------------------------- |
+| PromptBar                 | チャット入力（composer）     |
+| Thinking / ThinkingState  | 思考・作業中                 |
+| ToolChips                 | ツール呼び出し・差分のチップ |
+| Approval Card             | 確認待ち                     |
+| Streaming Text / Chat     | 本文ストリーム               |
+| SidebarNav / harness      | 左レール・アプリ枠           |
+| Task Rows / Loading State | 作成中・公開中の進捗         |
 
 トークンは tahcode と同じく **VS Code Dark Green+** を基準にする（背景 `#121712`、面 `#0c150c`、文字 `#cfd4cf`、アクセント `#1fbf3a` 前後）。ライトは後でもよい。tahcode のトークン実装を証拠に、ADHD Stack のシェルへ写す。
 
@@ -67,14 +65,13 @@ Phase 1 で最低限マップする部品:
 - git 用語を UI に出さない（保存 / 反映 / 変更）
 - 切れた接続は接続画面でつなぎ直す
 
-このブランチの緑セリフモックは、上記 IA を確認するための移行用フロントである。Phase 1 で Beautiful UI シェルに置き換える。
+緑セリフモックは削除した。Phase 1 の画面は Beautiful UI + Dark Green+ のシェルである。
 
 ---
 
 ## 4. 接続
 
-カードは四つだけ: **ChatGPT / GitHub / Cloudflare / Convex**。
-足りないカードだけ「接続する」を出す。つながっているものは識別子（メール、@handle、team）と切断を出す。
+カードは四つだけ: **ChatGPT / GitHub / Cloudflare / Convex**。足りないカードだけ「接続する」を出す。つながっているものは識別子（メール、@handle、team）と切断を出す。
 
 偽の接続・モックトークン・デモ用の成功状態は禁止。未設定なら「つながっていない」と出し、押せば本物の認可だけを始める。
 
@@ -129,8 +126,7 @@ v1 UI にバックエンド選択は出さなくてよい。ただしスキー�
 
 ## 6. 生成アプリのテンプレート（tahcode 由来）
 
-ユーザーアプリを provision するときの **テンプレートリポジトリは tahcode ベース**。
-[tahcode](https://github.com/MichitoSugawara/tahcode) と、手元の参照パターンを正とする。
+ユーザーアプリを provision するときの **テンプレートリポジトリは tahcode ベース**。 [tahcode](https://github.com/MichitoSugawara/tahcode) と、手元の参照パターンを正とする。
 
 前提: tahcode にはプレビュー作成と、それに必要な足場が既にある。空のグリーンフィールドテンプレートを新造しない。
 
@@ -202,15 +198,15 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 
 | Phase | 内容 | 完了の目安 |
 | --- | --- | --- |
-| **0** | 本ファイルを正本にする（この PR） | オーナーが方向に合意できる |
-| **1** | Beautiful UI シェル。ログイン / 接続 / 一覧 / 作成中 / エディタ。モック接続なし。手渡しピクセル一致なし | 画面を辿れる。トークンは Dark Green+ |
+| **0** | 本ファイルを正本にする | オーナーが方向に合意できる |
+| **1** | Beautiful UI シェル。ログイン / 接続 / 一覧 / 作成中 / エディタ。モック接続なし。手渡しピクセル一致なし（この PR） | 画面を辿れる。トークンは Dark Green+ |
 | **2** | OpenConnector / ConnectionsPort。4 カードを本物の接続にする。ChatGPT は device OAuth 固定 | Convex に不透明 id だけ残る。UI にゲートウェイ名が出ない |
 | **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
 | **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す | 偽 URL を出さない |
 | **5** | `adhd.gawarago.com` を本番に切り替える | モック Pages を本物に置換 |
 | **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする | UI を書き直さずに差し込める |
 
-Phase 1 は本ファイルがあれば着手してよい。OAuth や Codex 呼び出しは Phase 2–3。
+Phase 1 は本 PR のシェル。OAuth や Codex 呼び出しは Phase 2–3。
 
 ---
 

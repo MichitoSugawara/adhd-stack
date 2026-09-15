@@ -15,29 +15,19 @@ export default defineConfig({
     "convex/_generated/**",
     "design-system/**",
     "design_handoff/**",
+    "apps/web/app/beautifui/**",
+    "apps/web/components/primitives/**",
   ],
   jsPlugins: jsPlugins.jsPlugins,
   overrides: [
     {
-      files: ["apps/web/components/editor-screen.tsx"],
+      files: ["apps/web/app/beautifui/**", "apps/web/components/primitives/**"],
       rules: {
-        // Kumo's icon-only Button API requires the `shape` prop.
-        "anti-slop/no-shape-in-symbol-names": "off",
+        // Beautiful UI registry files keep upstream names and demo traces.
         "eslint/complexity": "off",
+        "eslint/max-lines": "off",
         "react-doctor/no-giant-component": "off",
-      },
-    },
-    {
-      files: [
-        "apps/web/components/connect-screen.tsx",
-        "apps/web/components/editor-right-pane.tsx",
-        "apps/web/components/envs-screen.tsx",
-        "apps/web/components/message-view.tsx",
-        "apps/web/components/projects-screen.tsx",
-      ],
-      rules: {
-        "eslint/complexity": "off",
-        "react-doctor/no-giant-component": "off",
+        "unicorn/filename-case": "off",
       },
     },
     {
@@ -69,10 +59,11 @@ export default defineConfig({
         "convex/oauthInternal.ts",
         "convex/publishActions.ts",
         "convex/workspaceActions.ts",
-        "apps/web/lib/mock-store.ts",
+        "apps/web/lib/shell-state.ts",
       ],
       rules: {
         // Third-party OAuth / platform JSON is parsed at the HTTP boundary.
+        // Shell localStorage is the same shape of untrusted JSON at the client boundary.
         "anti-slop/no-conditional-empty-object-spread": "off",
         "anti-slop/no-known-value-widening": "off",
         "anti-slop/no-runtime-typeof": "off",
@@ -84,6 +75,9 @@ export default defineConfig({
         "node/callback-return": "off",
         "promise/avoid-new": "off",
         "react-doctor/async-await-in-loop": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-type-assertion": "off",
       },
     },
   ],

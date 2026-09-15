@@ -1,8 +1,10 @@
-@source "../node_modules/@cloudflare/kumo/dist/**/*.{js,jsx,ts,tsx}";
-@import "@cloudflare/kumo/styles/tailwind";
-@import "tailwindcss";
-@import "konsta/react/theme.css";
-@import "./stack.css";
+@import "./beautifui/foundation.css";
+@import "./beautifui/sidebar-nav.css";
+@import "./beautifui/tokens.css";
+
+@source "../components/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";
 
 * {
   box-sizing: border-box;
@@ -10,9 +12,8 @@
 
 html,
 body {
+  min-height: 100%;
   margin: 0;
-  overflow-x: hidden;
-  background: var(--paper, #f3f5f2);
 }
 
 .sr-only {

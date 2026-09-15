@@ -1,4 +1,4 @@
-import { CreatingScreen } from "../../../../components/creating-screen";
+import { CreatingScreen } from "../../../../components/screens/creating-screen";
 
 interface PageProperties {
   params: Promise<{ project: string }>;
@@ -6,5 +6,5 @@ interface PageProperties {
 
 export default async function CreatingPage({ params }: PageProperties) {
   const { project } = await params;
-  return <CreatingScreen projectId={project} />;
+  return <CreatingScreen appId={project} />;
 }

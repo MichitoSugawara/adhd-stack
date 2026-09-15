@@ -1,4 +1,4 @@
-import { LoginScreen } from "../components/login-screen";
+import { LoginScreen } from "../components/screens/login-screen";
 
 export default function HomePage() {
   return <LoginScreen />;

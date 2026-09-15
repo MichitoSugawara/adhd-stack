@@ -1,4 +1,4 @@
-import { EnvsScreen } from "../../../../components/envs-screen";
+import { EnvsScreen } from "../../../../components/screens/envs-screen";
 
 interface PageProperties {
   params: Promise<{ project: string }>;
@@ -6,5 +6,5 @@ interface PageProperties {
 
 export default async function EnvsPage({ params }: PageProperties) {
   const { project } = await params;
-  return <EnvsScreen projectId={project} />;
+  return <EnvsScreen appId={project} />;
 }

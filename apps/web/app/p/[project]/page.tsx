@@ -1,6 +1,4 @@
-import { Suspense } from "react";
-
-import { EditorScreen } from "../../../components/editor-screen";
+import { EditorScreen } from "../../../components/screens/editor-screen";
 
 interface PageProperties {
   params: Promise<{ project: string }>;
@@ -8,9 +6,5 @@ interface PageProperties {
 
 export default async function ProjectEditorPage({ params }: PageProperties) {
   const { project } = await params;
-  return (
-    <Suspense fallback={<p>読み込み中</p>}>
-      <EditorScreen projectId={project} />
-    </Suspense>
-  );
+  return <EditorScreen appId={project} />;
 }

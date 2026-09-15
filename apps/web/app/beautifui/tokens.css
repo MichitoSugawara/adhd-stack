@@ -1,0 +1,50 @@
+/* tahcode / VS Code Dark Green+ — Beautiful UI トークンへの写し。
+ * 根拠: tahcode の foundation 上書きと同じく、registry の変数名は変えず値だけ移す。 */
+:root,
+.dark {
+  color-scheme: dark;
+  --page: #121712;
+  --canvas: #101610;
+  --surface: #0c150c;
+  --inset: #0a120a;
+  --hover: #162016;
+  --hover-2: #1c281c;
+  --ink: #cfd4cf;
+  --ink-2: #a9b2a9;
+  --ink-3: #7d877d;
+  --line: color-mix(in srgb, #0e9c2d 40%, #121712);
+  --line-strong: color-mix(in srgb, #0e9c2d 55%, #121712);
+  --line-soft: #152015;
+  --field: #101810;
+  --stripe: rgb(31 191 58 / 6%);
+  --stripe-bg: #121712;
+  --accent: #1fbf3a;
+  --accent-ink: #8ee89a;
+  --accent-tint: rgb(31 191 58 / 16%);
+  --green: #1fbf3a;
+  --green-tint: rgb(31 191 58 / 14%);
+  --orange: #d7a13b;
+  --orange-tint: rgb(215 161 59 / 14%);
+  --red: #ef6a5c;
+  --red-tint: rgb(239 106 92 / 14%);
+  --tooltip-bg: #0a100a;
+  --tooltip-fg: #cfd4cf;
+  --tooltip-muted: #a9b2a9;
+  --tooltip-border: color-mix(in srgb, #0e9c2d 40%, #121712);
+}
+
+body {
+  background-color: var(--page);
+  background-image: none;
+  color: var(--ink);
+}
+
+.shell-note {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--inset);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}

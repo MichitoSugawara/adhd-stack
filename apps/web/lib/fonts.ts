@@ -1,17 +1,15 @@
-import { Source_Code_Pro, Source_Serif_4 } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 
-export const display = Source_Serif_4({
+export const sans = Inter({
   display: "swap",
   subsets: ["latin"],
-  variable: "--font-serif",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
 });
 
-export const mono = Source_Code_Pro({
+export const mono = Geist_Mono({
   display: "swap",
   subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500", "600"],
+  variable: "--font-mono-face",
 });
 
-export const fontVariables = `${display.variable} ${mono.variable}`;
+export const fontVariables = `${sans.variable} ${mono.variable}`;
