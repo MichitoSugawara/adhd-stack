@@ -122,7 +122,9 @@ const seeds = tahcodeSeedFiles({ name: "Demo", slug: "demo-app" });
 const packageJson = seeds.find((file) => file.path === "package.json");
 const tsconfig = seeds.find((file) => file.path === "tsconfig.json");
 const nextConfig = seeds.find((file) => file.path === "next.config.ts");
-const openNextConfig = seeds.find((file) => file.path === "open-next.config.ts");
+const openNextConfig = seeds.find(
+  (file) => file.path === "open-next.config.ts"
+);
 const wrangler = seeds.find((file) => file.path === "wrangler.toml");
 const gitignore = seeds.find((file) => file.path === ".gitignore");
 const workflow = seeds.find(
