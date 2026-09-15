@@ -10,6 +10,7 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { openOauthTab } from "@/lib/oauth-navigation";
 import {
   clearPendingOc,
   readPendingOc,
@@ -184,7 +185,7 @@ const ConnectBoard = () => {
           userCode: started.userCode,
           verificationUrl: started.verificationUrl,
         });
-        window.open(started.verificationUrl, "_blank");
+        openOauthTab(started.verificationUrl);
         return;
       }
       const started = await beginConnect({ provider: id });
@@ -193,13 +194,14 @@ const ConnectBoard = () => {
         started.connectionName &&
         (id === "github" || id === "convex")
       ) {
-        writePendingOc({
+        const pending = {
           connectionName: started.connectionName,
           service: id,
-        });
+        };
+        writePendingOc(pending);
+        setPendingOc(pending);
       }
-      // 同一タブだけ。ポップアップの null 判定で同じ URL を二度開かない。
-      window.location.assign(started.url);
+      openOauthTab(started.url);
     } catch (error) {
       setErrors((current) => ({
         ...current,
@@ -255,7 +257,7 @@ const ConnectBoard = () => {
           } else if (service.id === pendingOc?.service) {
             extra = (
               <p className="text-ink-3 mt-3 text-[12px]">
-                認可が終わるとこの画面に戻ります。
+                新しいタブで認可しています。終わったらこのタブに戻ってください。
               </p>
             );
           }
