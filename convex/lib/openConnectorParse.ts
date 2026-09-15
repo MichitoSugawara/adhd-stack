@@ -24,22 +24,26 @@ const pushArray = (target: unknown[], value: unknown): void => {
   }
 };
 
-export const extractPayloadItems = (
-  payload: Record<string, unknown>
-): unknown[] => {
+export const extractPayloadItems = (payload: unknown): unknown[] => {
+  // OpenConnector GET /api/connections returns a top-level JSON array.
+  // connector-sdk apps.list also treats GET /apps as an array (envelope.data ?? []).
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  const record = asRecord(payload);
   const items: unknown[] = [];
-  pushArray(items, payload.connections);
+  pushArray(items, record.connections);
   if (items.length > 0) {
     return items;
   }
-  pushArray(items, payload.items);
+  pushArray(items, record.items);
   if (items.length > 0) {
     return items;
   }
-  if (Array.isArray(payload.data)) {
-    return payload.data;
+  if (Array.isArray(record.data)) {
+    return record.data;
   }
-  const nested = asRecord(payload.data);
+  const nested = asRecord(record.data);
   pushArray(items, nested.connections);
   if (items.length > 0) {
     return items;
@@ -93,7 +97,7 @@ export const parseOcConnection = (
 };
 
 export const parseOcConnectionList = (
-  payload: Record<string, unknown>
+  payload: unknown
 ): OcConnectionSummary[] => {
   const parsed: OcConnectionSummary[] = [];
   for (const item of extractPayloadItems(payload)) {

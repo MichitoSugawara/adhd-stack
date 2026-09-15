@@ -10,9 +10,16 @@ export const asNumber = (value: unknown): number | undefined => {
 };
 
 export const asRecord = (value: unknown): Record<string, unknown> =>
-  typeof value === "object" && value !== null
+  typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+
+const recordFromJson = (value: unknown): Record<string, unknown> => {
+  if (Array.isArray(value)) {
+    return { items: value };
+  }
+  return asRecord(value);
+};
 
 export const asList = (value: unknown): unknown[] =>
   Array.isArray(value) ? value : [];
@@ -39,7 +46,7 @@ export const readJson = async (
     return {};
   }
   try {
-    return asRecord(JSON.parse(text));
+    return recordFromJson(JSON.parse(text));
   } catch {
     return { raw: text };
   }
