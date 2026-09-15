@@ -41,8 +41,9 @@ export const runTurn = internalAction({
       return null;
     }
 
+    const backend = getCodingBackend(workspace.codingBackend);
     const chatgpt = await loadFreshConnection(ctx, args.userId, "chatgpt");
-    if (!chatgpt) {
+    if (backend.kind === "codex_cloud" && !chatgpt) {
       await ctx.runMutation(internal.workspaceInternal.upsertArtifact, {
         body: "ChatGPT の接続がありません",
         createdAt: args.createdAt + 1,
@@ -63,16 +64,22 @@ export const runTurn = internalAction({
       workspaceId: args.workspaceId,
     });
 
-    const backend = getCodingBackend(workspace.codingBackend);
     let taskId: string;
     try {
       const started = await backend.startTurn({
-        chatgptAccessToken: chatgpt.accessToken,
-        chatgptAccountId: chatgpt.accountId,
+        chatgptAccessToken: chatgpt?.accessToken,
+        chatgptAccountId: chatgpt?.accountId,
         environmentId,
         prompt: args.prompt,
       });
       ({ taskId } = started);
+      if (started.environmentId && started.environmentId !== environmentId) {
+        await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
+          codingEnvironmentId: started.environmentId,
+          provisionStatus: workspace.provisionStatus,
+          workspaceId: args.workspaceId,
+        });
+      }
     } catch (error) {
       await ctx.runMutation(internal.workspaceInternal.upsertArtifact, {
         body:
@@ -97,8 +104,8 @@ export const runTurn = internalAction({
     while (Date.now() < deadline) {
       try {
         const snapshot = await backend.pollTurn({
-          chatgptAccessToken: chatgpt.accessToken,
-          chatgptAccountId: chatgpt.accountId,
+          chatgptAccessToken: chatgpt?.accessToken,
+          chatgptAccountId: chatgpt?.accountId,
           taskId,
         });
         await persistNormalizedTurn(ctx, args.workspaceId, taskId, snapshot);

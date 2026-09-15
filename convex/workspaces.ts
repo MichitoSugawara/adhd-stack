@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { nextUniqueSlug, slugFromName } from "./lib/appSlug";
 import { authedMutation, authedQuery } from "./lib/customFunctions";
-import { workspacePublicValidator } from "./validators";
+import { codingBackendValidator, workspacePublicValidator } from "./validators";
 
 const toPublic = (workspace: Doc<"workspaces">) => ({
   _id: workspace._id,
@@ -15,6 +15,7 @@ const toPublic = (workspace: Doc<"workspaces">) => ({
   githubRepoFullName: workspace.githubRepoFullName,
   githubRepoUrl: workspace.githubRepoUrl,
   name: workspace.name,
+  originRepoUrl: workspace.originRepoUrl,
   provisionError: workspace.provisionError,
   provisionStatus: workspace.provisionStatus,
   provisionSteps: workspace.provisionSteps,
@@ -100,4 +101,37 @@ export const ensure = authedMutation({
     });
   },
   returns: v.id("workspaces"),
+});
+
+export const setCodingBackend = authedMutation({
+  args: {
+    codingBackend: codingBackendValidator,
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const exact = await ctx.db
+      .query("workspaces")
+      .withIndex("by_user_and_slug", (q) =>
+        q.eq("userId", ctx.user._id).eq("slug", args.slug)
+      )
+      .unique();
+    const rows = exact
+      ? [exact]
+      : await ctx.db
+          .query("workspaces")
+          .withIndex("by_user", (q) => q.eq("userId", ctx.user._id))
+          .take(50);
+    const workspace =
+      exact ??
+      rows.find((row) => (row.slug ?? slugFromName(row.name)) === args.slug);
+    if (!workspace) {
+      throw new Error("アプリが見つかりません");
+    }
+    await ctx.db.patch(workspace._id, {
+      codingBackend: args.codingBackend,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+  returns: v.null(),
 });

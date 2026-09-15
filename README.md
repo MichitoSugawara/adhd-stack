@@ -8,7 +8,7 @@
 
 v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（Phase 0）。UI は [Beautiful UI](https://www.beautifului.dev/)、接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
 
-このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（v1 は GitHub + Codex Cloud Environment）です。公開は開いているアプリの Cloudflare Pages + Convex に出し、同じ画面に URL を返します。Convex の関数プッシュはこのサーバーからできないので、手動または CI のままです。ホスト `adhd.gawarago.com` の本番切替は次の段階です。
+このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（既定は GitHub + Codex Cloud Environment。第二実装は Cursor Cloud Agent。切り替えは [docs/coding-backends.md](docs/coding-backends.md)）です。公開は開いているアプリの Cloudflare Pages + Convex に出し、同じ画面に URL を返します。Convex の関数プッシュはこのサーバーからできないので、手動または CI のままです。ホスト `adhd.gawarago.com` の本番切替は次の段階です。
 
 現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。`/connect` は ConnectionsPort 経由の実接続です。つながったようには見せません。Google ログインと API キーカードはありません。このリポジトリにシークレットは入れていません。
 
@@ -49,6 +49,10 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 | Convex | OpenConnector に Convex team OAuth アプリを設定 | OpenConnector の `/oauth/callback` | `OPENCONNECTOR_BASE_URL` `OPENCONNECTOR_ADMIN_TOKEN` |
 
 フロントの `NEXT_PUBLIC_CONVEX_URL` と `NEXT_PUBLIC_CONVEX_SITE_URL` は公開してよいデプロイ URL です。シークレットは Convex 側だけに置きます。
+
+### Cursor Cloud Agent（エンジン 2）
+
+既定は Codex のままです。切替手順は [docs/coding-backends.md](docs/coding-backends.md)。Convex に `CURSOR_API_KEY`。任意で `ADHD_CODING_BACKEND=cursor_cloud`、`ORIGIN_TOKEN`、`ORIGIN_OWNER_SLUG`。Cursor の API キーは Origin の Bearer には使えません。画面にバックエンド選択は出しません。
 
 ### ChatGPT
 

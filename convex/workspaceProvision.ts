@@ -5,8 +5,10 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { action } from "./_generated/server";
 import { nextUniqueSlug, slugFromName } from "./lib/appSlug";
+import { defaultCodingBackend } from "./lib/codingBackendEnv";
 import { userHasAllConnections } from "./lib/connectionReady";
 import { authedMutation } from "./lib/customFunctions";
+import { codingBackendValidator } from "./validators";
 
 const createdValidator = v.object({
   slug: v.string(),
@@ -14,7 +16,10 @@ const createdValidator = v.object({
 });
 
 export const createAndProvision = authedMutation({
-  args: { name: v.string() },
+  args: {
+    codingBackend: v.optional(codingBackendValidator),
+    name: v.string(),
+  },
   handler: async (ctx, args) => {
     const name = args.name.trim();
     if (name.length === 0) {
@@ -36,7 +41,7 @@ export const createAndProvision = authedMutation({
       new Set(rows.map((row) => row.slug ?? slugFromName(row.name)))
     );
     const workspaceId = await ctx.db.insert("workspaces", {
-      codingBackend: "codex_cloud",
+      codingBackend: args.codingBackend ?? defaultCodingBackend(),
       name,
       provisionStatus: "pending",
       provisionSteps: {

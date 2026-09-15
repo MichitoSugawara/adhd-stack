@@ -2,6 +2,11 @@ import { codexCloudBackend } from "./codexCloudBackend";
 import type { CodingBackend, CodingBackendKind } from "./codingBackend";
 import { cursorCloudBackend } from "./cursorCloudBackend";
 
+export {
+  defaultCodingBackend,
+  isCursorApiConfigured,
+} from "./codingBackendEnv";
+
 export const getCodingBackend = (
   kind: CodingBackendKind | undefined
 ): CodingBackend => {

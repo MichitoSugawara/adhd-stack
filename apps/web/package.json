@@ -8,7 +8,7 @@
     "dev": "next dev",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start",
-    "typecheck": "node ./scripts/assert-forbidden-copy.mjs && node ./scripts/assert-app-slug.mjs && tsc --noEmit"
+    "typecheck": "node ./scripts/assert-forbidden-copy.mjs && node ./scripts/assert-app-slug.mjs && node ./scripts/assert-cursor-cloud-map.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@central-icons-react/round-outlined-radius-2-stroke-2": "^1.1.319",

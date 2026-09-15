@@ -583,6 +583,10 @@ export const mergeUserPair = async (
         keepWorkspace.githubRepoUrl,
         absorbWorkspace.githubRepoUrl
       ),
+      originRepoUrl: preferText(
+        keepWorkspace.originRepoUrl,
+        absorbWorkspace.originRepoUrl
+      ),
       provisionError: keepWorkspace.provisionError,
       provisionStatus: pickProvisionStatus(
         keepWorkspace.provisionStatus,

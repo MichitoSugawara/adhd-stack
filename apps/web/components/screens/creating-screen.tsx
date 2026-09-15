@@ -145,6 +145,9 @@ const CreatingLive = ({ slug }: { slug: string }) => {
         </h1>
         <p className="text-ink-2 mt-2 text-[14px]">
           GitHub リポジトリ、tahcode 由来の足場、実行環境の進捗です。
+          {workspace.codingBackend === "cursor_cloud"
+            ? " 実行系は Cursor Cloud Agent です。"
+            : " 実行系は Codex Cloud です。"}
         </p>
       </div>
       {workspace.provisionStatus === "provisioning" ? (

@@ -24,11 +24,23 @@ export const codexCloudBackend: CodingBackend = {
   isTurnDone: (snapshot) => isCodexTaskDone(snapshot),
   kind: "codex_cloud",
   pollTurn: async (input): Promise<NormalizedTurn> => {
-    const auth = await toAuth(input);
+    if (!input.chatgptAccessToken) {
+      throw new Error("ChatGPT の接続がありません");
+    }
+    const auth = await toAuth({
+      chatgptAccessToken: input.chatgptAccessToken,
+      chatgptAccountId: input.chatgptAccountId,
+    });
     return await getCodexTaskSnapshot(auth, input.taskId);
   },
   provisionEnvironment: async (input) => {
-    const auth = await toAuth(input);
+    if (!input.chatgptAccessToken) {
+      throw new Error("ChatGPT の接続がありません");
+    }
+    const auth = await toAuth({
+      chatgptAccessToken: input.chatgptAccessToken,
+      chatgptAccountId: input.chatgptAccountId,
+    });
     const environment = await ensureCodexEnvironment(
       auth,
       input.githubOwner,
@@ -38,7 +50,13 @@ export const codexCloudBackend: CodingBackend = {
     return { environmentId: environment.id };
   },
   startTurn: async (input) => {
-    const auth = await toAuth(input);
+    if (!input.chatgptAccessToken) {
+      throw new Error("ChatGPT の接続がありません");
+    }
+    const auth = await toAuth({
+      chatgptAccessToken: input.chatgptAccessToken,
+      chatgptAccountId: input.chatgptAccountId,
+    });
     const taskId = await createCodexTask(
       auth,
       input.environmentId,

@@ -5,22 +5,34 @@ export type CodingBackendKind = "codex_cloud" | "cursor_cloud";
 export type CodingStatus = "error" | "idle" | "running";
 
 export interface CodingProvisionInput {
-  chatgptAccessToken: string;
+  chatgptAccessToken?: string;
   chatgptAccountId?: string;
   githubOwner: string;
   githubRepoName: string;
+  githubRepoUrl?: string;
   label: string;
 }
 
+export interface CodingProvisionResult {
+  environmentId: string;
+  originNote?: string;
+  originRepoUrl?: string;
+}
+
 export interface CodingTurnStartInput {
-  chatgptAccessToken: string;
+  chatgptAccessToken?: string;
   chatgptAccountId?: string;
   environmentId: string;
   prompt: string;
 }
 
+export interface CodingTurnStartResult {
+  environmentId?: string;
+  taskId: string;
+}
+
 export interface CodingTurnPollInput {
-  chatgptAccessToken: string;
+  chatgptAccessToken?: string;
   chatgptAccountId?: string;
   taskId: string;
 }
@@ -31,8 +43,8 @@ export interface CodingBackend {
   pollTurn: (input: CodingTurnPollInput) => Promise<NormalizedTurn>;
   provisionEnvironment: (
     input: CodingProvisionInput
-  ) => Promise<{ environmentId: string }>;
-  startTurn: (input: CodingTurnStartInput) => Promise<{ taskId: string }>;
+  ) => Promise<CodingProvisionResult>;
+  startTurn: (input: CodingTurnStartInput) => Promise<CodingTurnStartResult>;
   status: (input: {
     environmentId?: string;
     provisionError?: string;

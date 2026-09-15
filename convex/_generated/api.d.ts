@@ -12,6 +12,7 @@ import type * as accountMerge from "../accountMerge.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as chatActions from "../chatActions.js";
+import type * as codingBackends from "../codingBackends.js";
 import type * as codingTurns from "../codingTurns.js";
 import type * as connections from "../connections.js";
 import type * as http from "../http.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   chat: typeof chat;
   chatActions: typeof chatActions;
+  codingBackends: typeof codingBackends;
   codingTurns: typeof codingTurns;
   connections: typeof connections;
   http: typeof http;

@@ -39,6 +39,7 @@ interface WorkspacePatch {
   githubRepoId?: number;
   githubRepoName?: string;
   githubRepoUrl?: string;
+  originRepoUrl?: string;
   provisionError?: string;
   provisionStatus?: "error" | "pending" | "provisioning" | "ready";
   provisionSteps?: {
@@ -132,6 +133,7 @@ export const provisionWorkspace = internalAction({
       let githubRepoId = existing?.githubRepoId;
       let githubRepoName = existing?.githubRepoName;
       let githubRepoUrl = existing?.githubRepoUrl;
+      let originRepoUrl = existing?.originRepoUrl;
       let codingEnvironmentId = environmentId;
       let cloudflareAccountId = existing?.cloudflareAccountId;
       let cloudflarePagesUrl = existing?.cloudflarePagesUrl;
@@ -198,33 +200,41 @@ export const provisionWorkspace = internalAction({
         blockers.push(reconnectMessage("github"));
       }
 
+      const backend = getCodingBackend(existing?.codingBackend);
       const chatgpt = await loadFreshConnection(ctx, args.userId, "chatgpt");
-      if (githubOwner && githubRepoName && chatgpt) {
+      const canStartBackend =
+        Boolean(githubOwner && githubRepoName) &&
+        (backend.kind === "cursor_cloud" || Boolean(chatgpt));
+      if (canStartBackend && githubOwner && githubRepoName) {
         steps.backend = "running";
         await patch(ctx, args.workspaceId, { provisionSteps: { ...steps } });
         try {
-          const backend = getCodingBackend(
-            existing?.codingBackend ?? "codex_cloud"
-          );
           const environment = await backend.provisionEnvironment({
-            chatgptAccessToken: chatgpt.accessToken,
-            chatgptAccountId: chatgpt.accountId,
+            chatgptAccessToken: chatgpt?.accessToken,
+            chatgptAccountId: chatgpt?.accountId,
             githubOwner,
             githubRepoName,
+            githubRepoUrl,
             label: slug,
           });
           codingEnvironmentId = environment.environmentId;
+          originRepoUrl = environment.originRepoUrl ?? originRepoUrl;
           steps.backend = "done";
           await patch(ctx, args.workspaceId, {
-            codexEnvironmentId: environment.environmentId,
+            ...(backend.kind === "codex_cloud"
+              ? { codexEnvironmentId: environment.environmentId }
+              : {}),
             codingBackend: backend.kind,
             codingEnvironmentId,
+            originRepoUrl,
             provisionSteps: { ...steps },
           });
           await note(
             ctx,
             args.workspaceId,
-            `実行環境を用意しました: ${environment.environmentId}`
+            environment.originNote
+              ? `実行環境を用意しました: ${environment.environmentId}。${environment.originNote}`
+              : `実行環境を用意しました: ${environment.environmentId}`
           );
         } catch (error) {
           steps.backend = "error";
@@ -234,7 +244,7 @@ export const provisionWorkspace = internalAction({
               : "実行環境を作成できませんでした"
           );
         }
-      } else if (!chatgpt) {
+      } else if (backend.kind === "codex_cloud" && !chatgpt) {
         steps.backend = "error";
         blockers.push(reconnectMessage("chatgpt"));
       }
@@ -306,8 +316,10 @@ export const provisionWorkspace = internalAction({
         cloudflareAccountId,
         cloudflarePagesUrl,
         cloudflareProjectName,
-        codexEnvironmentId: codingEnvironmentId,
-        codingBackend: existing?.codingBackend ?? "codex_cloud",
+        ...(backend.kind === "codex_cloud"
+          ? { codexEnvironmentId: codingEnvironmentId }
+          : {}),
+        codingBackend: backend.kind,
         codingEnvironmentId,
         convexDeploymentName,
         convexProjectSlug,
@@ -318,6 +330,7 @@ export const provisionWorkspace = internalAction({
         githubRepoId,
         githubRepoName,
         githubRepoUrl,
+        originRepoUrl,
         provisionError: notes.length > 0 ? notes.join(" / ") : "",
         provisionStatus: ready ? "ready" : "error",
         provisionSteps: { ...steps },

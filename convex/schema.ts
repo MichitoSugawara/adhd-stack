@@ -122,6 +122,7 @@ export default defineSchema({
     githubRepoName: v.optional(v.string()),
     githubRepoUrl: v.optional(v.string()),
     name: v.string(),
+    originRepoUrl: v.optional(v.string()),
     provisionError: v.optional(v.string()),
     provisionStatus: provisionStatusValidator,
     provisionSteps: v.optional(provisionStepsValidator),

@@ -118,7 +118,7 @@ CodingBackend
 | v1 | GitHub + Codex Cloud Environment（WHAM） | 最初の実装。現行 `convex/lib/codexCloud.ts` 等を再利用する。これは実装詳細であり、公開 API 名にしない |
 | 次 | Origin + Cursor Cloud Agent | 同じ CodingBackend の第二実装。Phase 6 |
 
-v1 UI にバックエンド選択は出さなくてよい。ただしスキーマと公開関数名を `codex*` 固定にしない。
+v1 UI にバックエンド選択は出さない。既定は Codex。Cursor 経路は `codingBackend` フィールド、`ADHD_CODING_BACKEND`、または `workspaces.setCodingBackend` で切る。手順は [docs/coding-backends.md](coding-backends.md)。両方を安全に選べるまでピッカーは出さない。
 
 現行の衝突: `workspaces.codexEnvironmentId` や `ensureAdhdRepo("adhd-app")` は Codex / 固定名にベタ書きされている。Phase 3 で `codingEnvironmentId` + backend kind、または backend 専用メタに分ける。
 
@@ -205,9 +205,9 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 | **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く（この PR） | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
 | **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す（この PR） | 偽 URL を出さない。公開は slug 単位 |
 | **5** | `adhd.gawarago.com` を本番に切り替える | モック Pages を本物に置換 |
-| **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする | UI を書き直さずに差し込める |
+| **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする（この PR） | UI を書き直さずに差し込める。キー無しは正直エラー |
 
-Phase 4 は本 PR の公開（CodingBackend とは直交するホスティング）。本番ホスト切替は Phase 5。手順は [docs/cutover.md](cutover.md)。第二実装（Origin + Cursor Cloud）は Phase 6 のスロットだけある。
+Phase 4 は公開。Phase 5 はホスト切替（資格情報待ち）。Phase 6 は第二 CodingBackend。手順は [docs/coding-backends.md](coding-backends.md)。
 
 ---
 
@@ -221,6 +221,7 @@ Phase 4 は本 PR の公開（CodingBackend とは直交するホスティング
 | ChatGPT ≠ OC openai | OpenConnector openai（API キー）、Codex device OAuth（tahcode / 現行 `codexDevice`） | カタログの openai はキー接続。Codex Cloud / WHAM は ChatGPT アカウントの device OAuth が必要 |
 | GitHub / Convex / CF の interim | 現行 ADHD Stack Convex OAuth、Ownstack の CF OAuth | OC で足りるまで、ConnectionsPort の裏に既存実装を残す。UI は同じ 4 カード |
 | CodingBackend の切り方 | t3code の provider 差し替え、Kumo の Codex Cloud 呼び出し | UI を固定し、実行系だけ差し替える。v1 は WHAM、次は Cursor Cloud Agent |
+| 第二 CodingBackend | [Cloud Agents API](https://cursor.com/docs/cloud-agent/api/endpoints)、[Origin API](https://cursor.com/docs/api/origin)、t3code / tahcode | UI は固定。実行は `POST /v1/agents` と `GET /v1/agents/{id}/runs/{runId}`。Origin は `POST /v1/origin/repos/{ownerSlug}`。公開 API は Origin URL を拒否し得る。キー無しは偽実行しない |
 | 生成アプリの足場 | tahcode | プレビュー作成・Convex・CF・Beautiful UI が既にある。空テンプレートを新造しない |
 | 公開先 | Ownstack / 現行 `publishActions` | ユーザーの Pages + Convex に出す。関数プッシュ未解決は既知 |
 
