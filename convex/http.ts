@@ -108,4 +108,17 @@ for (const provider of PROVIDER_IDS) {
   });
 }
 
+http.route({
+  handler: httpAction(async (_ctx, request) => {
+    const url = new URL(request.url);
+    const service = url.searchParams.get("service") ?? "";
+    const name = url.searchParams.get("name") ?? "";
+    return redirectWith(
+      `/connect?oc=${encodeURIComponent(service)}&name=${encodeURIComponent(name)}`
+    );
+  }),
+  method: "GET",
+  path: "/oauth/oc-return",
+});
+
 export default http;

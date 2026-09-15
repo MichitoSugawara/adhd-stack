@@ -10,21 +10,24 @@ import {
   mergeUserPair,
   readLiveTicket,
 } from "./lib/accountLinking";
-import { providerValidator } from "./validators";
+import {
+  providerValidator,
+  ticketBackendValidator,
+  ticketOcValidator,
+  ticketTokensValidator,
+} from "./validators";
 
 const ticketDocValidator = v.object({
   accountKey: v.string(),
+  backend: v.optional(ticketBackendValidator),
   connectionAccountId: v.optional(v.string()),
   email: v.optional(v.string()),
   identity: v.string(),
   name: v.optional(v.string()),
+  oc: v.optional(ticketOcValidator),
   pendingProvider: providerValidator,
   planWarning: v.optional(v.string()),
-  tokens: v.object({
-    accessToken: v.string(),
-    expiresAt: v.optional(v.number()),
-    refreshToken: v.optional(v.string()),
-  }),
+  tokens: v.optional(ticketTokensValidator),
 });
 
 export const getTicket = internalQuery({

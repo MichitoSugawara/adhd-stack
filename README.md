@@ -10,7 +10,7 @@ v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（
 
 このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。
 
-現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。接続カードは未接続のまま、Google ログインと API キーカードはありません。ローカル状態で画面を辿れますが、OAuth 成功は装いません。`convex/` の実接続は Phase 2 以降です。このリポジトリにシークレットは入れていません。
+現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。`/connect` は ConnectionsPort 経由の実接続です。つながったようには見せません。Google ログインと API キーカードはありません。このリポジトリにシークレットは入れていません。
 
 ## 動かし方
 
@@ -37,16 +37,16 @@ npx @convex-dev/auth
 
 ## 必要な OAuth アプリ
 
-方針の正本は [docs/requirements.md](docs/requirements.md)。GitHub / Cloudflare / Convex は OpenConnector のカタログで足りるまで、下のカスタム OAuth を ConnectionsPort の裏に置いてよい。ChatGPT は Codex のデバイスログインのまま（OpenConnector の openai API キー接続は使わない）。値はコミットしないでください。
+方針の正本は [docs/requirements.md](docs/requirements.md)。GitHub / Convex は OpenConnector（`OPENCONNECTOR_BASE_URL` + `OPENCONNECTOR_ADMIN_TOKEN`）。Cloudflare Pages はカタログに無いので現行カスタム OAuth を ConnectionsPort の裏に残す。ChatGPT は Codex のデバイスログインのまま（OpenConnector の openai API キー接続は使わない）。値はコミットしないでください。
 
-GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actions です。デプロイ URL の `.cloud` を `.site` にした origin を使います。
+Cloudflare のコールバック URL は Convex の HTTP Actions です。デプロイ URL の `.cloud` を `.site` にした origin を使います。GitHub / Convex の認可コールバックは OpenConnector 側（`/oauth/callback`）です。
 
 | サービス | 作る場所 | コールバック | Convex 環境変数 |
 | --- | --- | --- | --- |
 | ChatGPT | 不要（Codex デバイスログイン） | なし。画面の大きなコードをコピーし、ログイン後に入力 | なし |
-| GitHub | GitHub → Settings → Developer settings → OAuth Apps | `https://<deployment>.convex.site/oauth/callback/github` | `GITHUB_CLIENT_ID` `GITHUB_CLIENT_SECRET` |
+| GitHub | OpenConnector に GitHub OAuth アプリを設定 | OpenConnector の `/oauth/callback` | `OPENCONNECTOR_BASE_URL` `OPENCONNECTOR_ADMIN_TOKEN` |
 | Cloudflare | Cloudflare → Manage Account → OAuth clients | `https://<deployment>.convex.site/oauth/callback/cloudflare` | `CLOUDFLARE_CLIENT_ID` `CLOUDFLARE_CLIENT_SECRET` |
-| Convex | Convex → Team Settings → OAuth applications（team scope） | `https://<deployment>.convex.site/oauth/callback/convex` | `CONVEX_OAUTH_CLIENT_ID` `CONVEX_OAUTH_CLIENT_SECRET` |
+| Convex | OpenConnector に Convex team OAuth アプリを設定 | OpenConnector の `/oauth/callback` | `OPENCONNECTOR_BASE_URL` `OPENCONNECTOR_ADMIN_TOKEN` |
 
 フロントの `NEXT_PUBLIC_CONVEX_URL` と `NEXT_PUBLIC_CONVEX_SITE_URL` は公開してよいデプロイ URL です。シークレットは Convex 側だけに置きます。
 

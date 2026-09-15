@@ -48,8 +48,7 @@ export const LoginScreen = () => {
         <div className="rounded-window bg-surface shadow-card p-6">
           <h2 className="text-[20px] font-semibold">シェルを開く</h2>
           <p className="text-ink-2 mt-2 text-[14px] leading-6">
-            Google では入りません。最初の接続がセッションになります（Phase
-            2）。いまは画面を辿るためのローカル状態だけです。
+            Google では入りません。最初の接続がセッションになります。
           </p>
           <button
             className="rounded-control bg-ink text-surface mt-6 flex h-12 w-full items-center justify-center text-[14px] font-medium transition-transform duration-150 active:scale-[0.99]"
@@ -59,7 +58,7 @@ export const LoginScreen = () => {
             接続へ進む
           </button>
           <p className="shell-note mt-5">
-            偽のログイン成功は出しません。OAuth は Phase 2 で配線します。
+            偽のログイン成功は出しません。接続画面で本物の認可だけを始めます。
           </p>
         </div>
       </section>

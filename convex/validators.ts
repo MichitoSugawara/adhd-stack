@@ -47,3 +47,21 @@ export const configuredValidator = v.object({
   convex: v.boolean(),
   github: v.boolean(),
 });
+
+export const ticketTokensValidator = v.object({
+  accessToken: v.string(),
+  expiresAt: v.optional(v.number()),
+  refreshToken: v.optional(v.string()),
+});
+
+export const ticketOcValidator = v.object({
+  connectedAccountId: v.optional(v.string()),
+  connectionName: v.string(),
+  displayLabel: v.optional(v.string()),
+  service: v.string(),
+});
+
+export const ticketBackendValidator = v.union(
+  v.literal("custom"),
+  v.literal("openconnector")
+);

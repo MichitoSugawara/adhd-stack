@@ -29,6 +29,21 @@ export default defineSchema({
     .index("by_provider", ["provider"])
     .index("by_account_id", ["accountId"])
     .index("by_identity", ["identity"]),
+  connectorConnections: defineTable({
+    backend: v.literal("openconnector"),
+    connectedAccountId: v.string(),
+    connectedAt: v.number(),
+    connectionName: v.string(),
+    displayLabel: v.string(),
+    lastCheckedAt: v.optional(v.number()),
+    provider: providerValidator,
+    status: connectionStatusValidator,
+    userId: v.id("users"),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_provider", ["userId", "provider"])
+    .index("by_connection_name", ["connectionName"])
+    .index("by_connected_account", ["connectedAccountId"]),
   messages: defineTable({
     body: v.string(),
     createdAt: v.number(),
@@ -58,20 +73,33 @@ export default defineSchema({
     .index("by_expires", ["expiresAt"]),
   oauthTickets: defineTable({
     accountKey: v.string(),
+    backend: v.optional(
+      v.union(v.literal("custom"), v.literal("openconnector"))
+    ),
     connectionAccountId: v.optional(v.string()),
     consumed: v.boolean(),
     email: v.optional(v.string()),
     expiresAt: v.number(),
     identity: v.string(),
     name: v.optional(v.string()),
+    oc: v.optional(
+      v.object({
+        connectedAccountId: v.optional(v.string()),
+        connectionName: v.string(),
+        displayLabel: v.optional(v.string()),
+        service: v.string(),
+      })
+    ),
     pendingProvider: providerValidator,
     planWarning: v.optional(v.string()),
     ticket: v.string(),
-    tokens: v.object({
-      accessToken: v.string(),
-      expiresAt: v.optional(v.number()),
-      refreshToken: v.optional(v.string()),
-    }),
+    tokens: v.optional(
+      v.object({
+        accessToken: v.string(),
+        expiresAt: v.optional(v.number()),
+        refreshToken: v.optional(v.string()),
+      })
+    ),
   })
     .index("by_ticket", ["ticket"])
     .index("by_account_key", ["accountKey"]),

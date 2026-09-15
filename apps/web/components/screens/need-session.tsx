@@ -12,7 +12,7 @@ export const NeedSession = () => (
         先にシェルを開いてください
       </h1>
       <p className="text-ink-2 mt-2 text-[14px]">
-        これはローカルのシェル確認です。ログインや OAuth はまだ始まりません。
+        先に入口でシェルを開いてください。接続は接続画面で本物の認可だけを始めます。
       </p>
       <Link
         className="rounded-control bg-ink text-surface mt-6 inline-flex h-10 items-center px-4 text-[13px] font-medium"

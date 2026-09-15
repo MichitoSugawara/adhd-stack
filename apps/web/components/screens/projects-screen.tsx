@@ -5,7 +5,49 @@ import { useState } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { useConnectionsPort } from "@/lib/connections-port";
+import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
+
+const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
+  const port = useConnectionsPort();
+  const blocked = Boolean(port.board && !port.board.allConnected);
+
+  return (
+    <button
+      className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium disabled:opacity-40"
+      data-new-app
+      disabled={blocked}
+      onClick={onOpen}
+      type="button"
+    >
+      新しいアプリ
+    </button>
+  );
+};
+
+const ProjectsReadyNote = () => {
+  const port = useConnectionsPort();
+  if (!port.board) {
+    return (
+      <p className="shell-note max-w-3xl">
+        接続状態を確認しています。一覧はまだブラウザ内の骨格です。
+      </p>
+    );
+  }
+  if (port.board.allConnected) {
+    return (
+      <p className="shell-note max-w-3xl">
+        4つの接続は揃っています。作成の実体は次の段階です。いまは名前付きの骨格だけです。
+      </p>
+    );
+  }
+  return (
+    <p className="shell-note max-w-3xl">
+      接続が揃うまで作成は始めません。いまは一覧の骨格だけ見られます。
+    </p>
+  );
+};
 
 export const ProjectsScreen = () => {
   const router = useRouter();
@@ -14,6 +56,7 @@ export const ProjectsScreen = () => {
   const [manualOpen, setManualOpen] = useState(false);
   const [name, setName] = useState("");
   const open = manualOpen || searchParams.get("new") === "1";
+  const live = hasConvexUrl();
 
   const closeDialog = () => {
     setManualOpen(false);
@@ -49,21 +92,33 @@ export const ProjectsScreen = () => {
                 名前を付けて作ります。固定名はありません。
               </p>
             </div>
-            <button
-              className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
-              data-new-app
-              onClick={() => {
-                setManualOpen(true);
-              }}
-              type="button"
-            >
-              新しいアプリ
-            </button>
+            {live ? (
+              <ProjectsNewAppButton
+                onOpen={() => {
+                  setManualOpen(true);
+                }}
+              />
+            ) : (
+              <button
+                className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+                data-new-app
+                onClick={() => {
+                  setManualOpen(true);
+                }}
+                type="button"
+              >
+                新しいアプリ
+              </button>
+            )}
           </div>
-          <p className="shell-note max-w-3xl">
-            一覧はブラウザ内のローカル状態です。GitHub
-            上のリポジトリはまだ作りません。
-          </p>
+          {live ? (
+            <ProjectsReadyNote />
+          ) : (
+            <p className="shell-note max-w-3xl">
+              一覧はブラウザ内のローカル状態です。GitHub
+              上のリポジトリはまだ作りません。
+            </p>
+          )}
           {shell.state.apps.length === 0 ? (
             <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
               まだありません。名前を付けて、作成中の画面を見てください。

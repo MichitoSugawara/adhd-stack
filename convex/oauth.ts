@@ -10,6 +10,14 @@ import {
   pollCodexDeviceOnce,
   requestCodexUserCode,
 } from "./lib/codexDevice";
+import {
+  assertOauthAppReady,
+  findNamedOcConnection,
+  isOpenConnectorService,
+  makeConnectionName,
+  startOauthAuthorization,
+} from "./lib/openConnector";
+import { isOpenConnectorConfigured } from "./lib/openConnectorEnv";
 import { createPkce, randomUrlSafe } from "./lib/pkce";
 import {
   getProviderDefinition,
@@ -17,8 +25,24 @@ import {
   PROVIDER_LABELS,
   redirectUri,
   requireProviderEnv,
+  siteUrl,
 } from "./lib/providers";
 import { providerValidator } from "./validators";
+
+const beginUrlValidator = v.object({
+  connectionName: v.optional(v.string()),
+  kind: v.union(v.literal("oauth"), v.literal("catalog")),
+  url: v.string(),
+});
+
+const ocReturnUri = (service: "github" | "convex", connectionName: string) => {
+  try {
+    const base = siteUrl();
+    return `${base}/connect?oc=${service}&name=${encodeURIComponent(connectionName)}`;
+  } catch {
+    return "";
+  }
+};
 
 export const beginConnect = action({
   args: { provider: providerValidator },
@@ -26,9 +50,39 @@ export const beginConnect = action({
     if (args.provider === "chatgpt") {
       throw new Error("ChatGPT はデバイスログインです");
     }
+    if (isOpenConnectorService(args.provider)) {
+      if (!isOpenConnectorConfigured()) {
+        throw new Error(
+          `oauth_not_configured: ${PROVIDER_LABELS[args.provider]} の接続アプリが未設定です`
+        );
+      }
+      await assertOauthAppReady(args.provider);
+      const userId = await getAuthUserId(ctx);
+      const connectionName = makeConnectionName(
+        args.provider,
+        userId ?? "pending"
+      );
+      const returnUri = ocReturnUri(args.provider, connectionName);
+      const started =
+        returnUri.length > 0
+          ? await startOauthAuthorization({
+              connectionName,
+              returnUri,
+              service: args.provider,
+            })
+          : await startOauthAuthorization({
+              connectionName,
+              service: args.provider,
+            });
+      return {
+        connectionName,
+        kind: "catalog" as const,
+        url: started.authorizationUrl,
+      };
+    }
     if (!isProviderConfigured(args.provider)) {
       throw new Error(
-        `${PROVIDER_LABELS[args.provider]} の OAuth アプリが未設定です。README の手順で Client ID / Secret を入れてください`
+        `oauth_not_configured: ${PROVIDER_LABELS[args.provider]} の接続アプリが未設定です`
       );
     }
     const userId = await getAuthUserId(ctx);
@@ -60,9 +114,73 @@ export const beginConnect = action({
         url.searchParams.set(key, value);
       }
     }
-    return url.toString();
+    return {
+      kind: "oauth" as const,
+      url: url.toString(),
+    };
   },
-  returns: v.string(),
+  returns: beginUrlValidator,
+});
+
+export const confirmOcConnect = action({
+  args: {
+    connectionName: v.string(),
+    service: v.union(v.literal("convex"), v.literal("github")),
+  },
+  handler: async (ctx, args) => {
+    if (!isOpenConnectorConfigured()) {
+      throw new Error(
+        `oauth_not_configured: ${PROVIDER_LABELS[args.service]} の接続アプリが未設定です`
+      );
+    }
+    const found = await findNamedOcConnection(
+      args.service,
+      args.connectionName
+    );
+    if (!found) {
+      return { status: "pending" as const };
+    }
+    const identity = found.displayName;
+    const userId = await getAuthUserId(ctx);
+    if (userId) {
+      await ctx.runMutation(internal.oauthStore.upsertConnectorConnection, {
+        connectedAccountId: found.id,
+        connectionName: args.connectionName,
+        displayLabel: identity,
+        provider: args.service,
+        userId,
+      });
+      return { identity, status: "connected" as const };
+    }
+    const ticket = randomUrlSafe(32);
+    await ctx.runMutation(internal.oauthStore.createOcTicket, {
+      accountKey: `oc:${args.service}:${found.id}`,
+      backend: "openconnector",
+      connectionAccountId: found.id,
+      identity,
+      oc: {
+        connectedAccountId: found.id,
+        connectionName: args.connectionName,
+        displayLabel: identity,
+        service: args.service,
+      },
+      pendingProvider: args.service,
+      ticket,
+    });
+    return { identity, status: "authorized" as const, ticket };
+  },
+  returns: v.union(
+    v.object({ status: v.literal("pending") }),
+    v.object({
+      identity: v.string(),
+      status: v.literal("connected"),
+    }),
+    v.object({
+      identity: v.string(),
+      status: v.literal("authorized"),
+      ticket: v.string(),
+    })
+  ),
 });
 
 export const beginChatgptDevice = action({

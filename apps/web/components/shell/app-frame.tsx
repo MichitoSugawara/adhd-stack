@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import SidebarNav from "@/components/primitives/SidebarNav";
+import { WithSignOut } from "@/components/shell/with-sign-out";
 import { useShell } from "@/lib/shell-state";
 
 const navFromPath = (pathname: string): string => {
@@ -37,41 +38,49 @@ export const AppFrame = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="bg-page text-ink flex min-h-dvh">
-      <SidebarNav
-        activeNav={navFromPath(pathname)}
-        fill
-        onFooterClick={() => {
-          router.push("/connect");
-        }}
-        onNavigate={(key) => {
-          if (key === "connect") {
-            router.push("/connect");
-            return;
-          }
-          router.push("/projects");
-        }}
-        onNewChat={() => {
-          router.push("/projects?new=1");
-        }}
-        onPick={(id) => {
-          const app = shell.state.apps.find((item) => item.id === id);
-          if (!app) {
-            return;
-          }
-          router.push(
-            app.status === "creating" ? `/p/${app.id}/creating` : `/p/${app.id}`
-          );
-        }}
-        onSignOut={() => {
-          shell.leaveShell();
-          router.push("/");
-        }}
-        defaultCollapsed={narrow}
-        recents={shell.state.apps.map((app) => ({
-          id: app.id,
-          label: app.name,
-        }))}
-      />
+      <WithSignOut>
+        {(signOut) => (
+          <SidebarNav
+            activeNav={navFromPath(pathname)}
+            fill
+            onFooterClick={() => {
+              router.push("/connect");
+            }}
+            onNavigate={(key) => {
+              if (key === "connect") {
+                router.push("/connect");
+                return;
+              }
+              router.push("/projects");
+            }}
+            onNewChat={() => {
+              router.push("/projects?new=1");
+            }}
+            onPick={(id) => {
+              const app = shell.state.apps.find((item) => item.id === id);
+              if (!app) {
+                return;
+              }
+              router.push(
+                app.status === "creating"
+                  ? `/p/${app.id}/creating`
+                  : `/p/${app.id}`
+              );
+            }}
+            onSignOut={() => {
+              void (async () => {
+                await signOut();
+                router.push("/");
+              })();
+            }}
+            defaultCollapsed={narrow}
+            recents={shell.state.apps.map((app) => ({
+              id: app.id,
+              label: app.name,
+            }))}
+          />
+        )}
+      </WithSignOut>
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
     </div>
   );

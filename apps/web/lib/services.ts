@@ -1,6 +1,6 @@
 export const SERVICES = [
   {
-    body: "Codex Cloud 用のデバイスログイン。Phase 2 でつなぐ。",
+    body: "Codex Cloud 用のデバイスログイン。画面のコードを入力します。",
     id: "chatgpt",
     label: "ChatGPT",
     logo: "/brands/chatgpt.png",

@@ -7,13 +7,20 @@ type DbCtx = MutationCtx | QueryCtx;
 
 export interface TicketSnapshot {
   accountKey: string;
+  backend?: "custom" | "openconnector";
   connectionAccountId?: string;
   email?: string;
   identity: string;
   name?: string;
+  oc?: {
+    connectedAccountId?: string;
+    connectionName: string;
+    displayLabel?: string;
+    service: string;
+  };
   pendingProvider: ProviderId;
   planWarning?: string;
-  tokens: {
+  tokens?: {
     accessToken: string;
     expiresAt?: number;
     refreshToken?: string;
@@ -34,10 +41,12 @@ export const readLiveTicket = async (
   }
   return {
     accountKey: row.accountKey,
+    backend: row.backend,
     connectionAccountId: row.connectionAccountId,
     email: row.email,
     identity: row.identity,
     name: row.name,
+    oc: row.oc,
     pendingProvider: row.pendingProvider,
     planWarning: row.planWarning,
     tokens: row.tokens,
@@ -78,6 +87,16 @@ export const findExistingUserIdForTicket = async (
     const userId = uniqueUserId(connections);
     if (userId) {
       return userId;
+    }
+    const connectors = await ctx.db
+      .query("connectorConnections")
+      .withIndex("by_connected_account", (q) =>
+        q.eq("connectedAccountId", accountId)
+      )
+      .take(4);
+    const connectorUserId = uniqueUserId(connectors);
+    if (connectorUserId) {
+      return connectorUserId;
     }
   }
   if (!args.email) {
@@ -132,6 +151,35 @@ export const finalizeTicketForUser = async (
     throw new Error("Sign-in ticket is invalid");
   }
   await ctx.db.patch(row._id, { consumed: true });
+  if (row.backend === "openconnector" && row.oc) {
+    const existing = await ctx.db
+      .query("connectorConnections")
+      .withIndex("by_user_and_provider", (q) =>
+        q.eq("userId", args.userId).eq("provider", row.pendingProvider)
+      )
+      .unique();
+    const payload = {
+      backend: "openconnector" as const,
+      connectedAccountId:
+        row.oc.connectedAccountId ?? row.connectionAccountId ?? row.accountKey,
+      connectedAt: Date.now(),
+      connectionName: row.oc.connectionName,
+      displayLabel: row.oc.displayLabel ?? row.identity,
+      lastCheckedAt: Date.now(),
+      provider: row.pendingProvider,
+      status: "connected" as const,
+      userId: args.userId,
+    };
+    if (existing) {
+      await ctx.db.patch(existing._id, payload);
+      return;
+    }
+    await ctx.db.insert("connectorConnections", payload);
+    return;
+  }
+  if (!row.tokens) {
+    throw new Error("Sign-in ticket is invalid");
+  }
   const existing = await ctx.db
     .query("connections")
     .withIndex("by_user_and_provider", (q) =>
@@ -218,7 +266,7 @@ export const attachTicketToUser = async (
 };
 
 const loadFingerprints = async (ctx: DbCtx, userId: Id<"users">) => {
-  const [user, connections, workspace] = await Promise.all([
+  const [user, connections, workspace, connectors] = await Promise.all([
     ctx.db.get(userId),
     ctx.db
       .query("connections")
@@ -228,11 +276,29 @@ const loadFingerprints = async (ctx: DbCtx, userId: Id<"users">) => {
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique(),
+    ctx.db
+      .query("connectorConnections")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(8),
   ]);
   if (!user) {
     return null;
   }
-  return fingerprintsFor(user, connections, workspace);
+  const synthetic: Pick<
+    Doc<"connections">,
+    "accountId" | "identity" | "provider"
+  >[] = [];
+  for (const row of connectors) {
+    if (row.status !== "connected") {
+      continue;
+    }
+    synthetic.push({
+      accountId: row.connectedAccountId,
+      identity: row.displayLabel,
+      provider: row.provider,
+    });
+  }
+  return fingerprintsFor(user, [...connections, ...synthetic], workspace);
 };
 
 const addCandidate = (
@@ -407,6 +473,34 @@ export const mergeUserPair = async (
         identity: row.identity,
         planWarning: row.planWarning,
         refreshToken: row.refreshToken,
+        status: row.status,
+      });
+    }
+    await ctx.db.delete(row._id);
+  }
+
+  const absorbConnectors = await ctx.db
+    .query("connectorConnections")
+    .withIndex("by_user", (q) => q.eq("userId", args.absorbUserId))
+    .take(8);
+  for (const row of absorbConnectors) {
+    const existing = await ctx.db
+      .query("connectorConnections")
+      .withIndex("by_user_and_provider", (q) =>
+        q.eq("userId", args.keepUserId).eq("provider", row.provider)
+      )
+      .unique();
+    if (!existing) {
+      await ctx.db.patch(row._id, { userId: args.keepUserId });
+      continue;
+    }
+    if (existing.status !== "connected" && row.status === "connected") {
+      await ctx.db.patch(existing._id, {
+        connectedAccountId: row.connectedAccountId,
+        connectedAt: row.connectedAt,
+        connectionName: row.connectionName,
+        displayLabel: row.displayLabel,
+        lastCheckedAt: row.lastCheckedAt,
         status: row.status,
       });
     }

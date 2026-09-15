@@ -2,7 +2,7 @@
 
 プロダクトオーナー合意の方向。以降の実装・調査・検証は本ファイルを単一の正本とする。 `design_handoff/`・旧モック・現行 `convex/` 実験は証拠や移行用参考であり、本ファイルと矛盾したら本ファイルが勝つ。
 
-対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。Phase 0 で本ファイルを正本にした。Phase 1 はこの PR の Beautiful UI シェル。OAuth / 公開 / デプロイは後続フェーズ。
+対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。Phase 0 で本ファイルを正本にした。Phase 1 は Beautiful UI シェル。Phase 2 は ConnectionsPort と実接続。公開 / デプロイは後続フェーズ。
 
 ---
 
@@ -92,9 +92,9 @@ UI と provision は `ConnectionsPort` だけを見る。実装の差し替え�
 | プロバイダ | v1 の方針 |
 | --- | --- |
 | ChatGPT | **カスタム device OAuth**（Codex 公開クライアント）。OpenConnector の openai プロバイダは API キーのみなので、v1 の ChatGPT 入口にしない |
-| GitHub | カタログで OAuth が使えるなら OpenConnector。使えなければ現行のカスタム Convex OAuth を interim として ConnectionsPort の裏に残してよい |
-| Convex | 同上。Platform OAuth を優先し、現行カスタム実装は interim |
-| Cloudflare | Pages 向け OAuth の OpenConnector カバレッジを先に確認する。足りなければ Ownstack 型の CF OAuth を interim にしてよい |
+| GitHub | OpenConnector の oauth2 + 後続の repo actions。未設定なら正直に未接続 |
+| Convex | OpenConnector の team OAuth + project actions。未設定なら正直に未接続 |
+| Cloudflare | カタログに Pages（`page.*`）が無いので、現行カスタム OAuth（`providers.ts` + `cloudflarePages.ts`）を ConnectionsPort の裏に残す。上流への `cloudflare_pages` 追加は follow-up |
 
 手渡しの「API キーカード」と「Google ログイン」ストーリーは殺す。セッションは `/login` でも、最初の接続（ChatGPT または GitHub）をセッション開始にしてもよい。
 
@@ -206,7 +206,7 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 | **5** | `adhd.gawarago.com` を本番に切り替える | モック Pages を本物に置換 |
 | **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする | UI を書き直さずに差し込める |
 
-Phase 1 は本 PR のシェル。OAuth や Codex 呼び出しは Phase 2–3。
+Phase 2 は本 PR の ConnectionsPort。Codex 呼び出しは Phase 3。
 
 ---
 

@@ -1,6 +1,7 @@
 import type { Infer } from "convex/values";
 
 import type { providerValidator } from "../validators";
+import { isOpenConnectorConfigured } from "./openConnectorEnv";
 
 export type ProviderId = Infer<typeof providerValidator>;
 
@@ -95,6 +96,9 @@ export const readProviderEnv = (provider: ProviderId): ProviderEnv => {
 export const isProviderConfigured = (provider: ProviderId): boolean => {
   if (provider === "chatgpt") {
     return true;
+  }
+  if (provider === "github" || provider === "convex") {
+    return isOpenConnectorConfigured();
   }
   const env = readProviderEnv(provider);
   return Boolean(env.clientId && env.clientSecret);

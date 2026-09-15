@@ -1,8 +1,15 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
-import { getCurrentUser, getCurrentUserOrNull } from "./lib/auth";
+import { internal } from "./_generated/api";
+import { action, query } from "./_generated/server";
+import { getCurrentUserOrNull } from "./lib/auth";
+import {
+  deleteOcConnection,
+  isOpenConnectorService,
+} from "./lib/openConnector";
 import { configuredProviders, PROVIDER_IDS } from "./lib/providers";
+import type { ProviderId } from "./lib/providers";
 import { canKeepConnection, reconnectMessage } from "./lib/tokenRefresh";
 import {
   configuredValidator,
@@ -11,7 +18,7 @@ import {
 } from "./validators";
 
 const disconnectedConnection = (
-  provider: (typeof PROVIDER_IDS)[number],
+  provider: ProviderId,
   reconnectHint?: string
 ) => ({
   identity: "アカウント未選択",
@@ -36,13 +43,36 @@ export const getBoard = query({
         connections: emptyBoard(),
       };
     }
-    const rows = await ctx.db
-      .query("connections")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-    const byProvider = new Map(rows.map((row) => [row.provider, row]));
+    const [customRows, connectorRows] = await Promise.all([
+      ctx.db
+        .query("connections")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .take(8),
+      ctx.db
+        .query("connectorConnections")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .take(8),
+    ]);
+    const customByProvider = new Map(
+      customRows.map((row) => [row.provider, row])
+    );
+    const connectorByProvider = new Map(
+      connectorRows.map((row) => [row.provider, row])
+    );
     const connections = PROVIDER_IDS.map((provider) => {
-      const row = byProvider.get(provider);
+      if (isOpenConnectorService(provider)) {
+        const row = connectorByProvider.get(provider);
+        if (row?.status === "connected" && row.connectedAccountId.length > 0) {
+          return {
+            identity: row.displayLabel,
+            provider,
+            reconnectHint: undefined,
+            status: "connected" as const,
+          };
+        }
+        return disconnectedConnection(provider);
+      }
+      const row = customByProvider.get(provider);
       if (!row) {
         return disconnectedConnection(provider);
       }
@@ -89,24 +119,37 @@ export const getBoard = query({
   }),
 });
 
-export const disconnect = mutation({
+export const disconnect = action({
   args: { provider: providerValidator },
   handler: async (ctx, args) => {
-    const user = await getCurrentUser(ctx);
-    const row = await ctx.db
-      .query("connections")
-      .withIndex("by_user_and_provider", (q) =>
-        q.eq("userId", user._id).eq("provider", args.provider)
-      )
-      .unique();
-    if (!row) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+    if (isOpenConnectorService(args.provider)) {
+      const row = await ctx.runQuery(
+        internal.oauthStore.getConnectorConnection,
+        {
+          provider: args.provider,
+          userId,
+        }
+      );
+      if (row?.connectionName) {
+        try {
+          await deleteOcConnection(args.provider, row.connectionName);
+        } catch {
+          // Local row still disconnects so the board stays honest.
+        }
+      }
+      await ctx.runMutation(internal.oauthStore.clearConnectorConnection, {
+        provider: args.provider,
+        userId,
+      });
       return null;
     }
-    await ctx.db.patch(row._id, {
-      accessToken: "",
-      planWarning: undefined,
-      refreshToken: undefined,
-      status: "disconnected",
+    await ctx.runMutation(internal.oauthStore.clearCustomConnection, {
+      provider: args.provider,
+      userId,
     });
     return null;
   },

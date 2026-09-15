@@ -1,79 +1,346 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import { ChatgptDevicePanel } from "@/components/screens/chatgpt-device-panel";
+import { ConnectServiceCard } from "@/components/screens/connect-service-card";
 import { AppFrame } from "@/components/shell/app-frame";
-import { BrandMark } from "@/components/shell/brand-mark";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
+import { useConnectionsPort } from "@/lib/connections-port";
+import { hasConvexUrl } from "@/lib/env";
+import type { ServiceId } from "@/lib/services";
 import { SERVICES } from "@/lib/services";
+import { enterShell } from "@/lib/shell-state";
 
-export const ConnectScreen = () => {
+interface DeviceSession {
+  deviceAuthId: string;
+  intervalSeconds: number;
+  startedAt: number;
+  userCode: string;
+  verificationUrl: string;
+}
+
+interface PendingOc {
+  connectionName: string;
+  service: "convex" | "github";
+}
+
+const ctaLabelFor = (
+  boardReady: boolean,
+  busy: ServiceId | null,
+  id: ServiceId
+): string => {
+  if (!boardReady) {
+    return "確認中…";
+  }
+  if (busy === id) {
+    return "接続中…";
+  }
+  return "つなぐ";
+};
+
+const ConnectBoard = () => {
   const router = useRouter();
+  const {
+    beginConnect,
+    beginDevice,
+    board,
+    confirmOc,
+    disconnect,
+    pollDevice,
+    refresh,
+    signInWithTicket,
+  } = useConnectionsPort();
+  const banner = useConnectBanner();
+  const [errors, setErrors] = useState<Partial<Record<ServiceId, string>>>({});
+  const [busy, setBusy] = useState<ServiceId | null>(null);
+  const [device, setDevice] = useState<DeviceSession | null>(null);
+  const [pendingOc, setPendingOc] = useState<PendingOc | null>(null);
+
+  const configured = board?.configured;
+  const connectedCount = (board?.connections ?? []).filter(
+    (row) => row.status === "connected"
+  ).length;
+
+  useEffect(() => {
+    if (!device) {
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const result = await pollDevice({
+          deviceAuthId: device.deviceAuthId,
+          startedAt: device.startedAt,
+          userCode: device.userCode,
+        });
+        if (cancelled || result.status === "pending") {
+          return;
+        }
+        if (result.ticket) {
+          await signInWithTicket(result.ticket);
+        }
+        enterShell();
+        setDevice(null);
+        setBusy(null);
+        refresh();
+      } catch (error) {
+        if (!cancelled) {
+          setErrors((current) => ({
+            ...current,
+            chatgpt: connectErrorMessage(error),
+          }));
+          setDevice(null);
+          setBusy(null);
+        }
+      }
+    };
+    const waitMs = Math.max(2000, device.intervalSeconds * 1000);
+    const timer = window.setInterval(() => {
+      void tick();
+    }, waitMs);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [device, pollDevice, refresh, signInWithTicket]);
+
+  useEffect(() => {
+    if (!pendingOc) {
+      return;
+    }
+    let cancelled = false;
+    let timer = 0;
+    const confirm = async () => {
+      try {
+        const result = await confirmOc(pendingOc);
+        if (cancelled || result.status === "pending") {
+          return false;
+        }
+        if (result.status === "authorized") {
+          await signInWithTicket(result.ticket);
+        }
+        enterShell();
+        setPendingOc(null);
+        setBusy(null);
+        refresh();
+        return true;
+      } catch (error) {
+        if (!cancelled) {
+          setErrors((current) => ({
+            ...current,
+            [pendingOc.service]: connectErrorMessage(error),
+          }));
+          setPendingOc(null);
+          setBusy(null);
+        }
+        return true;
+      }
+    };
+    const loop = async () => {
+      const done = await confirm();
+      if (done) {
+        window.clearInterval(timer);
+      }
+    };
+    timer = window.setInterval(() => {
+      void loop();
+    }, 2500);
+    void loop();
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [confirmOc, pendingOc, refresh, signInWithTicket]);
+
+  const startConnect = async (id: ServiceId) => {
+    setErrors((current) => ({ ...current, [id]: undefined }));
+    setBusy(id);
+    try {
+      if (id === "chatgpt") {
+        const started = await beginDevice();
+        setDevice({
+          deviceAuthId: started.deviceAuthId,
+          intervalSeconds: started.intervalSeconds,
+          startedAt: Date.now(),
+          userCode: started.userCode,
+          verificationUrl: started.verificationUrl,
+        });
+        window.open(started.verificationUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+      const started = await beginConnect({ provider: id });
+      if (started.kind === "catalog" && started.connectionName) {
+        if (id === "github" || id === "convex") {
+          setPendingOc({
+            connectionName: started.connectionName,
+            service: id,
+          });
+        }
+        const popup = window.open(started.url, "_blank", "noopener,noreferrer");
+        if (popup === null) {
+          window.location.assign(started.url);
+        }
+        return;
+      }
+      window.location.assign(started.url);
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        [id]: connectErrorMessage(error),
+      }));
+      setBusy(null);
+    }
+  };
+
+  const startDisconnect = async (id: ServiceId) => {
+    setBusy(id);
+    try {
+      await disconnect({ provider: id });
+      refresh();
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        [id]: connectErrorMessage(error),
+      }));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
-    <ShellGate>
-      <AppFrame>
-        <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-          <div className="max-w-3xl">
-            <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-              接続
-            </p>
-            <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-              4つをつなぎます
-            </h1>
-            <p className="text-ink-2 mt-2 text-[14px] leading-6">
-              いまはどれもつながっていません。ボタンは Phase 2
-              まで無効です。つながったように見せません。
-            </p>
-          </div>
-          <p className="shell-note max-w-3xl">
-            0 / 4 接続。ChatGPT はデバイスログイン、ほかは OpenConnector または
-            interim OAuth。API キーカードはありません。
-          </p>
-          <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
-            {SERVICES.map((service) => (
-              <article
-                className="rounded-card bg-surface shadow-card p-4"
-                key={service.id}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <BrandMark alt="" src={service.logo} />
-                  <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px] font-medium">
-                    未接続
-                  </span>
-                </div>
-                <h2 className="mt-3 text-[16px] font-semibold">
-                  {service.label}
-                </h2>
-                <p className="text-ink-2 mt-1 text-[13px] leading-5">
-                  {service.body}
-                </p>
-                <button
-                  className="rounded-control bg-field text-ink-3 mt-4 h-8 px-3 text-[13px] font-medium"
-                  disabled
-                  type="button"
-                >
-                  Phase 2 でつなぐ
-                </button>
-              </article>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
-              onClick={() => {
-                router.push("/projects");
+    <>
+      <p className="text-ink-2 mt-2 text-[14px] leading-6">
+        つながったように見せません。未設定なら押せません。
+      </p>
+      {banner ? <p className="shell-note mt-4 max-w-3xl">{banner}</p> : null}
+      <p className="shell-note mt-4 max-w-3xl">
+        {connectedCount} / 4 接続。ChatGPT
+        は画面のコード、ほかはつなぐボタンです。
+      </p>
+      <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
+        {SERVICES.map((service) => {
+          const connection = board?.connections.find(
+            (row) => row.provider === service.id
+          );
+          let extra = null;
+          if (service.id === "chatgpt" && device) {
+            extra = (
+              <ChatgptDevicePanel
+                busy={busy === "chatgpt"}
+                onCancel={() => {
+                  setDevice(null);
+                  setBusy(null);
+                }}
+                userCode={device.userCode}
+                verificationUrl={device.verificationUrl}
+              />
+            );
+          } else if (service.id === pendingOc?.service) {
+            extra = (
+              <p className="text-ink-3 mt-3 text-[12px]">
+                認可を待っています。終わったらこの画面に戻ってください。
+              </p>
+            );
+          }
+          return (
+            <ConnectServiceCard
+              configured={configured?.[service.id] ?? true}
+              connection={connection}
+              ctaDisabled={busy !== null || board === undefined}
+              ctaLabel={ctaLabelFor(board !== undefined, busy, service.id)}
+              error={errors[service.id]}
+              extra={extra}
+              key={service.id}
+              onConnect={() => {
+                void startConnect(service.id);
               }}
-              type="button"
-            >
-              一覧へ（シェル確認）
-            </button>
-            <p className="text-ink-3 self-center text-[13px]">
-              未接続のまま、一覧の骨格を見ます。
-            </p>
-          </div>
-        </main>
-      </AppFrame>
-    </ShellGate>
+              onDisconnect={() => {
+                void startDisconnect(service.id);
+              }}
+              service={service}
+            />
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+          onClick={() => {
+            router.push("/projects");
+          }}
+          type="button"
+        >
+          {board?.allConnected ? "一覧へ" : "一覧の骨格を見る"}
+        </button>
+        <p className="text-ink-3 self-center text-[13px]">
+          {board?.allConnected
+            ? "4つそろいました。"
+            : "未接続のまま、一覧の骨格を見ます。作成は接続が揃ってからです。"}
+        </p>
+      </div>
+    </>
   );
 };
+
+const noop = (): void => {
+  // Offline cards have no live connection actions.
+};
+
+const ConnectOffline = () => {
+  const router = useRouter();
+  return (
+    <>
+      <p className="text-ink-2 mt-2 text-[14px] leading-6">
+        バックエンド URL が未設定です。つながったようには見せません。
+      </p>
+      <p className="shell-note mt-4 max-w-3xl">
+        0 / 4 接続。接続ボタンは使えません。
+      </p>
+      <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
+        {SERVICES.map((service) => (
+          <ConnectServiceCard
+            configured={false}
+            ctaDisabled
+            ctaLabel="つなぐ"
+            key={service.id}
+            onConnect={noop}
+            onDisconnect={noop}
+            service={service}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+          onClick={() => {
+            router.push("/projects");
+          }}
+          type="button"
+        >
+          一覧の骨格を見る
+        </button>
+      </div>
+    </>
+  );
+};
+
+export const ConnectScreen = () => (
+  <ShellGate>
+    <AppFrame>
+      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
+        <div className="max-w-3xl">
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            接続
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            4つをつなぎます
+          </h1>
+          {hasConvexUrl() ? <ConnectBoard /> : <ConnectOffline />}
+        </div>
+      </main>
+    </AppFrame>
+  </ShellGate>
+);
