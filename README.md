@@ -6,11 +6,11 @@
 
 ## いまの状態
 
+v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（Phase 0）。UI は [Beautiful UI](https://www.beautifului.dev/)、接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
+
 このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。
 
-現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。ボタンは見た目だけで、OAuth も Convex もつながっていません。このコードは本物の第三者ログインと Convex を配線しています。GitHub / Cloudflare / Convex は OAuth アプリの Client ID / Secret が必要です。ChatGPT は Codex のデバイスログインなので、OpenAI の OAuth アプリは不要です。このリポジトリにシークレットは入れていません。
-
-要件は [docs/requirements.md](docs/requirements.md) です。
+現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` も手渡し IA を辿る移行用モックで、偽の接続を本番に出してはいけません。`convex/` には以前の実 OAuth / Codex Cloud 実験が残っていますが、トークン保管と公開名は後続フェーズで ConnectionsPort / CodingBackend に合わせます。GitHub / Cloudflare / Convex のカスタム OAuth は OpenConnector が使えるまでの interim です。ChatGPT は Codex のデバイスログインのままです（OpenAI API キー物語は使いません）。このリポジトリにシークレットは入れていません。
 
 ## 動かし方
 
@@ -37,7 +37,7 @@ npx @convex-dev/auth
 
 ## 必要な OAuth アプリ
 
-GitHub / Cloudflare / Convex のログインはモックではありません。各サービスのダッシュボードで OAuth アプリを作り、Client ID / Secret を **Convex の環境変数** に入れてください。値はコミットしないでください。ChatGPT は Codex CLI と同じデバイスログインなので、OpenAI の OAuth アプリも `CHATGPT_CLIENT_*` も不要です。
+方針の正本は [docs/requirements.md](docs/requirements.md)。GitHub / Cloudflare / Convex は OpenConnector のカタログで足りるまで、下のカスタム OAuth を ConnectionsPort の裏に置いてよい。ChatGPT は Codex のデバイスログインのまま（OpenConnector の openai API キー接続は使わない）。値はコミットしないでください。
 
 GitHub / Cloudflare / Convex のコールバック URL は Convex の HTTP Actions です。デプロイ URL の `.cloud` を `.site` にした origin を使います。
 

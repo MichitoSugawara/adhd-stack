@@ -1,5 +1,7 @@
 # Handoff: ADHD Stack — フロントエンド全画面
 
+> **正本は [docs/requirements.md](../docs/requirements.md)。** この手渡しは移行用の IA / ジャーニー / コピー参考。最終デザインシステムではない。緑セリフへのピクセル一致は不要。Google ログイン・OpenAI API キーカード・Cloudflare Sandbox 主ランタイム・必須の多環境は v1 対象外。
+
 ## Overview
 ADHD Stack は「何も考えずに始められる開発と公開」。Google でログインし、OpenAI Codex（API キー）・GitHub・Cloudflare・Convex の4つをつなぐと、チャットだけでコードが書き換わり、プレビュー → 検証 → 本番 に反映される。IDE は開かない。git は内部で使うが、UI に git 用語は一切出さない。
 
