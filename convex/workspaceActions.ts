@@ -6,10 +6,11 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalAction } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
-import { loadFreshConnection } from "./lib/actionAuth";
+import { loadConnectorOrToken, loadFreshConnection } from "./lib/actionAuth";
 import type { TemplateKind } from "./lib/appTemplate";
 import { ensurePagesProject } from "./lib/cloudflarePages";
 import { getCodingBackend } from "./lib/codingBackends";
+import { ensureConvexProjectViaOpenConnector } from "./lib/convexFromOpenConnector";
 import { convexProjectName, ensureConvexProject } from "./lib/convexProject";
 import { provisionGithubViaOpenConnector } from "./lib/githubFromOpenConnector";
 import { provisionGithubViaToken } from "./lib/githubProvision";
@@ -75,28 +76,6 @@ const note = async (
   });
 };
 
-const githubHandle = async (
-  ctx: ActionCtx,
-  userId: Id<"users">
-): Promise<
-  | { connectionName: string; mode: "connector" }
-  | { mode: "token"; token: string }
-  | null
-> => {
-  const token = await loadFreshConnection(ctx, userId, "github");
-  if (token) {
-    return { mode: "token", token: token.accessToken };
-  }
-  const connector = await ctx.runQuery(
-    internal.oauthStore.getConnectorConnection,
-    { provider: "github", userId }
-  );
-  if (connector?.status === "connected" && connector.connectionName) {
-    return { connectionName: connector.connectionName, mode: "connector" };
-  }
-  return null;
-};
-
 export const provisionWorkspace = internalAction({
   args: {
     force: v.optional(v.boolean()),
@@ -149,7 +128,7 @@ export const provisionWorkspace = internalAction({
       steps.repo = "running";
       await patch(ctx, args.workspaceId, { provisionSteps: { ...steps } });
 
-      const github = await githubHandle(ctx, args.userId);
+      const github = await loadConnectorOrToken(ctx, args.userId, "github");
       if (github) {
         try {
           const result =
@@ -283,15 +262,19 @@ export const provisionWorkspace = internalAction({
         warnings.push(reconnectMessage("cloudflare"));
       }
 
-      const convex = await loadFreshConnection(ctx, args.userId, "convex");
+      const convex = await loadConnectorOrToken(ctx, args.userId, "convex");
       if (convex) {
         steps.convex = "running";
         await patch(ctx, args.workspaceId, { provisionSteps: { ...steps } });
         try {
-          const project = await ensureConvexProject(
-            convex.accessToken,
-            convexProjectName(slug)
-          );
+          const project =
+            convex.mode === "token"
+              ? await ensureConvexProject(convex.token, convexProjectName(slug))
+              : await ensureConvexProjectViaOpenConnector({
+                  accountHints: convex.accountHints,
+                  connectionName: convex.connectionName,
+                  projectName: convexProjectName(slug),
+                });
           convexDeploymentName = project.deploymentName;
           convexProjectSlug = project.projectSlug;
           convexTeamSlug = project.teamSlug;

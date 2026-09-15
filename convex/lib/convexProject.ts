@@ -52,22 +52,41 @@ export const resolveConvexTeamId = async (token: string): Promise<string> => {
   throw new Error("Convex チームを特定できませんでした");
 };
 
-const projectFrom = (
+export const convexProjectFromPayload = (
   teamId: string,
   value: unknown
 ): ConvexProjectTarget | undefined => {
   const row = asRecord(value);
-  const projectSlug = asString(row.slug) ?? asString(row.projectSlug);
+  const nested = asRecord(row.project);
+  const data = asRecord(row.data);
+  let source = row;
+  if (Object.keys(nested).length > 0) {
+    source = nested;
+  } else if (Object.keys(data).length > 0) {
+    source = data;
+  }
+  const projectSlug =
+    asString(source.slug) ??
+    asString(source.projectSlug) ??
+    asString(row.slug) ??
+    asString(row.projectSlug);
   if (!projectSlug) {
     return undefined;
   }
   return {
     deploymentName:
-      asString(row.prodDeploymentName) ?? asString(row.deploymentName),
+      asString(source.prodDeploymentName) ??
+      asString(source.deploymentName) ??
+      asString(row.prodDeploymentName) ??
+      asString(row.deploymentName),
     projectSlug,
     teamId,
-    teamSlug: asString(row.teamSlug),
-    url: asString(row.deploymentUrl) ?? asString(row.prodUrl),
+    teamSlug: asString(source.teamSlug) ?? asString(row.teamSlug),
+    url:
+      asString(source.deploymentUrl) ??
+      asString(source.prodUrl) ??
+      asString(row.deploymentUrl) ??
+      asString(row.prodUrl),
   };
 };
 
@@ -84,7 +103,7 @@ export const ensureConvexProject = async (
   if (listed.ok) {
     const rows = asList(listed.payload.projects ?? listed.payload.items);
     const match = rows
-      .map((row) => projectFrom(teamId, row))
+      .map((row) => convexProjectFromPayload(teamId, row))
       .find((row) => row?.projectSlug === projectName);
     if (match) {
       return match;
@@ -100,7 +119,7 @@ export const ensureConvexProject = async (
     }
   );
   if (created.ok) {
-    const project = projectFrom(teamId, created.payload);
+    const project = convexProjectFromPayload(teamId, created.payload);
     if (project) {
       return project;
     }

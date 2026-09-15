@@ -4,12 +4,13 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { loadFreshConnection } from "./lib/actionAuth";
+import { loadConnectorOrToken, loadFreshConnection } from "./lib/actionAuth";
 import {
   attachPagesGitHubSource,
   ensurePagesProject,
   triggerPagesDeployment,
 } from "./lib/cloudflarePages";
+import { ensureConvexProjectViaOpenConnector } from "./lib/convexFromOpenConnector";
 import {
   ensureConvexProject,
   getConvexProductionDeployment,
@@ -113,18 +114,27 @@ export const publishWorkspace = internalAction({
       errors.push(reconnectMessage("cloudflare"));
     }
 
-    const convex = await loadFreshConnection(ctx, args.userId, "convex");
+    const convex = await loadConnectorOrToken(ctx, args.userId, "convex");
     if (convex) {
       try {
-        const project = await ensureConvexProject(
-          convex.accessToken,
-          workspace.convexProjectSlug ?? workspace.slug
-        );
-        const deployment = await getConvexProductionDeployment(
-          convex.accessToken,
-          project.teamId,
-          project.projectSlug
-        );
+        const projectName =
+          workspace.convexProjectSlug ?? workspace.slug ?? "workspace";
+        const project =
+          convex.mode === "token"
+            ? await ensureConvexProject(convex.token, projectName)
+            : await ensureConvexProjectViaOpenConnector({
+                accountHints: convex.accountHints,
+                connectionName: convex.connectionName,
+                projectName,
+              });
+        const deployment =
+          convex.mode === "token"
+            ? await getConvexProductionDeployment(
+                convex.token,
+                project.teamId,
+                project.projectSlug
+              )
+            : { name: project.deploymentName, url: project.url };
         convexDeploymentName = deployment.name ?? project.deploymentName;
         convexProjectSlug = project.projectSlug;
         convexTeamSlug = project.teamSlug;

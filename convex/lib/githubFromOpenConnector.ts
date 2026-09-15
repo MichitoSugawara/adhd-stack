@@ -4,6 +4,14 @@ import { repoFromPayload, utf8ToBase64 } from "./githubRepo";
 import type { GitHubRepo } from "./githubRepo";
 import { asRecord, asString } from "./httpJson";
 import {
+  githubCreateFromTemplateActionIds,
+  githubCreateFromTemplateInput,
+  githubCreateOrUpdateFileActionIds,
+  githubCreateOrUpdateFileInput,
+  githubCreateRepositoryActionIds,
+  githubCreateRepositoryInput,
+} from "./openConnectorActionInputs";
+import {
   invokeOpenConnectorAction,
   invokeOpenConnectorActionIds,
   proxyOpenConnector,
@@ -89,18 +97,11 @@ const createRepo = async (
   try {
     const payload = await invokeOpenConnectorActionIds({
       actionIds: [
+        ...githubCreateRepositoryActionIds,
         envAction("OPENCONNECTOR_GITHUB_CREATE_REPO_ACTION", ""),
-        "github.create_a_repository_for_the_authenticated_user",
-        "github.repos_create_for_authenticated_user",
-        "github.create_repository",
       ],
       connectionName,
-      input: {
-        auto_init: false,
-        description,
-        name,
-        private: true,
-      },
+      input: githubCreateRepositoryInput({ description, name }),
     });
     return requireRepo(payload);
   } catch (error) {
@@ -148,17 +149,15 @@ const createFromTemplate = async (args: {
     const payload = await invokeOpenConnectorActionIds({
       actionIds: [
         envAction("OPENCONNECTOR_GITHUB_CREATE_FROM_TEMPLATE_ACTION", ""),
-        "github.create_a_repository_using_a_template",
-        "github.repos_create_using_a_template",
+        ...githubCreateFromTemplateActionIds,
       ],
       connectionName: args.connectionName,
-      input: {
+      input: githubCreateFromTemplateInput({
         name: args.name,
         owner: login,
-        private: true,
-        template_owner: args.templateOwner,
-        template_repo: args.templateRepo,
-      },
+        templateOwner: args.templateOwner,
+        templateRepo: args.templateRepo,
+      }),
     });
     return requireRepo(payload);
   } catch {
@@ -200,18 +199,17 @@ const putFile = async (args: {
   try {
     await invokeOpenConnectorActionIds({
       actionIds: [
+        ...githubCreateOrUpdateFileActionIds,
         envAction("OPENCONNECTOR_GITHUB_PUT_FILE_ACTION", ""),
-        "github.create_or_update_file_contents",
-        "github.repos_create_or_update_file_contents",
-        "github.create_or_update_file",
       ],
       connectionName: args.connectionName,
-      input: {
-        ...body,
+      input: githubCreateOrUpdateFileInput({
+        contentBase64: body.content,
+        message: body.message,
         owner: args.owner,
         path: args.path,
         repo: args.repo,
-      },
+      }),
     });
     return;
   } catch (error) {
@@ -280,14 +278,18 @@ export const provisionGithubViaOpenConnector = async (args: {
   const description = "ADHD Stack が tahcode 由来で用意したリポジトリ";
   const template = templateRepoFromEnv();
   if (template) {
-    const repo = await createFromTemplate({
-      connectionName: args.connectionName,
-      description,
-      name: args.slug,
-      templateOwner: template.owner,
-      templateRepo: template.repo,
-    });
-    return { repo, templateKind: "tahcode_template" };
+    try {
+      const repo = await createFromTemplate({
+        connectionName: args.connectionName,
+        description,
+        name: args.slug,
+        templateOwner: template.owner,
+        templateRepo: template.repo,
+      });
+      return { repo, templateKind: "tahcode_template" };
+    } catch {
+      // Catalog often lacks the template action, or the call times out.
+    }
   }
   const repo = await createRepo(args.connectionName, args.slug, description);
   await seedRepoViaOpenConnector({

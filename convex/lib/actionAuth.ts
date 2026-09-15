@@ -5,6 +5,10 @@ import type { ProviderId } from "./providers";
 import { resolveConnectionTokens } from "./tokenRefresh";
 import type { StoredConnectionSecret } from "./tokenRefresh";
 
+export type ConnectorOrToken =
+  | { accountHints: string[]; connectionName: string; mode: "connector" }
+  | { mode: "token"; token: string };
+
 export const loadFreshConnection = async (
   ctx: ActionCtx,
   userId: Id<"users">,
@@ -41,4 +45,30 @@ export const loadFreshConnection = async (
     expiresAt: resolution.tokens.expiresAt,
     refreshToken: resolution.tokens.refreshToken,
   };
+};
+
+export const loadConnectorOrToken = async (
+  ctx: ActionCtx,
+  userId: Id<"users">,
+  provider: ProviderId
+): Promise<ConnectorOrToken | null> => {
+  const token = await loadFreshConnection(ctx, userId, provider);
+  if (token) {
+    return { mode: "token", token: token.accessToken };
+  }
+  const connector = await ctx.runQuery(
+    internal.oauthStore.getConnectorConnection,
+    { provider, userId }
+  );
+  if (connector?.status === "connected" && connector.connectionName) {
+    return {
+      accountHints: [
+        connector.connectedAccountId,
+        connector.displayLabel,
+      ].filter((value) => value.length > 0),
+      connectionName: connector.connectionName,
+      mode: "connector",
+    };
+  }
+  return null;
 };
