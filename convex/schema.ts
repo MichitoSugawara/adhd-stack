@@ -125,6 +125,7 @@ export default defineSchema({
     provisionError: v.optional(v.string()),
     provisionStatus: provisionStatusValidator,
     provisionSteps: v.optional(provisionStepsValidator),
+    publishError: v.optional(v.string()),
     slug: v.optional(v.string()),
     templateKind: v.optional(
       v.union(v.literal("tahcode_seed"), v.literal("tahcode_template"))

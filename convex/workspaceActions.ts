@@ -297,7 +297,7 @@ export const provisionWorkspace = internalAction({
         }
       } else {
         steps.convex = "skipped";
-        warnings.push("Convex は接続カタログ経由です。公開は次の段階です");
+        warnings.push("Convex がつながっていません。公開は接続してから。");
       }
 
       const ready = Boolean(githubRepoUrl && codingEnvironmentId);

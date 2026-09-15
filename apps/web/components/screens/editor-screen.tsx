@@ -7,24 +7,69 @@ import PromptBar from "@/components/primitives/PromptBar";
 import StreamingText from "@/components/primitives/StreamingText";
 import ThinkingState from "@/components/primitives/ThinkingState";
 import ToolChips from "@/components/primitives/ToolChips";
+import { PublishPanel } from "@/components/screens/publish-panel";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { toChatView } from "@/lib/chat-view";
 import {
   useChatMessages,
+  usePublishApp,
   useSendChat,
   useWorkspaceBySlug,
 } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
+import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { OFFLINE_PUBLISH_NOTE } from "@/lib/publish-copy";
 import { useShell } from "@/lib/shell-state";
+
+const hostingHint = (
+  board:
+    | {
+        connections: readonly {
+          provider: string;
+          status: string;
+        }[];
+      }
+    | undefined,
+  hasRepo: boolean
+): string | null => {
+  if (!board) {
+    return null;
+  }
+  const missing: string[] = [];
+  for (const row of board.connections) {
+    if (row.status === "connected") {
+      continue;
+    }
+    if (row.provider === "cloudflare") {
+      missing.push("Cloudflare");
+    }
+    if (row.provider === "convex") {
+      missing.push("Convex");
+    }
+  }
+  const parts: string[] = [];
+  if (!hasRepo) {
+    parts.push("GitHub リポジトリの準備が終わるまで公開できません。");
+  }
+  if (missing.length > 0) {
+    parts.push(`${missing.join(" と ")} がつながっていません。`);
+  }
+  return parts.length > 0 ? parts.join(" ") : null;
+};
 
 const EditorLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
+  const publishApp = usePublishApp();
+  const { board } = useConnectionsPort();
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishNotes, setPublishNotes] = useState<string[]>([]);
 
   if (workspace === undefined) {
     return (
@@ -45,6 +90,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
     workspace.githubRepoUrl && workspace.codingEnvironmentId
   );
   const view = toChatView(messages ?? []);
+  const lastPublishError = publishError ?? (workspace.publishError || null);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
@@ -66,6 +112,24 @@ const EditorLive = ({ slug }: { slug: string }) => {
     }
   };
 
+  const publish = async () => {
+    if (publishing) {
+      return;
+    }
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      const result = await publishApp({ slug });
+      setPublishNotes(result.notes);
+      setPublishError(result.error);
+    } catch (error) {
+      setPublishNotes([]);
+      setPublishError(connectErrorMessage(error));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="border-line flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
@@ -73,28 +137,29 @@ const EditorLive = ({ slug }: { slug: string }) => {
           <p className="text-ink-3 text-[12px]">チャット</p>
           <h1 className="text-[16px] font-semibold">{workspace.name}</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
-            href={`/p/${slug}/envs`}
-          >
-            環境
-          </Link>
-          <button
-            className="rounded-control bg-field text-ink-3 h-8 px-3 text-[13px] font-medium"
-            disabled
-            title="Phase 4 でユーザーの Pages と Convex に出します"
-            type="button"
-          >
-            公開（Phase 4）
-          </button>
-        </div>
+        <Link
+          className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
+          href={`/p/${slug}/envs`}
+        >
+          環境
+        </Link>
       </header>
       <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
+          <PublishPanel
+            convexUrl={workspace.convexUrl}
+            error={lastPublishError}
+            hint={hostingHint(board, Boolean(workspace.githubRepoUrl))}
+            notes={publishNotes}
+            onPublish={() => {
+              void publish();
+            }}
+            pagesUrl={workspace.cloudflarePagesUrl}
+            pending={publishing}
+          />
           {ready ? (
             <p className="shell-note">
-              指示は実行環境に送られます。公開 URL はまだ返しません。
+              指示は実行環境に送られます。公開 URL は上の公開欄です。
             </p>
           ) : (
             <p className="shell-note">
@@ -185,6 +250,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
 const EditorSkeleton = ({ appId }: { appId: string }) => {
   const shell = useShell();
   const app = shell.state.apps.find((item) => item.id === appId);
+  const [publishNote, setPublishNote] = useState<string | null>(null);
 
   return shell.hydrated && !app ? (
     <main className="px-8 py-10">
@@ -197,25 +263,23 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
           <p className="text-ink-3 text-[12px]">チャット</p>
           <h1 className="text-[16px] font-semibold">{app?.name ?? appId}</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
-            href={`/p/${appId}/envs`}
-          >
-            環境
-          </Link>
-          <button
-            className="rounded-control bg-field text-ink-3 h-8 px-3 text-[13px] font-medium"
-            disabled
-            title="Phase 4 でユーザーの Pages と Convex に出します"
-            type="button"
-          >
-            公開（Phase 4）
-          </button>
-        </div>
+        <Link
+          className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
+          href={`/p/${appId}/envs`}
+        >
+          環境
+        </Link>
       </header>
       <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
+          <PublishPanel
+            error={publishNote}
+            hint={OFFLINE_PUBLISH_NOTE}
+            onPublish={() => {
+              setPublishNote(OFFLINE_PUBLISH_NOTE);
+            }}
+            pending={false}
+          />
           <p className="shell-note">
             Convex 未設定のため会話は送れません。偽の返答は出しません。
           </p>

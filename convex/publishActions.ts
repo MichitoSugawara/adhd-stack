@@ -15,13 +15,13 @@ import {
   getConvexProductionDeployment,
 } from "./lib/convexProject";
 import type { PublishResult } from "./lib/publishResult";
+import {
+  asStoredHttpUrl,
+  CONVEX_FUNCTION_PUSH_NOTE,
+  summarizePublish,
+} from "./lib/publishResult";
 import { reconnectMessage } from "./lib/tokenRefresh";
-
-const publishResultValidator = v.object({
-  cloudflarePagesUrl: v.union(v.string(), v.null()),
-  convexUrl: v.union(v.string(), v.null()),
-  error: v.union(v.string(), v.null()),
-});
+import { publishResultValidator } from "./validators";
 
 export const publishWorkspace = internalAction({
   args: {
@@ -37,15 +37,17 @@ export const publishWorkspace = internalAction({
       return {
         cloudflarePagesUrl: null,
         convexUrl: null,
-        error: "ワークスペースがありません",
+        error: "アプリが見つかりません",
+        notes: [],
       };
     }
 
     const errors: string[] = [];
-    let { cloudflarePagesUrl } = workspace;
+    const notes: string[] = [];
+    let cloudflarePagesUrl = asStoredHttpUrl(workspace.cloudflarePagesUrl);
     let { cloudflareAccountId } = workspace;
     let { cloudflareProjectName } = workspace;
-    let { convexUrl } = workspace;
+    let convexUrl = asStoredHttpUrl(workspace.convexUrl);
     let { convexDeploymentName } = workspace;
     let { convexProjectSlug } = workspace;
     let { convexTeamSlug } = workspace;
@@ -73,7 +75,7 @@ export const publishWorkspace = internalAction({
         );
         cloudflareAccountId = project.accountId;
         cloudflareProjectName = project.name;
-        cloudflarePagesUrl = project.url ?? cloudflarePagesUrl;
+        cloudflarePagesUrl = asStoredHttpUrl(project.url) ?? cloudflarePagesUrl;
         try {
           await attachPagesGitHubSource(
             cloudflare.accessToken,
@@ -95,7 +97,8 @@ export const publishWorkspace = internalAction({
           project.accountId,
           project.name
         );
-        cloudflarePagesUrl = deployment.url ?? cloudflarePagesUrl;
+        cloudflarePagesUrl =
+          asStoredHttpUrl(deployment.url) ?? cloudflarePagesUrl;
         if (deployment.status === "failure" || deployment.status === "failed") {
           errors.push("Pages: デプロイが失敗しました");
         }
@@ -125,11 +128,10 @@ export const publishWorkspace = internalAction({
         convexDeploymentName = deployment.name ?? project.deploymentName;
         convexProjectSlug = project.projectSlug;
         convexTeamSlug = project.teamSlug;
-        convexUrl = deployment.url ?? project.url;
+        convexUrl =
+          asStoredHttpUrl(deployment.url) ?? asStoredHttpUrl(project.url);
         if (convexUrl) {
-          errors.push(
-            "Convex: プロジェクトと本番デプロイはあります。関数のプッシュはこのサーバーからバンドルできないため未実施です。"
-          );
+          notes.push(CONVEX_FUNCTION_PUSH_NOTE);
         } else {
           errors.push(
             "Convex: 本番デプロイ URL を取得できませんでした。プロジェクトはあります。"
@@ -146,6 +148,13 @@ export const publishWorkspace = internalAction({
       errors.push("Convex: つながっていません");
     }
 
+    const result: PublishResult = {
+      cloudflarePagesUrl: cloudflarePagesUrl ?? null,
+      convexUrl: convexUrl ?? null,
+      error: errors.length > 0 ? errors.join(" / ") : null,
+      notes,
+    };
+
     await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
       cloudflareAccountId,
       cloudflarePagesUrl,
@@ -155,17 +164,15 @@ export const publishWorkspace = internalAction({
       convexTeamSlug,
       convexUrl,
       provisionStatus: workspace.provisionStatus,
+      publishError: result.error ?? "",
+      workspaceId: args.workspaceId,
+    });
+    await ctx.runMutation(internal.workspaceInternal.insertSystemMessage, {
+      body: summarizePublish(result),
       workspaceId: args.workspaceId,
     });
 
-    const blocking = errors.filter(
-      (item) => !item.startsWith("Convex: プロジェクトと本番デプロイ")
-    );
-    return {
-      cloudflarePagesUrl: cloudflarePagesUrl ?? null,
-      convexUrl: convexUrl ?? null,
-      error: blocking.length > 0 ? errors.join(" / ") : (errors[0] ?? null),
-    };
+    return result;
   },
   returns: publishResultValidator,
 });

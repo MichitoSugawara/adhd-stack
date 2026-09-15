@@ -8,7 +8,7 @@
 
 v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（Phase 0）。UI は [Beautiful UI](https://www.beautifului.dev/)、接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
 
-このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（v1 は GitHub + Codex Cloud Environment）です。公開 URL の完成は次の段階です。
+このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（v1 は GitHub + Codex Cloud Environment）です。公開は開いているアプリの Cloudflare Pages + Convex に出し、同じ画面に URL を返します。Convex の関数プッシュはこのサーバーからできないので、手動または CI のままです。ホスト `adhd.gawarago.com` の本番切替は次の段階です。
 
 現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。`/connect` は ConnectionsPort 経由の実接続です。つながったようには見せません。Google ログインと API キーカードはありません。このリポジトリにシークレットは入れていません。
 
@@ -104,8 +104,8 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 
 ```
 apps/web          Next.js App Router + Beautiful UI + OpenNext
-convex            Convex Auth・接続・CodingBackend・チャット（Phase 3）
-docs              要件の正本
+convex            Convex Auth・接続・CodingBackend・チャット・公開
+docs              要件の正本と切替手順
 design_handoff    移行用 IA 参考
 ```
 

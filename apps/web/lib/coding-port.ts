@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -20,3 +20,5 @@ export const useChatMessages = (workspaceId?: Id<"workspaces">) =>
   useQuery(api.chat.listRecent, workspaceId ? { workspaceId } : "skip");
 
 export const useSendChat = () => useMutation(api.chat.send);
+
+export const usePublishApp = () => useAction(api.workspacePublish.publish);

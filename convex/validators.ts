@@ -52,7 +52,15 @@ export const workspacePublicValidator = v.object({
   provisionError: v.optional(v.string()),
   provisionStatus: provisionStatusValidator,
   provisionSteps: v.optional(provisionStepsValidator),
+  publishError: v.optional(v.string()),
   slug: v.string(),
+});
+
+export const publishResultValidator = v.object({
+  cloudflarePagesUrl: v.union(v.string(), v.null()),
+  convexUrl: v.union(v.string(), v.null()),
+  error: v.union(v.string(), v.null()),
+  notes: v.array(v.string()),
 });
 
 export const messageKindValidator = v.union(

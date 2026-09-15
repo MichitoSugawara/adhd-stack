@@ -18,6 +18,7 @@ const toPublic = (workspace: Doc<"workspaces">) => ({
   provisionError: workspace.provisionError,
   provisionStatus: workspace.provisionStatus,
   provisionSteps: workspace.provisionSteps,
+  publishError: workspace.publishError,
   slug: workspace.slug ?? slugFromName(workspace.name),
 });
 

@@ -162,6 +162,7 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 - ユーザー Convex デプロイへの **関数プッシュ**は、解けるまで手動または CI のままになり得る。現行 `publishActions` も「プロジェクトと本番デプロイはあるが、このサーバーから関数をバンドルできない」と返している
 - Pages は GitHub 連携とデプロイ起動までが先行しやすい。Convex URL と Pages URL は取れても、両方 live とは限らない
 - 失敗したら同じ画面に原因を平文で出す。偽の成功 URL は出さない
+- 公開は開いているアプリの slug / workspace id に対して行う。最初の 1 件だけを公開してはいけない
 
 ---
 
@@ -202,11 +203,11 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 | **1** | Beautiful UI シェル。ログイン / 接続 / 一覧 / 作成中 / エディタ。モック接続なし。手渡しピクセル一致なし（この PR） | 画面を辿れる。トークンは Dark Green+ |
 | **2** | OpenConnector / ConnectionsPort。4 カードを本物の接続にする。ChatGPT は device OAuth 固定 | Convex に不透明 id だけ残る。UI にゲートウェイ名が出ない |
 | **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く（この PR） | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
-| **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す | 偽 URL を出さない |
+| **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す（この PR） | 偽 URL を出さない。公開は slug 単位 |
 | **5** | `adhd.gawarago.com` を本番に切り替える | モック Pages を本物に置換 |
 | **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする | UI を書き直さずに差し込める |
 
-Phase 3 は本 PR の CodingBackend。公開 URL の完成は Phase 4。第二実装（Origin + Cursor Cloud）は Phase 6 のスロットだけある。
+Phase 4 は本 PR の公開（CodingBackend とは直交するホスティング）。本番ホスト切替は Phase 5。手順は [docs/cutover.md](cutover.md)。第二実装（Origin + Cursor Cloud）は Phase 6 のスロットだけある。
 
 ---
 

@@ -588,6 +588,10 @@ export const mergeUserPair = async (
         keepWorkspace.provisionStatus,
         absorbWorkspace.provisionStatus
       ),
+      publishError: preferText(
+        keepWorkspace.publishError,
+        absorbWorkspace.publishError
+      ),
       slug: keepWorkspace.slug ?? absorbWorkspace.slug ?? slug,
       updatedAt: Date.now(),
     });
