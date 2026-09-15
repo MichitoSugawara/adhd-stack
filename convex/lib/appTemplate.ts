@@ -7,6 +7,7 @@ export type TemplateKind = "tahcode_seed" | "tahcode_template";
 
 const gitignore = `node_modules
 .next
+.open-next
 .vercel
 .env
 .env.local
@@ -18,6 +19,7 @@ const packageJsonFor = (slug: string): string =>
   `${JSON.stringify(
     {
       dependencies: {
+        "@opennextjs/cloudflare": "^1.20.6",
         convex: "^1.45.0",
         next: "16.3.4",
         react: "19.2.8",
@@ -30,11 +32,13 @@ const packageJsonFor = (slug: string): string =>
         "@types/react": "19.2.18",
         "@types/react-dom": "19.2.5",
         typescript: "7.0.2",
+        wrangler: "^4.128.0",
       },
       name: slug,
       private: true,
       scripts: {
-        build: "next build",
+        build: "opennextjs-cloudflare build",
+        "build:next": "next build",
         "convex:deploy": "convex deploy --yes",
         dev: "next dev",
       },
@@ -42,6 +46,26 @@ const packageJsonFor = (slug: string): string =>
     null,
     2
   )}\n`;
+
+const nextConfigTs = `import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {};
+
+export default nextConfig;
+
+if (process.env.npm_lifecycle_event === "dev") {
+  initOpenNextCloudflareForDev();
+}
+`;
+
+const openNextConfigTs = `import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+
+export default {
+  ...defineCloudflareConfig(),
+  buildCommand: "next build",
+};
+`;
 
 const tsconfigJson = `${JSON.stringify(
   {
@@ -76,7 +100,8 @@ ADHD Stack が [tahcode](https://github.com/MichitoSugawara/tahcode) の型に�
 ## 入っているもの
 
 - Convex の薄い schema（データ）
-- Cloudflare / OpenNext を想定した wrangler の型
+- OpenNext（\`@opennextjs/cloudflare\`）。\`npm run build\` は \`.open-next\` を出す
+- Cloudflare Pages 向け \`wrangler.toml\`（\`pages_build_output_dir = ".open-next"\`）
 - TypeScript（\`typescript\` / \`@types/node\` / \`@types/react\` / \`@types/react-dom\`）と \`tsconfig.json\`
 - Beautiful UI / Dark Green+ を前提にした最初の画面（\`app/page.tsx\`）
 
@@ -128,7 +153,8 @@ export default defineSchema({
 `;
 
 const wranglerToml = `name = "app"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-09-03"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".open-next"
 `;
 
@@ -160,6 +186,8 @@ export const tahcodeSeedFiles = (args: {
   { content: readmeFor(args.name, args.slug), path: "README.md" },
   { content: packageJsonFor(args.slug), path: "package.json" },
   { content: tsconfigJson, path: "tsconfig.json" },
+  { content: nextConfigTs, path: "next.config.ts" },
+  { content: openNextConfigTs, path: "open-next.config.ts" },
   { content: gitignore, path: ".gitignore" },
   { content: convexJson, path: "convex.json" },
   {

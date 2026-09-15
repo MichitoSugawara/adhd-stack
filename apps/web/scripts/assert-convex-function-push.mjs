@@ -121,6 +121,10 @@ assert.equal(hasFunctionPushOutcome(["Pages だけ"]), false);
 const seeds = tahcodeSeedFiles({ name: "Demo", slug: "demo-app" });
 const packageJson = seeds.find((file) => file.path === "package.json");
 const tsconfig = seeds.find((file) => file.path === "tsconfig.json");
+const nextConfig = seeds.find((file) => file.path === "next.config.ts");
+const openNextConfig = seeds.find((file) => file.path === "open-next.config.ts");
+const wrangler = seeds.find((file) => file.path === "wrangler.toml");
+const gitignore = seeds.find((file) => file.path === ".gitignore");
 const workflow = seeds.find(
   (file) => file.path === ".github/workflows/convex-deploy.yml"
 );
@@ -130,12 +134,24 @@ assert.equal(packageManifest.devDependencies?.typescript, "7.0.2");
 assert.equal(packageManifest.devDependencies?.["@types/node"], "26.4.1");
 assert.equal(packageManifest.devDependencies?.["@types/react"], "19.2.18");
 assert.equal(packageManifest.devDependencies?.["@types/react-dom"], "19.2.5");
+assert.equal(packageManifest.devDependencies?.wrangler, "^4.128.0");
+assert.equal(
+  packageManifest.dependencies?.["@opennextjs/cloudflare"],
+  "^1.20.6"
+);
+assert.equal(packageManifest.scripts?.build, "opennextjs-cloudflare build");
+assert.equal(packageManifest.scripts?.["build:next"], "next build");
 assert.match(
   packageJson?.content ?? "",
   /"convex:deploy": "convex deploy --yes"/
 );
 assert.match(tsconfig?.content ?? "", /"jsx": "react-jsx"/);
 assert.match(tsconfig?.content ?? "", /\*\*\/\*\.tsx/);
+assert.match(nextConfig?.content ?? "", /initOpenNextCloudflareForDev/);
+assert.match(openNextConfig?.content ?? "", /defineCloudflareConfig/);
+assert.match(openNextConfig?.content ?? "", /buildCommand: "next build"/);
+assert.match(wrangler?.content ?? "", /pages_build_output_dir = "\.open-next"/);
+assert.match(gitignore?.content ?? "", /^\.open-next$/m);
 assert.match(workflow?.content ?? "", /workflow_dispatch/);
 assert.match(workflow?.content ?? "", /npx convex deploy --yes/);
 assert.doesNotMatch(workflow?.content ?? "", /on:\s*\n\s*push:/);
