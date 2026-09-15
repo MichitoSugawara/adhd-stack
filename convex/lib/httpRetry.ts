@@ -48,3 +48,49 @@ export const busyHttpMessage = (status: number): string => {
   }
   return `HTTP ${String(status)}`;
 };
+
+export const OPENCONNECTOR_FETCH_TIMEOUT_MS = 15_000;
+
+export const OPENCONNECTOR_TIMEOUT_MESSAGE =
+  "接続アプリが応答しません。もう一度試してください。";
+
+export const isAbortLikeError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return (
+    error.name === "AbortError" ||
+    error.name === "TimeoutError" ||
+    error.message.includes("The operation was aborted")
+  );
+};
+
+const timeoutSignal = (timeoutMs: number): AbortSignal => {
+  if (typeof AbortSignal.timeout === "function") {
+    return AbortSignal.timeout(timeoutMs);
+  }
+  const controller = new AbortController();
+  setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  return controller.signal;
+};
+
+export const fetchWithTimeout = async (
+  url: string,
+  init: RequestInit | undefined,
+  timeoutMs: number,
+  timeoutMessage = OPENCONNECTOR_TIMEOUT_MESSAGE
+): Promise<Response> => {
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: timeoutSignal(timeoutMs),
+    });
+  } catch (error) {
+    if (isAbortLikeError(error)) {
+      throw new Error(timeoutMessage, { cause: error });
+    }
+    throw error;
+  }
+};

@@ -17,6 +17,10 @@ export const githubCreateFromTemplateActionIds = [
 
 export const convexCreateProjectActionIds = ["convex.create_project"] as const;
 
+export const convexCreateDeployKeyActionIds = [
+  "convex.create_deploy_key",
+] as const;
+
 export const githubCreateRepositoryInput = (args: {
   description: string;
   name: string;
@@ -61,6 +65,14 @@ export const convexCreateProjectInput = (args: {
   deploymentType: "prod",
   projectName: args.projectName,
   team_id: args.teamId,
+});
+
+export const convexCreateDeployKeyInput = (args: {
+  deploymentName: string;
+  name: string;
+}): Record<string, unknown> => ({
+  deployment_name: args.deploymentName,
+  name: args.name,
 });
 
 export const convexTeamIdFromAccount = (value: string): number | undefined => {

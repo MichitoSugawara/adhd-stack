@@ -5,6 +5,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
 import { loadConnectorOrToken, loadFreshConnection } from "./lib/actionAuth";
+import type { CloudflarePagesProject } from "./lib/cloudflarePages";
 import {
   attachPagesGitHubSource,
   ensurePagesProject,
@@ -14,6 +15,7 @@ import {
   ensureConvexProjectViaOpenConnector,
   getConvexProductionDeploymentViaOpenConnector,
 } from "./lib/convexFromOpenConnector";
+import { pushConvexFunctionsViaPages } from "./lib/convexFunctionPush";
 import {
   ensureConvexProject,
   getConvexProductionDeployment,
@@ -21,7 +23,7 @@ import {
 import type { PublishResult } from "./lib/publishResult";
 import {
   asStoredHttpUrl,
-  CONVEX_FUNCTION_PUSH_NOTE,
+  PAGES_DEPLOY_STARTED_NOTE,
   summarizePublish,
 } from "./lib/publishResult";
 import { reconnectMessage } from "./lib/tokenRefresh";
@@ -55,6 +57,7 @@ export const publishWorkspace = internalAction({
     let { convexDeploymentName } = workspace;
     let { convexProjectSlug } = workspace;
     let { convexTeamSlug } = workspace;
+    let pagesProject: CloudflarePagesProject | undefined;
 
     const owner = workspace.githubOwner;
     const repo = workspace.githubRepoName;
@@ -69,7 +72,7 @@ export const publishWorkspace = internalAction({
     );
     if (cloudflare && owner && repo) {
       try {
-        const project = await ensurePagesProject(
+        pagesProject = await ensurePagesProject(
           cloudflare.accessToken,
           owner,
           repo,
@@ -77,14 +80,15 @@ export const publishWorkspace = internalAction({
           cloudflare.accountId,
           workspace.cloudflareProjectName ?? workspace.slug
         );
-        cloudflareAccountId = project.accountId;
-        cloudflareProjectName = project.name;
-        cloudflarePagesUrl = asStoredHttpUrl(project.url) ?? cloudflarePagesUrl;
+        cloudflareAccountId = pagesProject.accountId;
+        cloudflareProjectName = pagesProject.name;
+        cloudflarePagesUrl =
+          asStoredHttpUrl(pagesProject.url) ?? cloudflarePagesUrl;
         try {
           await attachPagesGitHubSource(
             cloudflare.accessToken,
-            project.accountId,
-            project.name,
+            pagesProject.accountId,
+            pagesProject.name,
             owner,
             repo,
             workspace.githubRepoId
@@ -96,21 +100,11 @@ export const publishWorkspace = internalAction({
               : "Pages: GitHub 連携に失敗しました"
           );
         }
-        const deployment = await triggerPagesDeployment(
-          cloudflare.accessToken,
-          project.accountId,
-          project.name
-        );
-        cloudflarePagesUrl =
-          asStoredHttpUrl(deployment.url) ?? cloudflarePagesUrl;
-        if (deployment.status === "failure" || deployment.status === "failed") {
-          errors.push("Pages: デプロイが失敗しました");
-        }
       } catch (error) {
         errors.push(
           error instanceof Error
             ? `Pages: ${error.message}`
-            : "Pages: デプロイを開始できませんでした"
+            : "Pages: プロジェクトを用意できませんでした"
         );
       }
     } else if (!cloudflare) {
@@ -147,9 +141,17 @@ export const publishWorkspace = internalAction({
         convexTeamSlug = project.teamSlug;
         convexUrl =
           asStoredHttpUrl(deployment.url) ?? asStoredHttpUrl(project.url);
-        if (convexUrl) {
-          notes.push(CONVEX_FUNCTION_PUSH_NOTE);
-        } else {
+        const push = await pushConvexFunctionsViaPages({
+          appSlug: workspace.slug,
+          cloudflareAccountId: pagesProject?.accountId ?? cloudflareAccountId,
+          cloudflareProjectName: pagesProject?.name ?? cloudflareProjectName,
+          cloudflareToken: cloudflare?.accessToken,
+          convex,
+          convexUrl,
+          deploymentName: convexDeploymentName,
+        });
+        notes.push(push.note);
+        if (!convexUrl) {
           errors.push(
             "Convex: 本番デプロイ URL を取得できませんでした。プロジェクトはあります。"
           );
@@ -163,6 +165,28 @@ export const publishWorkspace = internalAction({
       }
     } else {
       errors.push("Convex: つながっていません");
+    }
+
+    if (cloudflare && pagesProject) {
+      try {
+        const deployment = await triggerPagesDeployment(
+          cloudflare.accessToken,
+          pagesProject.accountId,
+          pagesProject.name
+        );
+        cloudflarePagesUrl =
+          asStoredHttpUrl(deployment.url) ?? cloudflarePagesUrl;
+        notes.push(PAGES_DEPLOY_STARTED_NOTE);
+        if (deployment.status === "failure" || deployment.status === "failed") {
+          errors.push("Pages: デプロイが失敗しました");
+        }
+      } catch (error) {
+        errors.push(
+          error instanceof Error
+            ? `Pages: ${error.message}`
+            : "Pages: デプロイを開始できませんでした"
+        );
+      }
     }
 
     const result: PublishResult = {

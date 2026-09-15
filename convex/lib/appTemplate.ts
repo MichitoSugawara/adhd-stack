@@ -29,6 +29,7 @@ const packageJsonFor = (slug: string): string =>
       private: true,
       scripts: {
         build: "next build",
+        "convex:deploy": "convex deploy --yes",
         dev: "next dev",
       },
     },
@@ -48,13 +49,40 @@ ADHD Stack が [tahcode](https://github.com/MichitoSugawara/tahcode) の型に�
 - Cloudflare / OpenNext を想定した wrangler の型
 - Beautiful UI / Dark Green+ を前提にした最初の画面
 
+## 公開と Convex 関数
+
+ホストはこのリポジトリへ関数バンドルを送りません。公開時にデプロイキーを Cloudflare Pages 本番の \`CONVEX_DEPLOY_KEY\` へ載せ、Pages のビルドコマンドを \`npx convex deploy --yes --cmd "npm run build"\` にします。関数が載るのはそのビルドが成功したあとです。
+
+手動で送るときは \`CONVEX_DEPLOY_KEY\` を置いて \`npm run convex:deploy\` を実行します。GitHub Actions の \`convex-deploy\` は手動実行だけです。Actions の secret は自動では載せません。
+
 ## まだスタブ
 
 - tahcode 本体のプレビュー作成 API と招待ハーネスは載せていない
-- Pages / Convex への公開完了はホスト側の次の段階
 - チーム向けの複数テナントは載せない
 
 \`ADHD_TEMPLATE_REPO\` があれば、その GitHub テンプレートから作ります。無いときはこの足場を Contents API で置きます。
+`;
+
+const convexJson = `{
+  "functions": "convex/"
+}
+`;
+
+const convexDeployWorkflow = `name: convex-deploy
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: npx convex deploy --yes
+        env:
+          CONVEX_DEPLOY_KEY: \${{ secrets.CONVEX_DEPLOY_KEY }}
 `;
 
 const schemaTs = `import { defineSchema, defineTable } from "convex/server";
@@ -101,6 +129,11 @@ export const tahcodeSeedFiles = (args: {
   { content: readmeFor(args.name, args.slug), path: "README.md" },
   { content: packageJsonFor(args.slug), path: "package.json" },
   { content: gitignore, path: ".gitignore" },
+  { content: convexJson, path: "convex.json" },
+  {
+    content: convexDeployWorkflow,
+    path: ".github/workflows/convex-deploy.yml",
+  },
   { content: schemaTs, path: "convex/schema.ts" },
   { content: wranglerToml, path: "wrangler.toml" },
   { content: pageTsx, path: "app/page.tsx" },

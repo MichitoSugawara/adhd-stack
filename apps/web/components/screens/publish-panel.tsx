@@ -1,5 +1,8 @@
 import { publicHttpUrl } from "@/lib/public-url";
-import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
+import {
+  CONVEX_FUNCTION_PUSH_NOTE,
+  hasFunctionPushOutcome,
+} from "@/lib/publish-copy";
 
 const UrlRow = ({ href, label }: { href: string | null; label: string }) => (
   <p className="text-[13px] leading-6">
@@ -40,8 +43,7 @@ export const PublishPanel = ({
   const convex = publicHttpUrl(convexUrl);
   const shownNotes = notes ?? [];
   const showFunctionGap =
-    convex !== null &&
-    !shownNotes.some((note) => note.includes("関数のプッシュ"));
+    convex !== null && !hasFunctionPushOutcome(shownNotes);
 
   return (
     <section className="rounded-card bg-surface shadow-card max-w-2xl p-4">

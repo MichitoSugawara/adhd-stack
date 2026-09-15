@@ -1,5 +1,11 @@
 import { resolveCloudflareAccountId } from "./cloudflareAccount";
 import { asList, asRecord, asString, readJson } from "./httpJson";
+import {
+  CONVEX_PAGES_BUILD_COMMAND,
+  mergePagesBuildConfig,
+  mergePagesProductionEnvVars,
+  pagesConvexEnvUpdates,
+} from "./pagesEnv";
 import { reconnectMessage } from "./tokenRefresh";
 
 export const pagesProjectName = (slug: string): string => slug.slice(0, 58);
@@ -171,6 +177,76 @@ export const attachPagesGitHubSource = async (
         `Cloudflare に GitHub を接続できませんでした: HTTP ${response.status}`
     );
   }
+};
+
+export const configurePagesForConvexDeploy = async (args: {
+  accountId: string;
+  convexUrl?: string;
+  deployKey: string;
+  deploymentName?: string;
+  projectName: string;
+  token: string;
+}): Promise<void> => {
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${args.accountId}/pages/projects/${args.projectName}`;
+  const current = await fetch(endpoint, { headers: headersFor(args.token) });
+  const currentPayload = await readJson(current);
+  if (!current.ok) {
+    throw new Error(
+      asString(asRecord(asList(currentPayload.errors)[0]).message) ??
+        "Cloudflare Pages プロジェクトを読めませんでした"
+    );
+  }
+  const result = asRecord(currentPayload.result);
+  const buildConfig = asRecord(result.build_config);
+  const deploymentConfigs = asRecord(result.deployment_configs);
+  const production = asRecord(deploymentConfigs.production);
+  const existingEnv = asRecord(production.env_vars);
+  const updates = pagesConvexEnvUpdates({
+    convexUrl: args.convexUrl,
+    deployKey: args.deployKey,
+    deploymentName: args.deploymentName,
+  });
+  const bodies = [
+    {
+      build_config: mergePagesBuildConfig(
+        buildConfig,
+        CONVEX_PAGES_BUILD_COMMAND
+      ),
+      deployment_configs: {
+        ...deploymentConfigs,
+        production: {
+          ...production,
+          env_vars: mergePagesProductionEnvVars(existingEnv, updates),
+        },
+      },
+    },
+    {
+      build_config: mergePagesBuildConfig(
+        buildConfig,
+        CONVEX_PAGES_BUILD_COMMAND
+      ),
+      deployment_configs: {
+        production: {
+          env_vars: updates,
+        },
+      },
+    },
+  ];
+  let lastMessage = "Cloudflare Pages にデプロイキーを載せられませんでした";
+  for (const body of bodies) {
+    const response = await fetch(endpoint, {
+      body: JSON.stringify(body),
+      headers: headersFor(args.token),
+      method: "PATCH",
+    });
+    const payload = await readJson(response);
+    if (response.ok) {
+      return;
+    }
+    lastMessage =
+      asString(asRecord(asList(payload.errors)[0]).message) ?? lastMessage;
+  }
+  throw new Error(lastMessage);
 };
 
 export const triggerPagesDeployment = async (

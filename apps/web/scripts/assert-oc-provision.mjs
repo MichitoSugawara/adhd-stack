@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 const {
+  convexCreateDeployKeyActionIds,
+  convexCreateDeployKeyInput,
   convexCreateProjectActionIds,
   convexCreateProjectInput,
   convexTeamIdFromAccount,
@@ -33,6 +35,14 @@ const convexInput = convexCreateProjectInput({
 assert.equal(convexInput.team_id, 46_534);
 assert.equal(convexInput.projectName, "flowcheck-915");
 assert.equal(convexCreateProjectActionIds[0], "convex.create_project");
+const deployKeyInput = convexCreateDeployKeyInput({
+  deploymentName: "happy-animal-123",
+  name: "adhd-pages-demo",
+});
+assert.equal(deployKeyInput.deployment_name, "happy-animal-123");
+assert.equal(deployKeyInput.name, "adhd-pages-demo");
+assert.equal(Object.hasOwn(deployKeyInput, "deploymentName"), false);
+assert.equal(convexCreateDeployKeyActionIds[0], "convex.create_deploy_key");
 assert.equal(convexTeamIdFromAccount("team:46534"), 46_534);
 assert.equal(convexTeamIdFromAccount("46534"), 46_534);
 assert.equal(convexTeamIdFromAccount("conn_abc"), undefined);

@@ -159,8 +159,9 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 
 既知のギャップ（隠さない）:
 
-- ユーザー Convex デプロイへの **関数プッシュ**は、解けるまで手動または CI のままになり得る。現行 `publishActions` も「プロジェクトと本番デプロイはあるが、このサーバーから関数をバンドルできない」と返している
-- Pages は GitHub 連携とデプロイ起動までが先行しやすい。Convex URL と Pages URL は取れても、両方 live とは限らない
+- ホストはこのサーバーから関数バンドルを送らない。公開時に `convex.create_deploy_key`（または Management API）で本番デプロイキーを発行し、Cloudflare Pages 本番の `CONVEX_DEPLOY_KEY` とビルドコマンド `npx convex deploy --yes --cmd "npm run build"` まで載せる。関数が載るのはその Pages ビルド成功後。この画面からは完了を待たない
+- キー発行や Pages への載せに失敗したら「未実施」と出す。偽の成功は出さない
+- Pages デプロイ開始はキー載せのあと。開始したことと live 完了は別
 - 失敗したら同じ画面に原因を平文で出す。偽の成功 URL は出さない
 - 公開は開いているアプリの slug / workspace id に対して行う。最初の 1 件だけを公開してはいけない
 
@@ -223,7 +224,7 @@ Phase 4 は公開。Phase 5 はホスト切替（資格情報待ち）。Phase 6
 | CodingBackend の切り方 | t3code の provider 差し替え、Kumo の Codex Cloud 呼び出し | UI を固定し、実行系だけ差し替える。v1 は WHAM、次は Cursor Cloud Agent |
 | 第二 CodingBackend | [Cloud Agents API](https://cursor.com/docs/cloud-agent/api/endpoints)、[Origin API](https://cursor.com/docs/api/origin)、t3code / tahcode | UI は固定。実行は `POST /v1/agents` と `GET /v1/agents/{id}/runs/{runId}`。Origin は `POST /v1/origin/repos/{ownerSlug}`。公開 API は Origin URL を拒否し得る。キー無しは偽実行しない |
 | 生成アプリの足場 | tahcode | プレビュー作成・Convex・CF・Beautiful UI が既にある。空テンプレートを新造しない |
-| 公開先 | Ownstack / 現行 `publishActions` | ユーザーの Pages + Convex に出す。関数プッシュ未解決は既知 |
+| 公開先 | Ownstack / 現行 `publishActions`、[Convex deploy key](https://docs.convex.dev/management-api/create-deploy-key)、[CONVEX_DEPLOY_KEY](https://docs.convex.dev/cli/deploy-key-types) | ユーザーの Pages + Convex に出す。関数は Pages ビルドの `convex deploy` で載せる。ホストからの直プッシュはしない |
 
 ---
 

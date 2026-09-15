@@ -157,6 +157,66 @@ export const ensureConvexProject = async (
   );
 };
 
+export const convexDeploymentNameForApi = (name: string): string => {
+  const trimmed = name.trim();
+  if (trimmed.startsWith("prod:") || trimmed.startsWith("dev:")) {
+    return trimmed.slice(trimmed.indexOf(":") + 1);
+  }
+  return trimmed;
+};
+
+export const deploymentNameFromConvexUrl = (
+  url?: string
+): string | undefined => {
+  if (!url) {
+    return undefined;
+  }
+  try {
+    const host = new URL(url).hostname;
+    const match = /^(?<deployment>[a-z0-9-]+)\.convex\.cloud$/iu.exec(host);
+    return match?.groups?.deployment;
+  } catch {
+    return undefined;
+  }
+};
+
+export const convexDeployKeyFromPayload = (
+  value: unknown
+): string | undefined => {
+  const row = asRecord(value);
+  const nested = asRecord(row.data);
+  return (
+    asString(row.deployKey) ??
+    asString(row.deploy_key) ??
+    asString(row.key) ??
+    asString(nested.deployKey) ??
+    asString(nested.deploy_key) ??
+    asString(nested.key)
+  );
+};
+
+export const createConvexDeployKeyWithToken = async (args: {
+  deploymentName: string;
+  name: string;
+  token: string;
+}): Promise<string> => {
+  const deploymentName = convexDeploymentNameForApi(args.deploymentName);
+  const response = await request(
+    args.token,
+    "POST",
+    `/deployments/${encodeURIComponent(deploymentName)}/create_deploy_key`,
+    { name: args.name }
+  );
+  const deployKey = convexDeployKeyFromPayload(response.payload);
+  if (response.ok && deployKey) {
+    return deployKey;
+  }
+  throw new Error(
+    asString(response.payload.message) ??
+      "Convex デプロイキーを発行できませんでした"
+  );
+};
+
 export const getConvexProductionDeployment = async (
   token: string,
   teamId: string,

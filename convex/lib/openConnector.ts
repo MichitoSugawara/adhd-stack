@@ -1,4 +1,5 @@
 import { asRecord, asString, readJson } from "./httpJson";
+import { fetchWithTimeout, OPENCONNECTOR_FETCH_TIMEOUT_MS } from "./httpRetry";
 import type { OcConnectionSummary } from "./openConnectorParse";
 import {
   findOcConnection,
@@ -40,10 +41,14 @@ const adminFetch = async (
   if (!headers.has("content-type") && init.body) {
     headers.set("content-type", "application/json");
   }
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...init,
-    headers,
-  });
+  const response = await fetchWithTimeout(
+    `${baseUrl}${path}`,
+    {
+      ...init,
+      headers,
+    },
+    OPENCONNECTOR_FETCH_TIMEOUT_MS
+  );
   const payload = await readJson(response);
   if (!response.ok) {
     const detail =

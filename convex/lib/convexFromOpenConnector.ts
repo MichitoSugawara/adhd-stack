@@ -1,8 +1,14 @@
 import type { ConvexProjectTarget } from "./convexProject";
-import { convexProjectFromPayload } from "./convexProject";
+import {
+  convexDeployKeyFromPayload,
+  convexDeploymentNameForApi,
+  convexProjectFromPayload,
+} from "./convexProject";
 import { asList, asNumber, asRecord, asString } from "./httpJson";
 import { findNamedOcConnection } from "./openConnector";
 import {
+  convexCreateDeployKeyActionIds,
+  convexCreateDeployKeyInput,
   convexCreateProjectActionIds,
   convexCreateProjectInput,
   firstConvexTeamId,
@@ -358,4 +364,49 @@ export const ensureConvexProjectViaOpenConnector = async (args: {
       teamId: String(teamId),
     }
   );
+};
+
+export const createConvexDeployKeyViaOpenConnector = async (args: {
+  connectionName: string;
+  deploymentName: string;
+  name: string;
+}): Promise<string> => {
+  const deploymentName = convexDeploymentNameForApi(args.deploymentName);
+  try {
+    const payload = await invokeOpenConnectorActionIds({
+      actionIds: [
+        ...convexCreateDeployKeyActionIds,
+        envAction("OPENCONNECTOR_CONVEX_CREATE_DEPLOY_KEY_ACTION", ""),
+      ],
+      connectionName: args.connectionName,
+      input: convexCreateDeployKeyInput({
+        deploymentName,
+        name: args.name,
+      }),
+    });
+    const deployKey = convexDeployKeyFromPayload(payload);
+    if (deployKey) {
+      return deployKey;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (!message.startsWith("unknown_action:")) {
+      throw error;
+    }
+  }
+  const proxied = await proxyOpenConnector({
+    body: { name: args.name },
+    connectionName: args.connectionName,
+    endpoint: `/deployments/${encodeURIComponent(deploymentName)}/create_deploy_key`,
+    method: "POST",
+    service: "convex",
+  });
+  const deployKey = convexDeployKeyFromPayload(proxied.data);
+  if (proxied.status >= 400 || !deployKey) {
+    throw new Error(
+      asString(proxied.data.message) ??
+        "Convex デプロイキーを発行できませんでした"
+    );
+  }
+  return deployKey;
 };

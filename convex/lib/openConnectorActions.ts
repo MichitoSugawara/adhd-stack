@@ -1,5 +1,10 @@
 import { asRecord, asString, readJson } from "./httpJson";
-import { busyHttpMessage, withHttpRetries } from "./httpRetry";
+import {
+  busyHttpMessage,
+  fetchWithTimeout,
+  OPENCONNECTOR_FETCH_TIMEOUT_MS,
+  withHttpRetries,
+} from "./httpRetry";
 import { publicConnectError } from "./openConnectorParse";
 
 export interface OpenConnectorActionResult {
@@ -32,11 +37,15 @@ const runtimeFetch = async (
   if (init.connectionName) {
     headers.set("x-oo-connector-alias", init.connectionName);
   }
-  const response = await fetch(`${baseUrl}${path}`, {
-    body: init.body,
-    headers,
-    method: init.method ?? "GET",
-  });
+  const response = await fetchWithTimeout(
+    `${baseUrl}${path}`,
+    {
+      body: init.body,
+      headers,
+      method: init.method ?? "GET",
+    },
+    OPENCONNECTOR_FETCH_TIMEOUT_MS
+  );
   return {
     payload: await readJson(response),
     status: response.status,

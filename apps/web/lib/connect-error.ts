@@ -25,6 +25,14 @@ export const useConnectBanner = (): string | null =>
 
 export const connectErrorMessage = (error: unknown): string => {
   const raw = error instanceof Error ? error.message : "接続に失敗しました";
+  if (
+    raw.includes("接続アプリが応答しません") ||
+    raw.includes("AbortError") ||
+    raw.includes("TimeoutError") ||
+    raw.includes("The operation was aborted")
+  ) {
+    return "接続アプリが応答しません。もう一度試してください。";
+  }
   if (raw.includes("invalid_oauth_state") || raw.includes("invalid_state")) {
     return "接続の状態が無効です。もう一度つなぎ直してください";
   }
