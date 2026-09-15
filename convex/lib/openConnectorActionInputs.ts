@@ -38,7 +38,7 @@ export const githubCreateOrUpdateFileInput = (args: {
   path: string;
   repo: string;
 }): Record<string, unknown> => ({
-  content: args.contentBase64,
+  contentBase64: args.contentBase64,
   message: args.message,
   owner: args.owner,
   path: args.path,

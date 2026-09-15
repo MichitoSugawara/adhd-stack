@@ -10,6 +10,7 @@ const {
   convexTeamIdFromAccount,
   firstConvexTeamId,
   githubCreateOrUpdateFileActionIds,
+  githubCreateOrUpdateFileInput,
   githubCreateRepositoryActionIds,
   githubCreateRepositoryInput,
 } = await import("../../../convex/lib/openConnectorActionInputs.ts");
@@ -27,6 +28,21 @@ assert.equal(
   githubCreateOrUpdateFileActionIds[0],
   "github.create_or_update_file"
 );
+
+const knownFileBase64 = "eyJuYW1lIjoiZmxvd2NoZWNrIn0=";
+const fileInput = githubCreateOrUpdateFileInput({
+  contentBase64: knownFileBase64,
+  message: "tahcode 由来の足場を置く",
+  owner: "MichitoSugawara",
+  path: "package.json",
+  repo: "flowcheck-955",
+});
+assert.equal(fileInput.contentBase64, knownFileBase64);
+assert.equal(Object.hasOwn(fileInput, "content"), false);
+assert.equal(fileInput.owner, "MichitoSugawara");
+assert.equal(fileInput.path, "package.json");
+assert.equal(fileInput.repo, "flowcheck-955");
+assert.equal(fileInput.message, "tahcode 由来の足場を置く");
 
 const convexInput = convexCreateProjectInput({
   projectName: "flowcheck-915",
@@ -53,6 +69,10 @@ const githubOc = await readFile(
   path.join(convexLib, "lib/githubFromOpenConnector.ts"),
   "utf8"
 );
+const githubRepo = await readFile(
+  path.join(convexLib, "lib/githubRepo.ts"),
+  "utf8"
+);
 const workspaceActions = await readFile(
   path.join(convexLib, "workspaceActions.ts"),
   "utf8"
@@ -60,6 +80,17 @@ const workspaceActions = await readFile(
 
 assert.match(githubOc, /githubCreateRepositoryInput/);
 assert.match(githubOc, /githubCreateOrUpdateFileInput/);
+const putFileFn = githubOc.slice(
+  githubOc.indexOf("const putFile"),
+  githubOc.indexOf("export const seedRepoViaOpenConnector")
+);
+assert.match(putFileFn, /content: utf8ToBase64\(args\.content\)/);
+assert.match(putFileFn, /contentBase64: body\.content/);
+const putGitHubFileFn = githubRepo.slice(
+  githubRepo.indexOf("export const putGitHubFile"),
+  githubRepo.indexOf("export const createGitHubRepo")
+);
+assert.match(putGitHubFileFn, /content: utf8ToBase64\(args\.content\)/);
 const createRepoFn = githubOc.slice(
   githubOc.indexOf("const createRepo"),
   githubOc.indexOf("const createFromTemplate")
