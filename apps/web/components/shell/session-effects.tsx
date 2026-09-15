@@ -10,6 +10,7 @@ import {
 } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { clearPendingOc } from "@/lib/pending-oc";
 import { enterShell } from "@/lib/shell-state";
 
 const SessionEffectsLive = () => {
@@ -63,6 +64,8 @@ const SessionEffectsLive = () => {
     if ((oc !== "github" && oc !== "convex") || !ocName) {
       return;
     }
+    enterShell();
+    clearPendingOc();
     let cancelled = false;
     let timer = 0;
     const confirm = async () => {

@@ -35,6 +35,7 @@ const beginUrlValidator = v.object({
   url: v.string(),
 });
 
+// 接続ボードは `/connect`（`apps/web/app/connect/page.tsx`）。`/` は入口だけ。
 const ocReturnUri = (service: "github" | "convex", connectionName: string) => {
   try {
     const base = siteUrl();

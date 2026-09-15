@@ -10,7 +10,7 @@ ADHD Stack **本体**のホスト切替。ユーザーアプリの Pages / Conve
 2. Convex 本番の環境変数を入れる（`SITE_URL=https://adhd.gawarago.com`、`JWT_PRIVATE_KEY`、`JWKS`、ChatGPT 以外の接続用シークレット、`OPENCONNECTOR_*`、`CLOUDFLARE_CLIENT_*`）。
 3. Cloudflare OAuth クライアントのコールバックを本番の `https://<deployment>.convex.site/oauth/callback/cloudflare` に合わせる。
 4. OpenConnector 側の GitHub / Convex コールバックも本番に向ける。
-5. Workers に `NEXT_PUBLIC_CONVEX_URL` と `NEXT_PUBLIC_CONVEX_SITE_URL` を入れて `pnpm --filter @adhd-stack/web deploy`。
+5. Workers に `NEXT_PUBLIC_CONVEX_URL` と `NEXT_PUBLIC_CONVEX_SITE_URL` を入れて `pnpm --filter @adhd-stack/web deploy`。GitHub / Convex / Cloudflare の認可は同一タブ（`window.location.assign`）。`noopener` 付き `window.open` の `null` 判定で二重認可しない。`SITE_URL=https://adhd.gawarago.com`。戻り先は `/connect?oc=&name=`。
 6. `adhd.gawarago.com` の DNS を、モック Pages から Workers に付け替える。
 7. 切替後にログインせず、接続 4 カードが「つながったように」見えないことを確認する。
 

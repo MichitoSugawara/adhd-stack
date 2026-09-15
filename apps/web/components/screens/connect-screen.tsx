@@ -10,6 +10,11 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import {
+  clearPendingOc,
+  readPendingOc,
+  writePendingOc,
+} from "@/lib/pending-oc";
 import type { ServiceId } from "@/lib/services";
 import { SERVICES } from "@/lib/services";
 import { enterShell } from "@/lib/shell-state";
@@ -122,6 +127,7 @@ const ConnectBoard = () => {
         if (result.status === "authorized") {
           await signInWithTicket(result.ticket);
         }
+        clearPendingOc();
         enterShell();
         setPendingOc(null);
         setBusy(null);
@@ -129,6 +135,7 @@ const ConnectBoard = () => {
         return true;
       } catch (error) {
         if (!cancelled) {
+          clearPendingOc();
           setErrors((current) => ({
             ...current,
             [pendingOc.service]: connectErrorMessage(error),
@@ -155,6 +162,15 @@ const ConnectBoard = () => {
     };
   }, [confirmOc, pendingOc, refresh, signInWithTicket]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const oc = params.get("oc");
+    if (oc === "github" || oc === "convex") {
+      return;
+    }
+    setPendingOc((current) => current ?? readPendingOc());
+  }, []);
+
   const startConnect = async (id: ServiceId) => {
     setErrors((current) => ({ ...current, [id]: undefined }));
     setBusy(id);
@@ -168,23 +184,21 @@ const ConnectBoard = () => {
           userCode: started.userCode,
           verificationUrl: started.verificationUrl,
         });
-        window.open(started.verificationUrl, "_blank", "noopener,noreferrer");
+        window.open(started.verificationUrl, "_blank");
         return;
       }
       const started = await beginConnect({ provider: id });
-      if (started.kind === "catalog" && started.connectionName) {
-        if (id === "github" || id === "convex") {
-          setPendingOc({
-            connectionName: started.connectionName,
-            service: id,
-          });
-        }
-        const popup = window.open(started.url, "_blank", "noopener,noreferrer");
-        if (popup === null) {
-          window.location.assign(started.url);
-        }
-        return;
+      if (
+        started.kind === "catalog" &&
+        started.connectionName &&
+        (id === "github" || id === "convex")
+      ) {
+        writePendingOc({
+          connectionName: started.connectionName,
+          service: id,
+        });
       }
+      // 同一タブだけ。ポップアップの null 判定で同じ URL を二度開かない。
       window.location.assign(started.url);
     } catch (error) {
       setErrors((current) => ({
@@ -241,7 +255,7 @@ const ConnectBoard = () => {
           } else if (service.id === pendingOc?.service) {
             extra = (
               <p className="text-ink-3 mt-3 text-[12px]">
-                認可を待っています。終わったらこの画面に戻ってください。
+                認可が終わるとこの画面に戻ります。
               </p>
             );
           }

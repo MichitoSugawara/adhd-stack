@@ -25,6 +25,9 @@ export const useConnectBanner = (): string | null =>
 
 export const connectErrorMessage = (error: unknown): string => {
   const raw = error instanceof Error ? error.message : "接続に失敗しました";
+  if (raw.includes("invalid_oauth_state") || raw.includes("invalid_state")) {
+    return "接続の状態が無効です。もう一度つなぎ直してください";
+  }
   return raw.replace(/^oauth_not_configured:\s*/u, "");
 };
 
@@ -32,7 +35,7 @@ export const oauthErrorCopy = (code: string): string => {
   if (code === "access_denied") {
     return "許可が取り消されました。もう一度つなぎ直してください";
   }
-  if (code === "invalid_state") {
+  if (code === "invalid_state" || code === "invalid_oauth_state") {
     return "接続の状態が無効です。もう一度つなぎ直してください";
   }
   if (code === "missing_code") {
