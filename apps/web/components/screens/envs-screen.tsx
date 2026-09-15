@@ -4,11 +4,20 @@ import Link from "next/link";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { useWorkspaceBySlug } from "@/lib/coding-port";
+import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
 
+const EnvsLiveName = ({ slug }: { slug: string }) => {
+  const workspace = useWorkspaceBySlug(slug);
+  return <>{workspace?.name ?? slug}</>;
+};
+
 export const EnvsScreen = ({ appId }: { appId: string }) => {
+  const live = hasConvexUrl();
   const shell = useShell();
   const app = shell.state.apps.find((item) => item.id === appId);
+  const title = live ? <EnvsLiveName slug={appId} /> : (app?.name ?? appId);
 
   return (
     <ShellGate>
@@ -19,7 +28,7 @@ export const EnvsScreen = ({ appId }: { appId: string }) => {
               環境
             </p>
             <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-              {app?.name ?? appId}
+              {title}
             </h1>
           </div>
           <p className="shell-note max-w-2xl">

@@ -68,7 +68,8 @@ export const publishWorkspace = internalAction({
           owner,
           repo,
           workspace.githubRepoId,
-          cloudflare.accountId
+          cloudflare.accountId,
+          workspace.cloudflareProjectName ?? workspace.slug
         );
         cloudflareAccountId = project.accountId;
         cloudflareProjectName = project.name;
@@ -112,7 +113,10 @@ export const publishWorkspace = internalAction({
     const convex = await loadFreshConnection(ctx, args.userId, "convex");
     if (convex) {
       try {
-        const project = await ensureConvexProject(convex.accessToken);
+        const project = await ensureConvexProject(
+          convex.accessToken,
+          workspace.convexProjectSlug ?? workspace.slug
+        );
         const deployment = await getConvexProductionDeployment(
           convex.accessToken,
           project.teamId,

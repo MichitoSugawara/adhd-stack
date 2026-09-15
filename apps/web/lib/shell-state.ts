@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 
+import { slugFromName } from "./app-slug";
+
 export type AppStatus = "creating" | "ready";
 
 export type MessageKind = "ai" | "thinking" | "tools" | "user";
@@ -37,19 +39,6 @@ const emptyState: ShellState = {
 let memory: ShellState = emptyState;
 let didReadStore = false;
 const listeners = new Set<() => void>();
-
-const slugFromName = (name: string): string => {
-  const trimmed = name.trim();
-  const slug = trimmed
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/gu, "-")
-    .replaceAll(/^-|-$/gu, "")
-    .slice(0, 48);
-  if (slug.length > 0) {
-    return slug;
-  }
-  return `app-${String(Date.now())}`;
-};
 
 const uniqueId = (name: string, existing: readonly ShellApp[]): string => {
   const base = slugFromName(name);

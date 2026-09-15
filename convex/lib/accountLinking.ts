@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { slugFromName } from "./appSlug";
 import { fingerprintsFor, shouldMergeUsers } from "./accountMatch";
 import type { ProviderId } from "./providers";
 
@@ -266,7 +267,7 @@ export const attachTicketToUser = async (
 };
 
 const loadFingerprints = async (ctx: DbCtx, userId: Id<"users">) => {
-  const [user, connections, workspace, connectors] = await Promise.all([
+  const [user, connections, workspaces, connectors] = await Promise.all([
     ctx.db.get(userId),
     ctx.db
       .query("connections")
@@ -275,7 +276,7 @@ const loadFingerprints = async (ctx: DbCtx, userId: Id<"users">) => {
     ctx.db
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", userId))
-      .unique(),
+      .take(20),
     ctx.db
       .query("connectorConnections")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -284,6 +285,8 @@ const loadFingerprints = async (ctx: DbCtx, userId: Id<"users">) => {
   if (!user) {
     return null;
   }
+  const workspace =
+    workspaces.find((row) => row.githubOwner) ?? workspaces[0] ?? null;
   const synthetic: Pick<
     Doc<"connections">,
     "accountId" | "identity" | "provider"
@@ -507,17 +510,26 @@ export const mergeUserPair = async (
     await ctx.db.delete(row._id);
   }
 
-  const [keepWorkspace, absorbWorkspace] = await Promise.all([
+  const [keepWorkspaces, absorbWorkspaces] = await Promise.all([
     ctx.db
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", args.keepUserId))
-      .unique(),
+      .take(50),
     ctx.db
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", args.absorbUserId))
-      .unique(),
+      .take(50),
   ]);
-  if (keepWorkspace && absorbWorkspace) {
+  const keepBySlug = new Map(
+    keepWorkspaces.map((row) => [row.slug ?? slugFromName(row.name), row])
+  );
+  for (const absorbWorkspace of absorbWorkspaces) {
+    const slug = absorbWorkspace.slug ?? slugFromName(absorbWorkspace.name);
+    const keepWorkspace = keepBySlug.get(slug);
+    if (!keepWorkspace) {
+      await ctx.db.patch(absorbWorkspace._id, { userId: args.keepUserId });
+      continue;
+    }
     await ctx.db.patch(keepWorkspace._id, {
       cloudflareAccountId: preferText(
         keepWorkspace.cloudflareAccountId,
@@ -530,6 +542,11 @@ export const mergeUserPair = async (
       cloudflareProjectName: preferText(
         keepWorkspace.cloudflareProjectName,
         absorbWorkspace.cloudflareProjectName
+      ),
+      codingBackend: keepWorkspace.codingBackend ?? absorbWorkspace.codingBackend,
+      codingEnvironmentId: preferText(
+        keepWorkspace.codingEnvironmentId,
+        absorbWorkspace.codingEnvironmentId
       ),
       codexEnvironmentId: preferText(
         keepWorkspace.codexEnvironmentId,
@@ -570,6 +587,7 @@ export const mergeUserPair = async (
         keepWorkspace.provisionStatus,
         absorbWorkspace.provisionStatus
       ),
+      slug: keepWorkspace.slug ?? absorbWorkspace.slug ?? slug,
       updatedAt: Date.now(),
     });
     const messages = await ctx.db
@@ -582,8 +600,6 @@ export const mergeUserPair = async (
       await ctx.db.patch(message._id, { workspaceId: keepWorkspace._id });
     }
     await ctx.db.delete(absorbWorkspace._id);
-  } else if (absorbWorkspace && !keepWorkspace) {
-    await ctx.db.patch(absorbWorkspace._id, { userId: args.keepUserId });
   }
 
   const absorbAccounts = await ctx.db

@@ -5,9 +5,24 @@ import { useState } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
+import { useCreateNamedApp, useWorkspaceList } from "@/lib/coding-port";
 import { hasConvexUrl } from "@/lib/env";
 import { useShell } from "@/lib/shell-state";
+
+const statusLabel = (status: string): string => {
+  if (status === "ready") {
+    return "準備完了";
+  }
+  if (status === "error") {
+    return "失敗";
+  }
+  if (status === "provisioning") {
+    return "作成中";
+  }
+  return "待ち";
+};
 
 const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
   const port = useConnectionsPort();
@@ -31,32 +46,201 @@ const ProjectsReadyNote = () => {
   if (!port.board) {
     return (
       <p className="shell-note max-w-3xl">
-        接続状態を確認しています。一覧はまだブラウザ内の骨格です。
+        接続状態を確認しています。
       </p>
     );
   }
   if (port.board.allConnected) {
     return (
       <p className="shell-note max-w-3xl">
-        4つの接続は揃っています。作成の実体は次の段階です。いまは名前付きの骨格だけです。
+        4つの接続は揃っています。名前を付けると GitHub リポジトリと実行環境を作ります。
       </p>
     );
   }
   return (
     <p className="shell-note max-w-3xl">
-      接続が揃うまで作成は始めません。いまは一覧の骨格だけ見られます。
+      接続が揃うまで作成は始めません。
     </p>
   );
 };
 
-export const ProjectsScreen = () => {
+const CreateDialog = ({
+  name,
+  onClose,
+  onName,
+  onSubmit,
+  pending,
+}: {
+  name: string;
+  onClose: () => void;
+  onName: (value: string) => void;
+  onSubmit: () => void;
+  pending: boolean;
+}) => (
+  <div className="bg-page/70 fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
+    <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
+      <h2 className="text-[18px] font-semibold">新しいアプリ</h2>
+      <p className="text-ink-2 mt-2 text-[13px]">
+        入力した名前が、GitHub リポジトリ名になります。固定名はありません。
+      </p>
+      <label className="mt-4 block">
+        <span className="text-ink-3 text-[12px]">名前</span>
+        <input
+          autoFocus
+          className="rounded-control bg-field text-ink shadow-inset-field mt-1 h-10 w-full px-3 text-[14px] outline-none"
+          data-app-name
+          onChange={(event) => {
+            onName(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              onSubmit();
+            }
+          }}
+          placeholder="たとえば notes や inbox"
+          value={name}
+        />
+      </label>
+      <div className="mt-5 flex justify-end gap-2">
+        <button
+          className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
+          onClick={onClose}
+          type="button"
+        >
+          やめる
+        </button>
+        <button
+          className="rounded-control bg-ink text-surface h-9 px-3 text-[13px] font-medium disabled:opacity-40"
+          disabled={name.trim().length === 0 || pending}
+          onClick={onSubmit}
+          type="button"
+        >
+          作って進む
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProjectsLive = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const apps = useWorkspaceList();
+  const createApp = useCreateNamedApp();
+  const [manualOpen, setManualOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const open = manualOpen || searchParams.get("new") === "1";
+
+  const closeDialog = () => {
+    setManualOpen(false);
+    if (searchParams.get("new") === "1") {
+      router.replace("/projects");
+    }
+  };
+
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (trimmed.length === 0 || pending) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      const created = await createApp({ name: trimmed });
+      setManualOpen(false);
+      setName("");
+      router.push(`/p/${created.slug}/creating`);
+    } catch (caught) {
+      setError(connectErrorMessage(caught));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            アプリ
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            プロジェクト
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">
+            名前を付けて作ります。固定名はありません。
+          </p>
+        </div>
+        <ProjectsNewAppButton
+          onOpen={() => {
+            setManualOpen(true);
+          }}
+        />
+      </div>
+      <ProjectsReadyNote />
+      {error ? <p className="text-red max-w-3xl text-[13px]">{error}</p> : null}
+      {apps === undefined ? (
+        <p className="text-ink-2 text-[14px]">読み込んでいます…</p>
+      ) : apps.length === 0 ? (
+        <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
+          まだありません。名前を付けて作成してください。
+        </div>
+      ) : (
+        <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
+          {apps.map((app) => (
+            <li key={app._id}>
+              <button
+                className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                onClick={() => {
+                  router.push(
+                    app.provisionStatus === "ready"
+                      ? `/p/${app.slug}`
+                      : `/p/${app.slug}/creating`
+                  );
+                }}
+                type="button"
+              >
+                <span>
+                  <span className="block text-[14px] font-medium">
+                    {app.name}
+                  </span>
+                  <span className="text-ink-3 block text-[12px]">
+                    {app.slug}
+                  </span>
+                </span>
+                <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
+                  {statusLabel(app.provisionStatus)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open ? (
+        <CreateDialog
+          name={name}
+          onClose={closeDialog}
+          onName={setName}
+          onSubmit={() => {
+            void submit();
+          }}
+          pending={pending}
+        />
+      ) : null}
+    </>
+  );
+};
+
+const ProjectsSkeleton = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shell = useShell();
   const [manualOpen, setManualOpen] = useState(false);
   const [name, setName] = useState("");
   const open = manualOpen || searchParams.get("new") === "1";
-  const live = hasConvexUrl();
 
   const closeDialog = () => {
     setManualOpen(false);
@@ -77,130 +261,89 @@ export const ProjectsScreen = () => {
   };
 
   return (
-    <ShellGate>
-      <AppFrame>
-        <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-                アプリ
-              </p>
-              <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-                プロジェクト
-              </h1>
-              <p className="text-ink-2 mt-2 text-[14px]">
-                名前を付けて作ります。固定名はありません。
-              </p>
-            </div>
-            {live ? (
-              <ProjectsNewAppButton
-                onOpen={() => {
-                  setManualOpen(true);
-                }}
-              />
-            ) : (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            アプリ
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            プロジェクト
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">
+            名前を付けて作ります。固定名はありません。
+          </p>
+        </div>
+        <button
+          className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+          data-new-app
+          onClick={() => {
+            setManualOpen(true);
+          }}
+          type="button"
+        >
+          新しいアプリ
+        </button>
+      </div>
+      <p className="shell-note max-w-3xl">
+        Convex 未設定です。一覧はブラウザ内の骨格だけで、リポジトリは作りません。
+      </p>
+      {shell.state.apps.length === 0 ? (
+        <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
+          まだありません。名前を付けて、作成中の画面を見てください。
+        </div>
+      ) : (
+        <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
+          {shell.state.apps.map((app) => (
+            <li key={app.id}>
               <button
-                className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
-                data-new-app
+                className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                 onClick={() => {
-                  setManualOpen(true);
+                  router.push(
+                    app.status === "creating"
+                      ? `/p/${app.id}/creating`
+                      : `/p/${app.id}`
+                  );
                 }}
                 type="button"
               >
-                新しいアプリ
+                <span>
+                  <span className="block text-[14px] font-medium">
+                    {app.name}
+                  </span>
+                  <span className="text-ink-3 block text-[12px]">
+                    {app.id}
+                  </span>
+                </span>
+                <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
+                  {app.status === "creating" ? "作成中" : "シェル"}
+                </span>
               </button>
-            )}
-          </div>
-          {live ? (
-            <ProjectsReadyNote />
-          ) : (
-            <p className="shell-note max-w-3xl">
-              一覧はブラウザ内のローカル状態です。GitHub
-              上のリポジトリはまだ作りません。
-            </p>
-          )}
-          {shell.state.apps.length === 0 ? (
-            <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
-              まだありません。名前を付けて、作成中の画面を見てください。
-            </div>
-          ) : (
-            <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
-              {shell.state.apps.map((app) => (
-                <li key={app.id}>
-                  <button
-                    className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                    onClick={() => {
-                      router.push(
-                        app.status === "creating"
-                          ? `/p/${app.id}/creating`
-                          : `/p/${app.id}`
-                      );
-                    }}
-                    type="button"
-                  >
-                    <span>
-                      <span className="block text-[14px] font-medium">
-                        {app.name}
-                      </span>
-                      <span className="text-ink-3 block text-[12px]">
-                        {app.id}
-                      </span>
-                    </span>
-                    <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
-                      {app.status === "creating" ? "作成中" : "シェル"}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {open ? (
+        <CreateDialog
+          name={name}
+          onClose={closeDialog}
+          onName={setName}
+          onSubmit={submit}
+          pending={false}
+        />
+      ) : null}
+    </>
+  );
+};
+
+export const ProjectsScreen = () => {
+  const live = hasConvexUrl();
+  return (
+    <ShellGate>
+      <AppFrame>
+        <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
+          {live ? <ProjectsLive /> : <ProjectsSkeleton />}
         </main>
-        {open ? (
-          <div className="bg-page/70 fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
-            <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
-              <h2 className="text-[18px] font-semibold">新しいアプリ</h2>
-              <p className="text-ink-2 mt-2 text-[13px]">
-                入力した名前が、あとで GitHub リポジトリ名になります。
-              </p>
-              <label className="mt-4 block">
-                <span className="text-ink-3 text-[12px]">名前</span>
-                <input
-                  autoFocus
-                  className="rounded-control bg-field text-ink shadow-inset-field mt-1 h-10 w-full px-3 text-[14px] outline-none"
-                  data-app-name
-                  onChange={(event) => {
-                    setName(event.target.value);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      submit();
-                    }
-                  }}
-                  placeholder="たとえば notes や inbox"
-                  value={name}
-                />
-              </label>
-              <div className="mt-5 flex justify-end gap-2">
-                <button
-                  className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
-                  onClick={closeDialog}
-                  type="button"
-                >
-                  やめる
-                </button>
-                <button
-                  className="rounded-control bg-ink text-surface h-9 px-3 text-[13px] font-medium disabled:opacity-40"
-                  disabled={name.trim().length === 0}
-                  onClick={submit}
-                  type="button"
-                >
-                  作って進む
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
       </AppFrame>
     </ShellGate>
   );

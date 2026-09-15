@@ -1,17 +1,22 @@
 import { v } from "convex/values";
 
+import { nextUniqueSlug, slugFromName } from "./lib/appSlug";
 import { internalMutation, internalQuery } from "./_generated/server";
 import {
+  codingBackendValidator,
   messageKindValidator,
   messageRoleValidator,
   providerValidator,
   provisionStatusValidator,
+  provisionStepsValidator,
 } from "./validators";
 
 const workspaceFields = {
   cloudflareAccountId: v.optional(v.string()),
   cloudflarePagesUrl: v.optional(v.string()),
   cloudflareProjectName: v.optional(v.string()),
+  codingBackend: v.optional(codingBackendValidator),
+  codingEnvironmentId: v.optional(v.string()),
   codexEnvironmentId: v.optional(v.string()),
   convexDeploymentName: v.optional(v.string()),
   convexProjectSlug: v.optional(v.string()),
@@ -24,12 +29,20 @@ const workspaceFields = {
   githubRepoUrl: v.optional(v.string()),
   provisionError: v.optional(v.string()),
   provisionStatus: provisionStatusValidator,
+  provisionSteps: v.optional(provisionStepsValidator),
+  slug: v.optional(v.string()),
+  templateKind: v.optional(
+    v.union(v.literal("tahcode_seed"), v.literal("tahcode_template"))
+  ),
 };
 
 const workspaceDocValidator = v.object({
   ...workspaceFields,
   name: v.string(),
 });
+
+const usedSlugs = (rows: { name: string; slug?: string }[]): Set<string> =>
+  new Set(rows.map((row) => row.slug ?? slugFromName(row.name)));
 
 export const getWorkspace = internalQuery({
   args: { workspaceId: v.id("workspaces") },
@@ -42,6 +55,9 @@ export const getWorkspace = internalQuery({
       cloudflareAccountId: workspace.cloudflareAccountId,
       cloudflarePagesUrl: workspace.cloudflarePagesUrl,
       cloudflareProjectName: workspace.cloudflareProjectName,
+      codingBackend: workspace.codingBackend,
+      codingEnvironmentId:
+        workspace.codingEnvironmentId ?? workspace.codexEnvironmentId,
       codexEnvironmentId: workspace.codexEnvironmentId,
       convexDeploymentName: workspace.convexDeploymentName,
       convexProjectSlug: workspace.convexProjectSlug,
@@ -55,9 +71,48 @@ export const getWorkspace = internalQuery({
       name: workspace.name,
       provisionError: workspace.provisionError,
       provisionStatus: workspace.provisionStatus,
+      provisionSteps: workspace.provisionSteps,
+      slug: workspace.slug ?? slugFromName(workspace.name),
+      templateKind: workspace.templateKind,
     };
   },
   returns: v.union(workspaceDocValidator, v.null()),
+});
+
+export const listIdsForUser = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("workspaces")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .take(50);
+    return rows.map((row) => row._id);
+  },
+  returns: v.array(v.id("workspaces")),
+});
+
+export const getIdBySlug = internalQuery({
+  args: { slug: v.string(), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const exact = await ctx.db
+      .query("workspaces")
+      .withIndex("by_user_and_slug", (q) =>
+        q.eq("userId", args.userId).eq("slug", args.slug)
+      )
+      .unique();
+    if (exact) {
+      return exact._id;
+    }
+    const rows = await ctx.db
+      .query("workspaces")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .take(50);
+    const match = rows.find(
+      (row) => (row.slug ?? slugFromName(row.name)) === args.slug
+    );
+    return match?._id ?? null;
+  },
+  returns: v.union(v.id("workspaces"), v.null()),
 });
 
 export const ensureForUser = internalMutation({
@@ -66,13 +121,47 @@ export const ensureForUser = internalMutation({
     const existing = await ctx.db
       .query("workspaces")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .unique();
-    if (existing) {
-      return existing._id;
+      .take(1);
+    if (existing[0]) {
+      return existing[0]._id;
     }
+    const rows = await ctx.db
+      .query("workspaces")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .take(50);
+    const slug = nextUniqueSlug("workspace", usedSlugs(rows));
     return await ctx.db.insert("workspaces", {
-      name: "app",
+      codingBackend: "codex_cloud",
+      name: "アプリ",
       provisionStatus: "pending",
+      slug,
+      updatedAt: Date.now(),
+      userId: args.userId,
+    });
+  },
+  returns: v.id("workspaces"),
+});
+
+export const createNamedForUser = internalMutation({
+  args: {
+    codingBackend: codingBackendValidator,
+    name: v.string(),
+    slug: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("workspaces", {
+      codingBackend: args.codingBackend,
+      name: args.name,
+      provisionStatus: "pending",
+      provisionSteps: {
+        backend: "pending",
+        convex: "pending",
+        pages: "pending",
+        repo: "pending",
+        template: "pending",
+      },
+      slug: args.slug,
       updatedAt: Date.now(),
       userId: args.userId,
     });

@@ -141,11 +141,11 @@ GitHub 上に作るリポジトリ名は、作成画面で付けた名前を使�
 
 現行の衝突:
 
-- `convex/lib/githubRepo.ts` の `ADHD_REPO_NAME = "adhd-app"`
-- `convex/lib/cloudflarePages.ts` の `ADHD_PAGES_PROJECT = "adhd-app"`
-- `convex/lib/convexProject.ts` の `ADHD_CONVEX_PROJECT = "adhd-app"`
-- `convex/lib/codexCloud.ts` の environment label `"adhd-app"`
-- `workspaces.ensure` が名前 `"app"` の行を一人 1 件だけ作る
+- `convex/lib/githubRepo.ts` の `ADHD_REPO_NAME = "adhd-app"`（Phase 3 で名前付き作成に置換）
+- `convex/lib/cloudflarePages.ts` の `ADHD_PAGES_PROJECT = "adhd-app"`（Phase 3 で slug に置換）
+- `convex/lib/convexProject.ts` の `ADHD_CONVEX_PROJECT = "adhd-app"`（Phase 3 で slug に置換）
+- `convex/lib/codexCloud.ts` の environment label `"adhd-app"`（Phase 3 で slug に置換）
+- `workspaces.ensure` が名前 `"app"` の行を一人 1 件だけ作る（Phase 3 で `listMine` / `createAndProvision` に置換。`ensure` は互換のまま）
 
 Phase 3 で、名前付き作成（一人複数アプリ可）に合わせる。
 
@@ -201,12 +201,12 @@ v1 は公開パスを一本にする。手渡しのプレビュー / 検証 / �
 | **0** | 本ファイルを正本にする | オーナーが方向に合意できる |
 | **1** | Beautiful UI シェル。ログイン / 接続 / 一覧 / 作成中 / エディタ。モック接続なし。手渡しピクセル一致なし（この PR） | 画面を辿れる。トークンは Dark Green+ |
 | **2** | OpenConnector / ConnectionsPort。4 カードを本物の接続にする。ChatGPT は device OAuth 固定 | Convex に不透明 id だけ残る。UI にゲートウェイ名が出ない |
-| **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
+| **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く（この PR） | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
 | **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す | 偽 URL を出さない |
 | **5** | `adhd.gawarago.com` を本番に切り替える | モック Pages を本物に置換 |
 | **6** | Origin + Cursor Cloud Agent を第二 CodingBackend にする | UI を書き直さずに差し込める |
 
-Phase 2 は本 PR の ConnectionsPort。Codex 呼び出しは Phase 3。
+Phase 3 は本 PR の CodingBackend。公開 URL の完成は Phase 4。第二実装（Origin + Cursor Cloud）は Phase 6 のスロットだけある。
 
 ---
 

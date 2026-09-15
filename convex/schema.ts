@@ -3,11 +3,13 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 import {
+  codingBackendValidator,
   connectionStatusValidator,
   messageKindValidator,
   messageRoleValidator,
   providerValidator,
   provisionStatusValidator,
+  provisionStepsValidator,
 } from "./validators";
 
 export default defineSchema({
@@ -107,6 +109,8 @@ export default defineSchema({
     cloudflareAccountId: v.optional(v.string()),
     cloudflarePagesUrl: v.optional(v.string()),
     cloudflareProjectName: v.optional(v.string()),
+    codingBackend: v.optional(codingBackendValidator),
+    codingEnvironmentId: v.optional(v.string()),
     codexEnvironmentId: v.optional(v.string()),
     convexDeploymentName: v.optional(v.string()),
     convexProjectSlug: v.optional(v.string()),
@@ -120,9 +124,15 @@ export default defineSchema({
     name: v.string(),
     provisionError: v.optional(v.string()),
     provisionStatus: provisionStatusValidator,
+    provisionSteps: v.optional(provisionStepsValidator),
+    slug: v.optional(v.string()),
+    templateKind: v.optional(
+      v.union(v.literal("tahcode_seed"), v.literal("tahcode_template"))
+    ),
     updatedAt: v.number(),
     userId: v.id("users"),
   })
     .index("by_user", ["userId"])
+    .index("by_user_and_slug", ["userId", "slug"])
     .index("by_github_owner", ["githubOwner"]),
 });

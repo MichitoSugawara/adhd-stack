@@ -1,6 +1,6 @@
 import { asList, asNumber, asRecord, asString, readJson } from "./httpJson";
 
-export const ADHD_CONVEX_PROJECT = "adhd-app";
+export const convexProjectName = (slug: string): string => slug.slice(0, 64);
 
 export interface ConvexProjectTarget {
   deploymentName?: string;
@@ -72,23 +72,20 @@ const projectFrom = (
 };
 
 export const ensureConvexProject = async (
-  token: string
+  token: string,
+  projectName: string
 ): Promise<ConvexProjectTarget> => {
   const teamId = await resolveConvexTeamId(token);
   const listed = await request(
     token,
     "GET",
-    `/teams/${encodeURIComponent(teamId)}/projects?limit=100&q=${encodeURIComponent(ADHD_CONVEX_PROJECT)}`
+    `/teams/${encodeURIComponent(teamId)}/projects?limit=100&q=${encodeURIComponent(projectName)}`
   );
   if (listed.ok) {
     const rows = asList(listed.payload.projects ?? listed.payload.items);
     const match = rows
       .map((row) => projectFrom(teamId, row))
-      .find(
-        (row) =>
-          row?.projectSlug === ADHD_CONVEX_PROJECT ||
-          row?.projectSlug === "adhd-app"
-      );
+      .find((row) => row?.projectSlug === projectName);
     if (match) {
       return match;
     }
@@ -99,7 +96,7 @@ export const ensureConvexProject = async (
     `/teams/${encodeURIComponent(teamId)}/create_project`,
     {
       deploymentType: "prod",
-      projectName: ADHD_CONVEX_PROJECT,
+      projectName,
     }
   );
   if (created.ok) {
@@ -110,7 +107,7 @@ export const ensureConvexProject = async (
   }
   const legacy = await fetch("https://api.convex.dev/v1/create_project", {
     body: JSON.stringify({
-      projectName: ADHD_CONVEX_PROJECT,
+      projectName,
       team: "default",
     }),
     headers: headersFor(token),
@@ -123,7 +120,7 @@ export const ensureConvexProject = async (
       projectSlug:
         asString(legacyPayload.projectSlug) ??
         asString(legacyPayload.slug) ??
-        ADHD_CONVEX_PROJECT,
+        projectName,
       teamId,
       teamSlug: asString(legacyPayload.team),
       url:

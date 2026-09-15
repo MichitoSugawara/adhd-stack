@@ -65,10 +65,10 @@ export const send = authedMutation({
     if (text.length === 0) {
       throw new Error("Message is empty");
     }
-    if (!(workspace.githubRepoUrl && workspace.codexEnvironmentId)) {
-      throw new Error(
-        "リポジトリと Codex Cloud 環境の準備が終わるまで送れません"
-      );
+    const environmentId =
+      workspace.codingEnvironmentId ?? workspace.codexEnvironmentId;
+    if (!(workspace.githubRepoUrl && environmentId)) {
+      throw new Error("リポジトリと実行環境の準備が終わるまで送れません");
     }
     const createdAt = Date.now();
     await ctx.db.insert("messages", {
@@ -78,7 +78,7 @@ export const send = authedMutation({
       role: "user",
       workspaceId: args.workspaceId,
     });
-    await ctx.scheduler.runAfter(0, internal.chatActions.runCodexTurn, {
+    await ctx.scheduler.runAfter(0, internal.codingTurns.runTurn, {
       createdAt,
       prompt: text,
       userId: ctx.user._id,
@@ -87,4 +87,23 @@ export const send = authedMutation({
     return null;
   },
   returns: v.null(),
+});
+
+export const listRecent = authedQuery({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace || workspace.userId !== ctx.user._id) {
+      throw new Error("Unauthorized");
+    }
+    const rows = await ctx.db
+      .query("messages")
+      .withIndex("by_workspace_and_created", (q) =>
+        q.eq("workspaceId", args.workspaceId)
+      )
+      .order("desc")
+      .take(80);
+    return rows.reverse();
+  },
+  returns: v.array(messageValidator),
 });

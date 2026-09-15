@@ -19,6 +19,42 @@ export const provisionStatusValidator = v.union(
   v.literal("ready")
 );
 
+export const codingBackendValidator = v.union(
+  v.literal("codex_cloud"),
+  v.literal("cursor_cloud")
+);
+
+export const provisionStepValidator = v.union(
+  v.literal("done"),
+  v.literal("error"),
+  v.literal("pending"),
+  v.literal("running"),
+  v.literal("skipped")
+);
+
+export const provisionStepsValidator = v.object({
+  backend: provisionStepValidator,
+  convex: provisionStepValidator,
+  pages: provisionStepValidator,
+  repo: provisionStepValidator,
+  template: provisionStepValidator,
+});
+
+export const workspacePublicValidator = v.object({
+  _id: v.id("workspaces"),
+  cloudflarePagesUrl: v.optional(v.string()),
+  codingBackend: v.optional(codingBackendValidator),
+  codingEnvironmentId: v.optional(v.string()),
+  convexUrl: v.optional(v.string()),
+  githubRepoFullName: v.optional(v.string()),
+  githubRepoUrl: v.optional(v.string()),
+  name: v.string(),
+  provisionError: v.optional(v.string()),
+  provisionStatus: provisionStatusValidator,
+  provisionSteps: v.optional(provisionStepsValidator),
+  slug: v.string(),
+});
+
 export const messageKindValidator = v.union(
   v.literal("command"),
   v.literal("diff"),

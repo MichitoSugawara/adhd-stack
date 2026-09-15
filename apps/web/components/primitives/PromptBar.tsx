@@ -149,6 +149,7 @@ export default function PromptBar({
   tall = false,
   placeholder,
   onSend,
+  disabled = false,
 }: {
   variant?: string;
   /** the self-running walkthrough; turn off when embedding in a real surface */
@@ -157,6 +158,7 @@ export default function PromptBar({
   tall?: boolean;
   placeholder?: string;
   onSend?: (text: string) => void;
+  disabled?: boolean;
 }) {
   const pill = variant === "Pill";
   const [draft, setDraft] = useState("");
@@ -391,7 +393,8 @@ export default function PromptBar({
     inputRef.current?.focus();
   };
 
-  const canSend = draft.trim().length > 0 || attachments.length > 0;
+  const canSend =
+    !disabled && (draft.trim().length > 0 || attachments.length > 0);
   const send = () => {
     if (!canSend) return;
     onSend?.(draft.trim());

@@ -2,7 +2,7 @@ import { asList, asRecord, asString, payloadText, readJson } from "./httpJson";
 import { looksLikeCfAccountId } from "./jwt";
 import { reconnectMessage } from "./tokenRefresh";
 
-export const ADHD_PAGES_PROJECT = "adhd-app";
+export const pagesProjectName = (slug: string): string => slug.slice(0, 58);
 
 export interface CloudflarePagesProject {
   accountId: string;
@@ -182,10 +182,11 @@ export const ensurePagesProject = async (
   owner: string,
   repo: string,
   repoId?: number,
-  accountHint?: string
+  accountHint?: string,
+  projectName = pagesProjectName(repo)
 ): Promise<CloudflarePagesProject> => {
   const accountId = await getCloudflareAccountId(token, accountHint);
-  const existing = await getPagesProject(token, accountId, ADHD_PAGES_PROJECT);
+  const existing = await getPagesProject(token, accountId, projectName);
   if (existing) {
     return existing;
   }
@@ -193,7 +194,7 @@ export const ensurePagesProject = async (
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects`,
     {
       body: JSON.stringify({
-        name: ADHD_PAGES_PROJECT,
+        name: projectName,
         production_branch: "main",
         source: sourceConfig(owner, repo, repoId),
       }),
@@ -211,7 +212,7 @@ export const ensurePagesProject = async (
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects`,
     {
       body: JSON.stringify({
-        name: ADHD_PAGES_PROJECT,
+        name: projectName,
         production_branch: "main",
       }),
       headers: headersFor(token),
@@ -220,7 +221,7 @@ export const ensurePagesProject = async (
   );
   const payload = await readJson(bare);
   if (bare.status === 409) {
-    const reused = await getPagesProject(token, accountId, ADHD_PAGES_PROJECT);
+    const reused = await getPagesProject(token, accountId, projectName);
     if (reused) {
       return reused;
     }

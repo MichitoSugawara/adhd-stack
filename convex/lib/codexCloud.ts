@@ -1,3 +1,4 @@
+import { busyHttpMessage, withHttpRetries } from "./httpRetry";
 import {
   asList,
   asNumber,
@@ -47,7 +48,7 @@ const headersFor = (auth: CodexCloudAuth): HeadersInit => {
   return headers;
 };
 
-const request = async (
+const requestOnce = async (
   auth: CodexCloudAuth,
   method: string,
   path: string,
@@ -67,6 +68,29 @@ const request = async (
     payload: await readJson(response),
     status: response.status,
   };
+};
+
+const request = async (
+  auth: CodexCloudAuth,
+  method: string,
+  path: string,
+  body?: Record<string, unknown>
+): Promise<{
+  ok: boolean;
+  payload: Record<string, unknown>;
+  status: number;
+}> => {
+  const result = await withHttpRetries(() =>
+    requestOnce(auth, method, path, body)
+  );
+  if ((result.status === 429 || result.status === 503) && !result.ok) {
+    return {
+      ok: false,
+      payload: { message: busyHttpMessage(result.status) },
+      status: result.status,
+    };
+  }
+  return result;
 };
 
 const environmentFrom = (value: unknown): CodexEnvironment | undefined => {
@@ -335,7 +359,8 @@ export const listEnvironmentsForRepo = async (
 export const createCodexEnvironment = async (
   auth: CodexCloudAuth,
   owner: string,
-  repo: string
+  repo: string,
+  label?: string
 ): Promise<CodexEnvironment> => {
   const installed = await findInstalledGithubRepoId(auth, owner, repo);
   if (installed.id === undefined) {
@@ -345,7 +370,7 @@ export const createCodexEnvironment = async (
   }
   const machines = await listCodexMachineId(auth);
   const response = await request(auth, "POST", "/wham/environments", {
-    label: "adhd-app",
+    label: label ?? `${owner}/${repo}`,
     machine_id: machines.id,
     repos: [`github-${installed.id}`],
   });
@@ -364,13 +389,14 @@ export const createCodexEnvironment = async (
 export const ensureCodexEnvironment = async (
   auth: CodexCloudAuth,
   owner: string,
-  repo: string
+  repo: string,
+  label?: string
 ): Promise<CodexEnvironment> => {
   const existing = await listEnvironmentsForRepo(auth, owner, repo);
   if (existing[0]) {
     return existing[0];
   }
-  return await createCodexEnvironment(auth, owner, repo);
+  return await createCodexEnvironment(auth, owner, repo, label);
 };
 
 export const createCodexTask = async (
@@ -394,11 +420,14 @@ export const createCodexTask = async (
     },
   });
   if (!response.ok) {
+    if (response.status === 429 || response.status === 503) {
+      throw new Error(busyHttpMessage(response.status));
+    }
     const detail =
       asString(response.payload.message) ??
       asString(response.payload.error) ??
       `HTTP ${response.status}`;
-    throw new Error(`Codex Cloud に送れませんでした: ${detail}`);
+    throw new Error(`実行環境に送れませんでした: ${detail}`);
   }
   const task = asRecord(response.payload.task);
   const id =

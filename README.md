@@ -8,7 +8,7 @@
 
 v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（Phase 0）。UI は [Beautiful UI](https://www.beautifului.dev/)、接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
 
-このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。
+このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（v1 は GitHub + Codex Cloud Environment）です。公開 URL の完成は次の段階です。
 
 現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。`/connect` は ConnectionsPort 経由の実接続です。つながったようには見せません。Google ログインと API キーカードはありません。このリポジトリにシークレットは入れていません。
 
@@ -59,8 +59,8 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 - ポーリング: `https://auth.openai.com/api/accounts/deviceauth/token`
 - トークン交換: `https://auth.openai.com/oauth/token`（`redirect_uri` は `https://auth.openai.com/deviceauth/callback`）
 - Cloud Environments / Codex Cloud は Plus 以上が必要です。Free と Go では足りません。
-- GitHub リポジトリと Cloudflare Pages / Convex プロジェクトは、つながったトークンで用意を試みます。偽の環境は作りません。
-- Codex Cloud 環境は Codex CLI と同じ `POST /wham/environments` です。`originator: codex_cli_rs` は HTTP ヘッダです。`machine_id` は取れなければ `wham-public/wham-universal`（`/wham/machines` が空なのは普通です）。`repos` は `github-{id}` の文字列で、id は `GET /wham/github/repositories/search/all-installations?query=adhd-app` から取ります。GitHub OAuth の `/repos` は使いません。ChatGPT 側にリポジトリが見えないときだけ https://chatgpt.com/codex で GitHub を繋いでください。
+- GitHub リポジトリと実行環境は、作成画面の名前から作ります。`adhd-app` 固定はありません。テンプレートは tahcode 由来（`ADHD_TEMPLATE_REPO` があれば GitHub テンプレート、無ければ最小足場）。偽の成功は出しません。
+- 実行環境は Codex CLI と同じ `POST /wham/environments` です。`originator: codex_cli_rs` は HTTP ヘッダです。`machine_id` は取れなければ `wham-public/wham-universal`（`/wham/machines` が空なのは普通です）。`repos` は `github-{id}` の文字列で、id は `GET /wham/github/repositories/search/all-installations?query=` にリポジトリ名を入れて取ります。GitHub OAuth の `/repos` は使いません。ChatGPT 側にリポジトリが見えないときだけ https://chatgpt.com/codex で GitHub を繋いでください。
 
 ### GitHub
 
@@ -71,7 +71,7 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 
 接続画面を開くと、同じ人の分割アカウント（GitHub 先行と ChatGPT メールなど）をまとめます。ログイン中の次のプロバイダは、今のユーザーに付けます。新しいユーザーは作りません。
 
-まとまらないときは Convex ダッシュボードで `internal.oauthInternal.mergeUsers` を実行してください。`keepUserId` は残すユーザー、`absorbUserId` は吸収するユーザーです。今のセッションを残すなら、ログイン中のユーザーを keep にしてください。ワークスペース `app` を残すなら、その owner を keep にしてください。absorb 側の行は消しません（email だけ外します）。
+まとまらないときは Convex ダッシュボードで `internal.oauthInternal.mergeUsers` を実行してください。`keepUserId` は残すユーザー、`absorbUserId` は吸収するユーザーです。今のセッションを残すなら、ログイン中のユーザーを keep にしてください。同じ slug のワークスペースは keep 側に寄せます。absorb 側の行は消しません（email だけ外します）。
 
 ### Cloudflare
 
@@ -104,7 +104,7 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 
 ```
 apps/web          Next.js App Router + Beautiful UI + OpenNext
-convex            Convex Auth・接続・チャット（Phase 2 以降）
+convex            Convex Auth・接続・CodingBackend・チャット（Phase 3）
 docs              要件の正本
 design_handoff    移行用 IA 参考
 ```
