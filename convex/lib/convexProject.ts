@@ -85,8 +85,10 @@ export const convexProjectFromPayload = (
     url:
       asString(source.deploymentUrl) ??
       asString(source.prodUrl) ??
+      asString(source.url) ??
       asString(row.deploymentUrl) ??
-      asString(row.prodUrl),
+      asString(row.prodUrl) ??
+      asString(row.url),
   };
 };
 

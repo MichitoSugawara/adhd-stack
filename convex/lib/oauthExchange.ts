@@ -1,3 +1,4 @@
+import { resolveCloudflareAccountId } from "./cloudflareAccount";
 import { asList, asRecord, asString } from "./httpJson";
 import {
   chatgptAccountIdFromClaims,
@@ -179,9 +180,17 @@ const cloudflareIdentity = async (
   const hinted =
     asString(profile.account_id) ??
     asString(asRecord(asList(profile.accounts)[0]).id);
+  let connectionAccountId = looksLikeCfAccountId(hinted) ? hinted : undefined;
+  const resolved = await resolveCloudflareAccountId(
+    tokens.accessToken,
+    connectionAccountId
+  );
+  if (resolved.ok) {
+    connectionAccountId = resolved.accountId;
+  }
   return {
     accountKey: `cloudflare:${subject}`,
-    connectionAccountId: looksLikeCfAccountId(hinted) ? hinted : undefined,
+    connectionAccountId,
     email,
     identity: email ?? subject,
     name: asString(profile.name),

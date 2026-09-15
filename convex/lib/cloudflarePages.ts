@@ -1,5 +1,5 @@
-import { asList, asRecord, asString, payloadText, readJson } from "./httpJson";
-import { looksLikeCfAccountId } from "./jwt";
+import { resolveCloudflareAccountId } from "./cloudflareAccount";
+import { asList, asRecord, asString, readJson } from "./httpJson";
 import { reconnectMessage } from "./tokenRefresh";
 
 export const pagesProjectName = (slug: string): string => slug.slice(0, 58);
@@ -36,116 +36,25 @@ const parseProject = (
   return { accountId, name, url: projectUrl(project) };
 };
 
-const isExpiredCloudflareToken = (
-  status: number,
-  payload: Record<string, unknown>
-): boolean => {
-  if (status !== 401 && status !== 403) {
-    return false;
-  }
-  const text =
-    `${payloadText(payload)} ${asString(payload.error) ?? ""}`.toLowerCase();
-  return (
-    text.includes("invalid_token") ||
-    text.includes("token expired") ||
-    text.includes("authentication error") ||
-    text.includes("access token expired")
-  );
-};
-
-const formatCloudflareError = (
-  status: number,
-  payload: Record<string, unknown>
-): string => {
-  if (isExpiredCloudflareToken(status, payload)) {
-    return reconnectMessage("cloudflare");
-  }
-  const messages = asList(payload.errors)
-    .map((item) => asString(asRecord(item).message))
-    .filter((item): item is string => item !== undefined);
-  const detail =
-    messages.length > 0 ? messages.join("; ") : payloadText(payload);
-  return `Cloudflare アカウントを取得できませんでした: HTTP ${status} ${detail}`;
-};
-
-const accountIdFromMemberships = (
-  payload: Record<string, unknown>
-): string | undefined => {
-  for (const item of asList(payload.result)) {
-    const row = asRecord(item);
-    const accountId =
-      asString(asRecord(row.account).id) ?? asString(row.account_id);
-    if (looksLikeCfAccountId(accountId)) {
-      return accountId;
-    }
-  }
-  return undefined;
-};
-
 export const getCloudflareAccountId = async (
   token: string,
-  hint?: string
+  hint?: string,
+  fetcher: typeof fetch = fetch
 ): Promise<string> => {
-  if (looksLikeCfAccountId(hint)) {
-    return hint;
+  const resolved = await resolveCloudflareAccountId(token, hint, fetcher);
+  if (resolved.ok) {
+    return resolved.accountId;
   }
-
-  const memberships = await fetch(
-    "https://api.cloudflare.com/client/v4/memberships",
-    { headers: headersFor(token) }
+  if (resolved.expired) {
+    throw new Error(reconnectMessage("cloudflare"));
+  }
+  const messages = asList(resolved.payload.errors)
+    .map((item) => asString(asRecord(item).message))
+    .filter((item): item is string => item !== undefined);
+  const detail = messages.length > 0 ? messages.join("; ") : "no account id";
+  throw new Error(
+    `Cloudflare アカウントを取得できませんでした: HTTP ${String(resolved.status)} ${detail}`
   );
-  const membershipPayload = await readJson(memberships);
-  if (memberships.ok) {
-    const fromMemberships = accountIdFromMemberships(membershipPayload);
-    if (fromMemberships) {
-      return fromMemberships;
-    }
-  } else {
-    if (isExpiredCloudflareToken(memberships.status, membershipPayload)) {
-      throw new Error(reconnectMessage("cloudflare"));
-    }
-    console.error("Cloudflare memberships failed", {
-      body: payloadText(membershipPayload),
-      status: memberships.status,
-    });
-  }
-
-  const userinfo = await fetch("https://dash.cloudflare.com/oauth2/userinfo", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const profile = await readJson(userinfo);
-  if (userinfo.ok) {
-    const fromProfile =
-      asString(profile.account_id) ??
-      asString(asRecord(asList(profile.accounts)[0]).id);
-    if (looksLikeCfAccountId(fromProfile)) {
-      return fromProfile;
-    }
-  } else {
-    if (isExpiredCloudflareToken(userinfo.status, profile)) {
-      throw new Error(reconnectMessage("cloudflare"));
-    }
-    console.error("Cloudflare userinfo failed", {
-      body: payloadText(profile),
-      status: userinfo.status,
-    });
-  }
-
-  const accounts = await fetch(
-    "https://api.cloudflare.com/client/v4/accounts?per_page=1",
-    { headers: headersFor(token) }
-  );
-  const payload = await readJson(accounts);
-  const first = asRecord(asList(payload.result)[0]);
-  const accountId = asString(first.id);
-  if (accounts.ok && looksLikeCfAccountId(accountId)) {
-    return accountId;
-  }
-  console.error("Cloudflare accounts list failed", {
-    body: payloadText(payload),
-    status: accounts.status,
-  });
-  throw new Error(formatCloudflareError(accounts.status, payload));
 };
 
 export const getPagesProject = async (

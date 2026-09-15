@@ -10,7 +10,10 @@ import {
   ensurePagesProject,
   triggerPagesDeployment,
 } from "./lib/cloudflarePages";
-import { ensureConvexProjectViaOpenConnector } from "./lib/convexFromOpenConnector";
+import {
+  ensureConvexProjectViaOpenConnector,
+  getConvexProductionDeploymentViaOpenConnector,
+} from "./lib/convexFromOpenConnector";
 import {
   ensureConvexProject,
   getConvexProductionDeployment,
@@ -134,7 +137,11 @@ export const publishWorkspace = internalAction({
                 project.teamId,
                 project.projectSlug
               )
-            : { name: project.deploymentName, url: project.url };
+            : await getConvexProductionDeploymentViaOpenConnector({
+                connectionName: convex.connectionName,
+                projectSlug: project.projectSlug,
+                teamId: project.teamId,
+              });
         convexDeploymentName = deployment.name ?? project.deploymentName;
         convexProjectSlug = project.projectSlug;
         convexTeamSlug = project.teamSlug;

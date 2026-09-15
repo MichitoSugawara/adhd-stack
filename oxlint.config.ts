@@ -47,6 +47,7 @@ export default defineConfig({
         "convex/lib/accountLinking.ts",
         "convex/lib/accountMatch.ts",
         "convex/lib/actionAuth.ts",
+        "convex/lib/cloudflareAccount.ts",
         "convex/lib/cloudflarePages.ts",
         "convex/lib/codexCloud.ts",
         "convex/lib/codexDevice.ts",

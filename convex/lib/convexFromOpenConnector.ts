@@ -143,6 +143,138 @@ const listConvexProjectViaOpenConnector = async (args: {
   }
 };
 
+const deploymentFromUnknown = (
+  value: unknown
+): { name?: string; url?: string } => {
+  const row = asRecord(value);
+  const nested = asRecord(row.deployment);
+  const source = Object.keys(nested).length > 0 ? nested : row;
+  const name =
+    asString(source.deploymentName) ??
+    asString(source.prodDeploymentName) ??
+    asString(source.name);
+  const url =
+    asString(source.deploymentUrl) ??
+    asString(source.prodUrl) ??
+    asString(source.url);
+  return { name, url };
+};
+
+const urlFromDeploymentName = (name?: string): string | undefined => {
+  if (!name || !/^[a-z0-9-]+$/iu.test(name)) {
+    return undefined;
+  }
+  return `https://${name}.convex.cloud`;
+};
+
+const withDeploymentUrl = (
+  project: ConvexProjectTarget,
+  deployment: { name?: string; url?: string }
+): ConvexProjectTarget => {
+  const deploymentName = deployment.name ?? project.deploymentName;
+  return {
+    ...project,
+    deploymentName,
+    url: deployment.url ?? project.url ?? urlFromDeploymentName(deploymentName),
+  };
+};
+
+export const getConvexProductionDeploymentViaOpenConnector = async (args: {
+  connectionName: string;
+  projectSlug: string;
+  teamId: string;
+}): Promise<{ name?: string; url?: string }> => {
+  const teamId = Number(args.teamId);
+  try {
+    const payload = await invokeOpenConnectorActionIds({
+      actionIds: [
+        envAction("OPENCONNECTOR_CONVEX_LIST_DEPLOYMENTS_ACTION", ""),
+        "convex.list_deployments",
+      ],
+      connectionName: args.connectionName,
+      input: {
+        projectSlug: args.projectSlug,
+        ...(Number.isInteger(teamId) ? { team_id: teamId } : {}),
+      },
+    });
+    const items = [
+      ...extractPayloadItems(payload),
+      ...asList(payload.deployments),
+    ];
+    const prod =
+      items
+        .map((item) => asRecord(item))
+        .find((row) => {
+          const kind =
+            asString(row.kind) ??
+            asString(row.deploymentType) ??
+            asString(row.type);
+          return kind === "prod" || row.isProd === true;
+        }) ?? items[0];
+    const parsed = deploymentFromUnknown(prod);
+    if (parsed.url || parsed.name) {
+      return {
+        ...parsed,
+        url: parsed.url ?? urlFromDeploymentName(parsed.name),
+      };
+    }
+  } catch {
+    // Fall through to get_project_by_slug / proxy.
+  }
+  try {
+    const payload = await invokeOpenConnectorActionIds({
+      actionIds: [
+        envAction("OPENCONNECTOR_CONVEX_GET_PROJECT_ACTION", ""),
+        "convex.get_project_by_slug",
+      ],
+      connectionName: args.connectionName,
+      input: {
+        projectSlug: args.projectSlug,
+        ...(Number.isInteger(teamId) ? { team_id: teamId } : {}),
+      },
+    });
+    const project = projectFromUnknown(args.teamId, payload);
+    if (project?.url || project?.deploymentName) {
+      return {
+        name: project.deploymentName,
+        url: project.url ?? urlFromDeploymentName(project.deploymentName),
+      };
+    }
+  } catch {
+    // Proxy the same management endpoint the token path uses.
+  }
+  try {
+    const proxied = await proxyOpenConnector({
+      connectionName: args.connectionName,
+      endpoint: `/teams/${encodeURIComponent(args.teamId)}/projects/${encodeURIComponent(args.projectSlug)}/deployment?defaultProd=true`,
+      method: "GET",
+      service: "convex",
+    });
+    const parsed = deploymentFromUnknown(proxied.data);
+    return {
+      ...parsed,
+      url: parsed.url ?? urlFromDeploymentName(parsed.name),
+    };
+  } catch {
+    return {};
+  }
+};
+
+const attachConvexDeployment = async (
+  connectionName: string,
+  project: ConvexProjectTarget
+): Promise<ConvexProjectTarget> => {
+  if (project.url) {
+    return project;
+  }
+  const deployment = await getConvexProductionDeploymentViaOpenConnector({
+    connectionName,
+    projectSlug: project.projectSlug,
+    teamId: project.teamId,
+  });
+  return withDeploymentUrl(project, deployment);
+};
+
 export const ensureConvexProjectViaOpenConnector = async (args: {
   accountHints?: readonly string[];
   connectionName: string;
@@ -158,7 +290,7 @@ export const ensureConvexProjectViaOpenConnector = async (args: {
     teamId,
   });
   if (existing) {
-    return existing;
+    return await attachConvexDeployment(args.connectionName, existing);
   }
   try {
     const payload = await invokeOpenConnectorActionIds({
@@ -179,7 +311,7 @@ export const ensureConvexProjectViaOpenConnector = async (args: {
         ...payload,
       });
     if (created) {
-      return created;
+      return await attachConvexDeployment(args.connectionName, created);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
@@ -190,7 +322,7 @@ export const ensureConvexProjectViaOpenConnector = async (args: {
         teamId,
       });
       if (again) {
-        return again;
+        return await attachConvexDeployment(args.connectionName, again);
       }
       throw error;
     }
@@ -212,14 +344,15 @@ export const ensureConvexProjectViaOpenConnector = async (args: {
       teamId,
     });
     if (again) {
-      return again;
+      return await attachConvexDeployment(args.connectionName, again);
     }
     throw new Error(
       asString(proxied.data.message) ??
         "Convex プロジェクトを作成できませんでした"
     );
   }
-  return (
+  return await attachConvexDeployment(
+    args.connectionName,
     projectFromUnknown(String(teamId), proxied.data) ?? {
       projectSlug: args.projectName,
       teamId: String(teamId),
