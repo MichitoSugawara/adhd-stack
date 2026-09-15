@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
@@ -9,9 +9,18 @@ import { useShell } from "@/lib/shell-state";
 
 export const ProjectsScreen = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const shell = useShell();
-  const [open, setOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [name, setName] = useState("");
+  const open = manualOpen || searchParams.get("new") === "1";
+
+  const closeDialog = () => {
+    setManualOpen(false);
+    if (searchParams.get("new") === "1") {
+      router.replace("/projects");
+    }
+  };
 
   const submit = () => {
     const trimmed = name.trim();
@@ -19,7 +28,7 @@ export const ProjectsScreen = () => {
       return;
     }
     const id = shell.createApp(trimmed);
-    setOpen(false);
+    setManualOpen(false);
     setName("");
     router.push(`/p/${id}/creating`);
   };
@@ -42,8 +51,9 @@ export const ProjectsScreen = () => {
             </div>
             <button
               className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+              data-new-app
               onClick={() => {
-                setOpen(true);
+                setManualOpen(true);
               }}
               type="button"
             >
@@ -102,6 +112,7 @@ export const ProjectsScreen = () => {
                 <input
                   autoFocus
                   className="rounded-control bg-field text-ink shadow-inset-field mt-1 h-10 w-full px-3 text-[14px] outline-none"
+                  data-app-name
                   onChange={(event) => {
                     setName(event.target.value);
                   }}
@@ -118,9 +129,7 @@ export const ProjectsScreen = () => {
               <div className="mt-5 flex justify-end gap-2">
                 <button
                   className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
-                  onClick={() => {
-                    setOpen(false);
-                  }}
+                  onClick={closeDialog}
                   type="button"
                 >
                   やめる

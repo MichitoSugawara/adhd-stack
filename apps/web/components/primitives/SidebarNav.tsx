@@ -57,6 +57,7 @@ type SidebarNavProps = {
   signOutLabel?: string;
   onSignOut?: () => void;
   variant?: string;
+  defaultCollapsed?: boolean;
 };
 
 const SIDEBAR_MOTION = {
@@ -209,8 +210,9 @@ export default function SidebarNav({
   emptyRecentsLabel = "まだアプリがありません",
   signOutLabel = "シェルを閉じる",
   onSignOut,
+  defaultCollapsed = false,
 }: SidebarNavProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [internalNav, setInternalNav] = useState("chats");
   const currentNav = activeNav ?? internalNav;
   const selectNav = (key: string) => {
@@ -243,6 +245,10 @@ export default function SidebarNav({
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus();
   }, [searchOpen]);
+
+  useEffect(() => {
+    setCollapsed(defaultCollapsed);
+  }, [defaultCollapsed]);
 
   const collapse = () => {
     setCollapsed(true);

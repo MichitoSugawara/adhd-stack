@@ -69,7 +69,7 @@ export const ConnectScreen = () => {
               一覧へ（シェル確認）
             </button>
             <p className="text-ink-3 self-center text-[13px]">
-              接続済みにはしません。画面の骨格を見るための導線です。
+              未接続のまま、一覧の骨格を見ます。
             </p>
           </div>
         </main>

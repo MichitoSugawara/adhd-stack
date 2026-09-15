@@ -1,12 +1,14 @@
 import Image from "next/image";
 
 export const BrandMark = ({ alt, src }: { alt: string; src: string }) => (
-  <Image
-    alt={alt}
-    className="rounded-chip bg-surface shadow-hairline size-8"
-    height={32}
-    src={src}
-    unoptimized
-    width={32}
-  />
+  <span className="rounded-chip shadow-hairline inline-flex size-8 items-center justify-center bg-[#e8eee8]">
+    <Image
+      alt={alt}
+      className="size-5"
+      height={20}
+      src={src}
+      unoptimized
+      width={20}
+    />
+  </span>
 );
