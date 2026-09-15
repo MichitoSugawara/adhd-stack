@@ -120,14 +120,22 @@ assert.equal(hasFunctionPushOutcome(["Pages だけ"]), false);
 
 const seeds = tahcodeSeedFiles({ name: "Demo", slug: "demo-app" });
 const packageJson = seeds.find((file) => file.path === "package.json");
+const tsconfig = seeds.find((file) => file.path === "tsconfig.json");
 const workflow = seeds.find(
   (file) => file.path === ".github/workflows/convex-deploy.yml"
 );
 const convexJson = seeds.find((file) => file.path === "convex.json");
+const packageManifest = JSON.parse(packageJson?.content ?? "{}");
+assert.equal(packageManifest.devDependencies?.typescript, "7.0.2");
+assert.equal(packageManifest.devDependencies?.["@types/node"], "26.4.1");
+assert.equal(packageManifest.devDependencies?.["@types/react"], "19.2.18");
+assert.equal(packageManifest.devDependencies?.["@types/react-dom"], "19.2.5");
 assert.match(
   packageJson?.content ?? "",
   /"convex:deploy": "convex deploy --yes"/
 );
+assert.match(tsconfig?.content ?? "", /"jsx": "react-jsx"/);
+assert.match(tsconfig?.content ?? "", /\*\*\/\*\.tsx/);
 assert.match(workflow?.content ?? "", /workflow_dispatch/);
 assert.match(workflow?.content ?? "", /npx convex deploy --yes/);
 assert.doesNotMatch(workflow?.content ?? "", /on:\s*\n\s*push:/);

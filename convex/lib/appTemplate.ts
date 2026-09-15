@@ -25,6 +25,12 @@ const packageJsonFor = (slug: string): string =>
       },
       description:
         "tahcode 由来の足場。Convex + Cloudflare + Beautiful UI を前提にする。プレビュー作成の本体 API はまだスタブ。",
+      devDependencies: {
+        "@types/node": "26.4.1",
+        "@types/react": "19.2.18",
+        "@types/react-dom": "19.2.5",
+        typescript: "7.0.2",
+      },
       name: slug,
       private: true,
       scripts: {
@@ -37,6 +43,30 @@ const packageJsonFor = (slug: string): string =>
     2
   )}\n`;
 
+const tsconfigJson = `${JSON.stringify(
+  {
+    compilerOptions: {
+      esModuleInterop: true,
+      incremental: true,
+      isolatedModules: true,
+      jsx: "react-jsx",
+      lib: ["dom", "dom.iterable", "esnext"],
+      module: "esnext",
+      moduleResolution: "bundler",
+      noEmit: true,
+      plugins: [{ name: "next" }],
+      resolveJsonModule: true,
+      skipLibCheck: true,
+      strict: true,
+      target: "ES2022",
+    },
+    exclude: ["node_modules"],
+    include: ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  },
+  null,
+  2
+)}\n`;
+
 const readmeFor = (name: string, slug: string): string => `# ${name}
 
 ADHD Stack が [tahcode](https://github.com/MichitoSugawara/tahcode) の型に合わせて置いた足場です。空のグリーンフィールドではありません。
@@ -47,7 +77,8 @@ ADHD Stack が [tahcode](https://github.com/MichitoSugawara/tahcode) の型に�
 
 - Convex の薄い schema（データ）
 - Cloudflare / OpenNext を想定した wrangler の型
-- Beautiful UI / Dark Green+ を前提にした最初の画面
+- TypeScript（\`typescript\` / \`@types/node\` / \`@types/react\` / \`@types/react-dom\`）と \`tsconfig.json\`
+- Beautiful UI / Dark Green+ を前提にした最初の画面（\`app/page.tsx\`）
 
 ## 公開と Convex 関数
 
@@ -128,6 +159,7 @@ export const tahcodeSeedFiles = (args: {
 }): TemplateFile[] => [
   { content: readmeFor(args.name, args.slug), path: "README.md" },
   { content: packageJsonFor(args.slug), path: "package.json" },
+  { content: tsconfigJson, path: "tsconfig.json" },
   { content: gitignore, path: ".gitignore" },
   { content: convexJson, path: "convex.json" },
   {
