@@ -13,6 +13,19 @@ interface WorkspacePublishFields {
   publishNotes?: string[];
 }
 
+export const useSyncPagesEnvironments = (slug: string, ready: boolean) => {
+  const refreshPages = useRefreshPages();
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    void refreshPages({ slug }).catch(() => {
+      // Keep stored URLs. A failed sync is not a new environment.
+    });
+  }, [ready, refreshPages, slug]);
+};
+
 export const usePublishFlow = (
   slug: string,
   workspace: WorkspacePublishFields | null | undefined

@@ -14,8 +14,11 @@ const publishSteps = await read("lib/publish-steps.ts");
 const urlChip = await read("components/screens/url-chip.tsx");
 const session = await read("components/shell/session-effects.tsx");
 const editor = await read("components/screens/editor-screen.tsx");
+const editorRail = await read("components/screens/editor-env-rail.tsx");
+const editorPane = await read("components/screens/editor-preview-pane.tsx");
 const envs = await read("components/screens/envs-screen.tsx");
 const envModals = await read("components/screens/env-modals.tsx");
+const validators = await read("../../convex/validators.ts");
 const sidebar = await read("components/primitives/SidebarNav.tsx");
 const lastWorkspace = await read("lib/last-workspace.ts");
 const login = await read("components/screens/login-screen.tsx");
@@ -55,11 +58,21 @@ assert.match(editor, /プレビュー/);
 assert.match(editor, /環境/);
 assert.match(editor, /TaskRows/);
 assert.match(editor, /EditorEnvRail/);
+assert.match(editor, /cloudflarePreviewUrl/);
+assert.match(editor, /previewHref=\{previewUrl\}/);
 assert.doesNotMatch(editor, /偽の成功/);
+assert.match(editorRail, /previewUrl/);
+assert.match(editorPane, /ENV_LABEL.preview/);
+assert.match(envs, /cloudflarePreviewUrl/);
 
 assert.match(envs, /ENV_LABEL.preview/);
 assert.match(envs, /本番へ反映/);
 assert.match(envModals, /新しいプレビュー/);
+assert.match(validators, /cloudflarePreviewUrl/);
+assert.match(validators, /ready: v.boolean/);
+assert.doesNotMatch(validators, /githubRepoUrl/);
+assert.doesNotMatch(validators, /githubRepoFullName/);
+assert.doesNotMatch(validators, /originRepoUrl/);
 assert.match(sidebar, /最初から/);
 assert.match(sidebar, /一覧/);
 assert.match(sidebar, /環境/);
@@ -75,6 +88,8 @@ const scmSurfaces = [
   ["creating", creating],
   ["projects", projects],
   ["editor", editor],
+  ["editor-env-rail", editorRail],
+  ["editor-preview-pane", editorPane],
   ["envs", envs],
   ["publish", publish],
   ["publish-screen", publishScreen],

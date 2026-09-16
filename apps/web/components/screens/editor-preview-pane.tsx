@@ -6,16 +6,54 @@ import { ENV_LABEL, PREVIEW_UNAVAILABLE } from "@/lib/env-labels";
 
 type PreviewTab = "preview" | "source";
 
+const ProductionPreview = ({
+  pagesUrl,
+  previewUrl,
+  waiting,
+}: {
+  pagesUrl: string | null;
+  previewUrl?: string | null;
+  waiting: boolean;
+}) => {
+  if (!pagesUrl) {
+    return (
+      <p className="text-ink-3 text-[13px]">本番のページもまだありません。</p>
+    );
+  }
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-ink-2 text-[12px]">{ENV_LABEL.production}</span>
+        <UrlChip href={pagesUrl} waiting={waiting} />
+      </div>
+      {waiting ? (
+        <p className="text-ink-3 text-[12px]">
+          本番の組み立てを待っています。完了はまだ見ていません。
+        </p>
+      ) : null}
+      {waiting || previewUrl ? null : (
+        <iframe
+          className="bg-inset rounded-card min-h-[280px] w-full flex-1"
+          src={pagesUrl}
+          title={`${ENV_LABEL.production}の表示`}
+        />
+      )}
+    </>
+  );
+};
+
 export const EditorPreviewPane = ({
   changes,
   onTab,
   pagesUrl,
+  previewUrl,
   tab,
   waiting,
 }: {
   changes: ChangeSummary;
   onTab: (tab: PreviewTab) => void;
   pagesUrl: string | null;
+  previewUrl?: string | null;
   tab: PreviewTab;
   waiting: boolean;
 }) => (
@@ -46,34 +84,30 @@ export const EditorPreviewPane = ({
     </div>
     {tab === "preview" ? (
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3">
-        <p className="text-ink-3 text-[12px] leading-5">
-          {PREVIEW_UNAVAILABLE}
-        </p>
-        {pagesUrl ? (
+        {previewUrl ? (
           <>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-ink-2 text-[12px]">
-                {ENV_LABEL.production}
+                {ENV_LABEL.preview}
               </span>
-              <UrlChip href={pagesUrl} waiting={waiting} />
+              <UrlChip href={previewUrl} />
             </div>
-            {waiting ? (
-              <p className="text-ink-3 text-[12px]">
-                本番の組み立てを待っています。完了はまだ見ていません。
-              </p>
-            ) : (
-              <iframe
-                className="bg-inset rounded-card min-h-[280px] w-full flex-1"
-                src={pagesUrl}
-                title={`${ENV_LABEL.production}の表示`}
-              />
-            )}
+            <iframe
+              className="bg-inset rounded-card min-h-[280px] w-full flex-1"
+              src={previewUrl}
+              title={`${ENV_LABEL.preview}の表示`}
+            />
           </>
         ) : (
-          <p className="text-ink-3 text-[13px]">
-            本番のページもまだありません。
+          <p className="text-ink-3 text-[12px] leading-5">
+            {PREVIEW_UNAVAILABLE}
           </p>
         )}
+        <ProductionPreview
+          pagesUrl={pagesUrl}
+          previewUrl={previewUrl}
+          waiting={waiting}
+        />
       </div>
     ) : (
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-3">

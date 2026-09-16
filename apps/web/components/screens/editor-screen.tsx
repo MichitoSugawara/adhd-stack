@@ -28,7 +28,7 @@ import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { publicHttpUrl } from "@/lib/public-url";
-import { usePublishFlow } from "@/lib/publish-flow";
+import { usePublishFlow, useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
 const STARTERS = [
@@ -145,6 +145,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
   const publishFlow = usePublishFlow(slug, workspace);
+  useSyncPagesEnvironments(slug, workspace?.ready === true);
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -176,12 +177,11 @@ const EditorLive = ({ slug }: { slug: string }) => {
     );
   }
 
-  const ready = Boolean(
-    workspace.githubRepoUrl && workspace.codingEnvironmentId
-  );
+  const ready = workspace.ready;
   const view = toChatView(messages ?? []);
   const changes = changeSummaryFromView(view);
   const pagesUrl = publicHttpUrl(workspace.cloudflarePagesUrl);
+  const previewUrl = publicHttpUrl(workspace.cloudflarePreviewUrl);
   const envsHref = `/p/${slug}/envs`;
 
   const send = async (text: string) => {
@@ -210,7 +210,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
         envsHref={envsHref}
         name={workspace.name}
         pagesUrl={pagesUrl}
-        previewHref={pagesUrl}
+        previewHref={previewUrl}
         waiting={publishFlow.waiting}
       />
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -222,6 +222,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
             setPreviewOpen(true);
           }}
           pagesUrl={pagesUrl}
+          previewUrl={previewUrl}
           waiting={publishFlow.waiting}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -317,6 +318,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
           changes={changes}
           onTab={setPane}
           pagesUrl={pagesUrl}
+          previewUrl={previewUrl}
           tab={pane}
           waiting={publishFlow.waiting}
         />
@@ -354,6 +356,7 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
             // Offline rail has no preview creation.
           }}
           pagesUrl={null}
+          previewUrl={null}
           waiting={false}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

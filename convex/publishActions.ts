@@ -10,6 +10,7 @@ import {
   attachPagesGitHubSource,
   ensurePagesProject,
   getPagesDeployment,
+  listPagesEnvironments,
   triggerPagesDeployment,
 } from "./lib/cloudflarePages";
 import {
@@ -34,6 +35,21 @@ import {
 import { reconnectMessage } from "./lib/tokenRefresh";
 import { pagesRefreshValidator, publishResultValidator } from "./validators";
 
+const listedPagesUrls = async (
+  token: string,
+  accountId: string,
+  projectName: string
+): Promise<{ previewUrl?: string; productionUrl?: string } | undefined> => {
+  const listed = await listPagesEnvironments(token, accountId, projectName);
+  if (!listed) {
+    return undefined;
+  }
+  return {
+    previewUrl: asStoredHttpUrl(listed.previewUrl) ?? undefined,
+    productionUrl: asStoredHttpUrl(listed.productionUrl) ?? undefined,
+  };
+};
+
 export const publishWorkspace = internalAction({
   args: {
     userId: v.id("users"),
@@ -56,6 +72,7 @@ export const publishWorkspace = internalAction({
     const errors: string[] = [];
     const notes: string[] = [];
     let cloudflarePagesUrl = asStoredHttpUrl(workspace.cloudflarePagesUrl);
+    let cloudflarePreviewUrl = asStoredHttpUrl(workspace.cloudflarePreviewUrl);
     let { cloudflareAccountId } = workspace;
     let { cloudflareProjectName } = workspace;
     let convexUrl = asStoredHttpUrl(workspace.convexUrl);
@@ -67,7 +84,7 @@ export const publishWorkspace = internalAction({
     const owner = workspace.githubOwner;
     const repo = workspace.githubRepoName;
     if (!(owner && repo && workspace.githubRepoUrl)) {
-      errors.push("GitHub リポジトリがまだありません");
+      errors.push("保存先がまだありません");
     }
 
     const cloudflare = await loadFreshConnection(
@@ -208,6 +225,15 @@ export const publishWorkspace = internalAction({
             : "Pages: デプロイを開始できませんでした"
         );
       }
+      const listed = await listedPagesUrls(
+        cloudflare.accessToken,
+        pagesProject.accountId,
+        pagesProject.name
+      );
+      if (listed) {
+        cloudflarePagesUrl = listed.productionUrl ?? cloudflarePagesUrl;
+        cloudflarePreviewUrl = listed.previewUrl;
+      }
     }
 
     const result: PublishResult = {
@@ -221,6 +247,7 @@ export const publishWorkspace = internalAction({
     await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
       cloudflareAccountId,
       cloudflarePagesUrl,
+      cloudflarePreviewUrl,
       cloudflareProjectName,
       convexDeploymentName,
       convexProjectSlug,
@@ -277,6 +304,11 @@ export const refreshPagesDeploy = internalAction({
         pagesUrl: asStoredHttpUrl(workspace.cloudflarePagesUrl) ?? null,
       };
     }
+    const listed = await listedPagesUrls(
+      cloudflare.accessToken,
+      accountId,
+      projectName
+    );
     const deployment = await getPagesDeployment(
       cloudflare.accessToken,
       accountId,
@@ -284,11 +316,23 @@ export const refreshPagesDeploy = internalAction({
       workspace.pagesDeployId
     );
     if (!deployment) {
+      if (listed) {
+        await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
+          cloudflarePagesUrl:
+            listed.productionUrl ?? workspace.cloudflarePagesUrl,
+          cloudflarePreviewUrl: listed.previewUrl ?? "",
+          provisionStatus: workspace.provisionStatus,
+          workspaceId: args.workspaceId,
+        });
+      }
       return {
         error: null,
         notes,
         pagesDeployStatus: workspace.pagesDeployStatus ?? "started",
-        pagesUrl: asStoredHttpUrl(workspace.cloudflarePagesUrl) ?? null,
+        pagesUrl:
+          listed?.productionUrl ??
+          asStoredHttpUrl(workspace.cloudflarePagesUrl) ??
+          null,
       };
     }
     const pagesDeployStatus = pagesStatusFromStage(deployment.status);
@@ -303,7 +347,11 @@ export const refreshPagesDeploy = internalAction({
       workspace.publishError
     );
     await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
-      cloudflarePagesUrl: pagesUrl ?? workspace.cloudflarePagesUrl,
+      cloudflarePagesUrl:
+        listed?.productionUrl ?? pagesUrl ?? workspace.cloudflarePagesUrl,
+      cloudflarePreviewUrl: listed
+        ? (listed.previewUrl ?? "")
+        : workspace.cloudflarePreviewUrl,
       pagesDeployId: deployment.id ?? workspace.pagesDeployId,
       pagesDeployStatus,
       provisionStatus: workspace.provisionStatus,

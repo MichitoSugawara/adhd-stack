@@ -9,6 +9,7 @@ import {
   ENV_STATUS,
   PREVIEW_UNAVAILABLE,
   STAGING_UNAVAILABLE,
+  previewChip,
 } from "@/lib/env-labels";
 
 interface ProductionChip {
@@ -55,6 +56,7 @@ export const EditorEnvRail = ({
   name,
   onNewPreview,
   pagesUrl,
+  previewUrl,
   waiting,
 }: {
   changes: ChangeSummary;
@@ -62,8 +64,10 @@ export const EditorEnvRail = ({
   name: string;
   onNewPreview: () => void;
   pagesUrl: string | null;
+  previewUrl?: string | null;
   waiting: boolean;
 }) => {
+  const preview = previewChip(previewUrl ?? null);
   const production = productionChip(pagesUrl, waiting);
 
   return (
@@ -81,9 +85,9 @@ export const EditorEnvRail = ({
         <div className="flex flex-col gap-1">
           <EnvRow
             href={envsHref}
-            status={ENV_STATUS.none}
+            status={preview.status}
             title={ENV_LABEL.preview}
-            tone="idle"
+            tone={preview.tone}
           />
           <EnvRow
             href={envsHref}
@@ -103,9 +107,20 @@ export const EditorEnvRail = ({
         <p className="text-ink-3 mb-1 text-[11px] tracking-[0.08em] uppercase">
           プレビュー
         </p>
-        <p className="text-ink-3 text-[12px] leading-5">
-          {PREVIEW_UNAVAILABLE}
-        </p>
+        {previewUrl ? (
+          <a
+            className="text-ink-2 block text-[12px] leading-5 underline underline-offset-2"
+            href={previewUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            開いているプレビュー
+          </a>
+        ) : (
+          <p className="text-ink-3 text-[12px] leading-5">
+            {PREVIEW_UNAVAILABLE}
+          </p>
+        )}
         <button
           className="rounded-control bg-field text-ink mt-2 h-8 w-full px-3 text-[12px] font-medium"
           onClick={onNewPreview}

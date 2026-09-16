@@ -157,7 +157,7 @@ Phase 3 で、名前付き作成（一人複数アプリ可）に合わせる。
 
 主 UI は **プレビュー / 検証 / 本番** を並べる（根拠: Claude Design 1795b4d9）。ソース管理の言葉は出さない。
 
-いまの Pages プロジェクトは `preview_deployment_setting: none` なので、プレビュー URL はまだ無い。無いものは「まだ」と出す。本番 URL と本番反映（既存の Pages デプロイ）だけを本物としてつなぐ。検証への送付や版の戻しは、API が無いあいだ操作できない。
+Pages の `preview_deployment_setting` は切らない。既存の preview 配備があればその URL を読む。無ければ「まだ」。本番 URL と本番反映（既存の Pages デプロイ）は本物としてつなぐ。新しいプレビューの作成、検証への送付、版の戻しは、API が無いあいだ操作できない。公開 API に githubRepoUrl は出さない。
 
 既知のギャップ（隠さない）:
 

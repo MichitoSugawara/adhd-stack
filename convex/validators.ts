@@ -49,19 +49,18 @@ export const pagesDeployStatusValidator = v.union(
 export const workspacePublicValidator = v.object({
   _id: v.id("workspaces"),
   cloudflarePagesUrl: v.optional(v.string()),
+  cloudflarePreviewUrl: v.optional(v.string()),
   codingBackend: v.optional(codingBackendValidator),
   codingEnvironmentId: v.optional(v.string()),
   convexUrl: v.optional(v.string()),
-  githubRepoFullName: v.optional(v.string()),
-  githubRepoUrl: v.optional(v.string()),
   name: v.string(),
-  originRepoUrl: v.optional(v.string()),
   pagesDeployStatus: v.optional(pagesDeployStatusValidator),
   provisionError: v.optional(v.string()),
   provisionStatus: provisionStatusValidator,
   provisionSteps: v.optional(provisionStepsValidator),
   publishError: v.optional(v.string()),
   publishNotes: v.optional(v.array(v.string())),
+  ready: v.boolean(),
   slug: v.string(),
 });
 

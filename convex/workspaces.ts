@@ -8,20 +8,19 @@ import { codingBackendValidator, workspacePublicValidator } from "./validators";
 const toPublic = (workspace: Doc<"workspaces">) => ({
   _id: workspace._id,
   cloudflarePagesUrl: workspace.cloudflarePagesUrl,
+  cloudflarePreviewUrl: workspace.cloudflarePreviewUrl,
   codingBackend: workspace.codingBackend,
   codingEnvironmentId:
     workspace.codingEnvironmentId ?? workspace.codexEnvironmentId,
   convexUrl: workspace.convexUrl,
-  githubRepoFullName: workspace.githubRepoFullName,
-  githubRepoUrl: workspace.githubRepoUrl,
   name: workspace.name,
-  originRepoUrl: workspace.originRepoUrl,
   pagesDeployStatus: workspace.pagesDeployStatus,
   provisionError: workspace.provisionError,
   provisionStatus: workspace.provisionStatus,
   provisionSteps: workspace.provisionSteps,
   publishError: workspace.publishError,
   publishNotes: workspace.publishNotes,
+  ready: workspace.provisionStatus === "ready",
   slug: workspace.slug ?? slugFromName(workspace.name),
 });
 

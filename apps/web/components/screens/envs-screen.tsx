@@ -13,13 +13,15 @@ import { hasConvexUrl } from "@/lib/env";
 import {
   ENV_LABEL,
   ENV_STATUS,
-  PREVIEW_UNAVAILABLE,
   ROLLBACK_UNAVAILABLE,
   STAGING_UNAVAILABLE,
+  previewBody,
+  previewChip,
 } from "@/lib/env-labels";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { publicHttpUrl } from "@/lib/public-url";
 import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
+import { useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
 type EnvTone = "idle" | "ok" | "wait";
@@ -56,6 +58,7 @@ const EnvCards = ({
   onNewPreview,
   onPromote,
   pages,
+  preview,
   production,
   publishHref,
   started,
@@ -63,75 +66,81 @@ const EnvCards = ({
   onNewPreview: () => void;
   onPromote: () => void;
   pages: string | null;
+  preview: string | null;
   production: ProductionChip;
   publishHref?: string;
   started: boolean;
-}) => (
-  <div className="mt-6 grid max-w-5xl gap-3 lg:grid-cols-3">
-    <EnvCard
-      actions={
-        <>
-          <button
-            className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-            onClick={onNewPreview}
-            type="button"
-          >
-            ＋新しいプレビュー
-          </button>
-          <DisabledAction>検証へ送る</DisabledAction>
-        </>
-      }
-      body={PREVIEW_UNAVAILABLE}
-      status={ENV_STATUS.none}
-      title={ENV_LABEL.preview}
-      tone="idle"
-    />
-    <EnvCard
-      actions={
-        <>
-          <DisabledAction>差を見る</DisabledAction>
-          <button
-            className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-            onClick={onPromote}
-            type="button"
-          >
-            本番へ反映
-          </button>
-        </>
-      }
-      body={STAGING_UNAVAILABLE}
-      status={ENV_STATUS.none}
-      title={ENV_LABEL.staging}
-      tone="idle"
-    />
-    <EnvCard
-      actions={
-        <>
-          {publishHref ? (
-            <Link
-              className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
-              href={publishHref}
+}) => {
+  const previewStatus = previewChip(preview);
+  return (
+    <div className="mt-6 grid max-w-5xl gap-3 lg:grid-cols-3">
+      <EnvCard
+        actions={
+          <>
+            <button
+              className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
+              onClick={onNewPreview}
+              type="button"
+            >
+              ＋新しいプレビュー
+            </button>
+            <DisabledAction>検証へ送る</DisabledAction>
+          </>
+        }
+        body={previewBody(preview)}
+        status={previewStatus.status}
+        title={ENV_LABEL.preview}
+        tone={previewStatus.tone}
+        url={preview}
+      />
+      <EnvCard
+        actions={
+          <>
+            <DisabledAction>差を見る</DisabledAction>
+            <button
+              className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
+              onClick={onPromote}
+              type="button"
             >
               本番へ反映
-            </Link>
-          ) : (
-            <DisabledAction>本番へ反映</DisabledAction>
-          )}
-          <DisabledAction>前の版に戻す</DisabledAction>
-        </>
-      }
-      body={productionBody(pages, started)}
-      status={production.label}
-      title={ENV_LABEL.production}
-      tone={production.tone}
-      url={pages}
-    />
-  </div>
-);
+            </button>
+          </>
+        }
+        body={STAGING_UNAVAILABLE}
+        status={ENV_STATUS.none}
+        title={ENV_LABEL.staging}
+        tone="idle"
+      />
+      <EnvCard
+        actions={
+          <>
+            {publishHref ? (
+              <Link
+                className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
+                href={publishHref}
+              >
+                本番へ反映
+              </Link>
+            ) : (
+              <DisabledAction>本番へ反映</DisabledAction>
+            )}
+            <DisabledAction>前の版に戻す</DisabledAction>
+          </>
+        }
+        body={productionBody(pages, started)}
+        status={production.label}
+        title={ENV_LABEL.production}
+        tone={production.tone}
+        url={pages}
+      />
+    </div>
+  );
+};
 
 const EnvsLive = ({ slug }: { slug: string }) => {
   const router = useRouter();
   const workspace = useWorkspaceBySlug(slug);
+  useSyncPagesEnvironments(slug, workspace?.ready === true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
 
@@ -155,6 +164,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
     );
   }
   const pages = publicHttpUrl(workspace.cloudflarePagesUrl);
+  const preview = publicHttpUrl(workspace.cloudflarePreviewUrl);
   const convex = publicHttpUrl(workspace.convexUrl);
   const started = workspace.pagesDeployStatus === "started";
   const production = productionStatus(pages, started);
@@ -175,6 +185,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
           setPromoteOpen(true);
         }}
         pages={pages}
+        preview={preview}
         production={production}
         publishHref={`/p/${slug}/publish`}
         started={started}
@@ -234,6 +245,7 @@ const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => {
           setPromoteOpen(true);
         }}
         pages={null}
+        preview={null}
         production={{ label: ENV_STATUS.none, tone: "idle" }}
         publishHref={`/p/${slug}/publish`}
         started={false}

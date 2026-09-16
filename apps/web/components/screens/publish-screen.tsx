@@ -22,7 +22,7 @@ const hostingHint = (
         }[];
       }
     | undefined,
-  hasRepo: boolean
+  ready: boolean
 ): string | null => {
   if (!board) {
     return null;
@@ -40,7 +40,7 @@ const hostingHint = (
     }
   }
   const parts: string[] = [];
-  if (!hasRepo) {
+  if (!ready) {
     parts.push("保存先の準備が終わるまで本番へ出せません。");
   }
   if (missing.length > 0) {
@@ -97,7 +97,7 @@ const PublishLive = ({ slug }: { slug: string }) => {
         convexUrl={workspace.convexUrl}
         editorHref={`/p/${slug}`}
         error={publishFlow.error}
-        hint={hostingHint(board, Boolean(workspace.githubRepoUrl))}
+        hint={hostingHint(board, workspace.ready)}
         notes={publishFlow.notes}
         onPublish={() => {
           void publishFlow.publish();

@@ -6,7 +6,15 @@ import {
   mergePagesProductionEnvVars,
   pagesConvexEnvUpdates,
 } from "./pagesEnv";
+import {
+  pagesEnvironmentsFrom,
+  type PagesDeployment,
+  type PagesEnvironments,
+} from "./pagesEnvironments";
 import { reconnectMessage } from "./tokenRefresh";
+
+export type { PagesDeployment, PagesEnvironments };
+export { pagesEnvironmentsFrom };
 
 export const pagesProjectName = (slug: string): string => slug.slice(0, 58);
 
@@ -249,12 +257,6 @@ export const configurePagesForConvexDeploy = async (args: {
   throw new Error(lastMessage);
 };
 
-export interface PagesDeployment {
-  id?: string;
-  status?: string;
-  url?: string;
-}
-
 const pagesDeploymentFrom = (
   payload: Record<string, unknown>
 ): PagesDeployment => {
@@ -262,10 +264,36 @@ const pagesDeploymentFrom = (
   const row =
     listed.length > 0 ? asRecord(listed[0]) : asRecord(payload.result);
   return {
+    environment: asString(row.environment),
     id: asString(row.id),
     status: asString(asRecord(row.latest_stage).status),
     url: asString(row.url),
   };
+};
+
+export const listPagesEnvironments = async (
+  token: string,
+  accountId: string,
+  projectName: string
+): Promise<PagesEnvironments | undefined> => {
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/deployments?per_page=25`,
+    { headers: headersFor(token) }
+  );
+  if (!response.ok) {
+    return undefined;
+  }
+  const payload = await readJson(response);
+  const rows = asList(payload.result).map((item) => {
+    const row = asRecord(item);
+    return {
+      environment: asString(row.environment),
+      id: asString(row.id),
+      status: asString(asRecord(row.latest_stage).status),
+      url: asString(row.url),
+    } satisfies PagesDeployment;
+  });
+  return pagesEnvironmentsFrom(rows);
 };
 
 export const triggerPagesDeployment = async (

@@ -60,7 +60,7 @@ export const NewPreviewModal = ({ onClose }: { onClose: () => void }) => (
       />
       <Choice
         label={`${ENV_LABEL.production}版から`}
-        note="本番から枝を分ける操作はまだありません。"
+        note="本番から新しいプレビューを作る操作はまだありません。"
       />
       <Choice
         label="既存のプレビューから"

@@ -31,3 +31,19 @@ export const PREVIEW_FROM_UNAVAILABLE =
   "検証版・本番版・既存プレビューのどれからも、まだ作れません。";
 
 export const PROMOTE_UNAVAILABLE = "検証から本番へ送る操作は、まだありません。";
+
+export const previewBody = (previewUrl: string | null): string => {
+  if (previewUrl) {
+    return "いま開いているプレビューです。新しいプレビューはまだ切れません。";
+  }
+  return PREVIEW_UNAVAILABLE;
+};
+
+export const previewChip = (
+  previewUrl: string | null
+): { status: string; tone: "idle" | "ok" } => {
+  if (previewUrl) {
+    return { status: ENV_STATUS.published, tone: "ok" };
+  }
+  return { status: ENV_STATUS.none, tone: "idle" };
+};

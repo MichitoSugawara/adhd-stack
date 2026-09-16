@@ -15,6 +15,7 @@ import {
 const workspaceFields = {
   cloudflareAccountId: v.optional(v.string()),
   cloudflarePagesUrl: v.optional(v.string()),
+  cloudflarePreviewUrl: v.optional(v.string()),
   cloudflareProjectName: v.optional(v.string()),
   codexEnvironmentId: v.optional(v.string()),
   codingBackend: v.optional(codingBackendValidator),
@@ -60,6 +61,7 @@ export const getWorkspace = internalQuery({
     return {
       cloudflareAccountId: workspace.cloudflareAccountId,
       cloudflarePagesUrl: workspace.cloudflarePagesUrl,
+      cloudflarePreviewUrl: workspace.cloudflarePreviewUrl,
       cloudflareProjectName: workspace.cloudflareProjectName,
       codexEnvironmentId: workspace.codexEnvironmentId,
       codingBackend: workspace.codingBackend,
