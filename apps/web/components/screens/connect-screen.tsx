@@ -425,6 +425,7 @@ const ConnectOffline = () => {
         </button>
       </div>
       <ConnectProgress count={0} />
+      <ConnectNextStep busy onConnect={noop} service={chatgptService ?? null} />
       <div className="mt-6 flex max-w-4xl flex-col gap-3">
         {chatgptService ? (
           <ConnectServiceCard

@@ -11,7 +11,7 @@ import { useCreateNamedApp, useWorkspaceList } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
-import { listAppStatus } from "@/lib/env-labels";
+import { ENV_STATUS, listAppStatus } from "@/lib/env-labels";
 import { hostOf, publicHttpUrl } from "@/lib/public-url";
 import { publishedThisWeek, relativeFrom } from "@/lib/relative-time";
 import { useShell } from "@/lib/shell-state";
@@ -353,19 +353,19 @@ const ProjectsSkeleton = () => {
           まだありません。名前を付けて、作成中の画面を見てください。
         </div>
       ) : (
-        <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
-          {shell.state.apps.map((app) => (
-            <li key={app.id}>
-              <button
-                className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                onClick={() => {
-                  router.push(
-                    app.status === "creating"
-                      ? `/p/${app.id}/creating`
-                      : `/p/${app.id}`
-                  );
-                }}
-                type="button"
+        <div className="rounded-card bg-surface shadow-card max-w-4xl overflow-hidden">
+          <div className="text-ink-3 grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] gap-3 px-4 py-2 text-[12px]">
+            <span>アプリ</span>
+            <span>状態</span>
+            <span>本番</span>
+            <span>更新</span>
+            <span />
+          </div>
+          <ul className="divide-line divide-y">
+            {shell.state.apps.map((app) => (
+              <li
+                className="grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3"
+                key={app.id}
               >
                 <span>
                   <span className="block text-[14px] font-medium">
@@ -373,13 +373,30 @@ const ProjectsSkeleton = () => {
                   </span>
                   <span className="text-ink-3 block text-[12px]">{app.id}</span>
                 </span>
-                <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
-                  {app.status === "creating" ? "作成中" : "シェル"}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+                <StatusChip tone={app.status === "creating" ? "wait" : "idle"}>
+                  {app.status === "creating"
+                    ? ENV_STATUS.working
+                    : ENV_STATUS.unpublished}
+                </StatusChip>
+                <span className="text-ink-2 text-[12px]">まだ</span>
+                <span className="text-ink-3 text-[12px]">—</span>
+                <button
+                  className="text-ink text-[13px] font-medium underline underline-offset-2"
+                  onClick={() => {
+                    router.push(
+                      app.status === "creating"
+                        ? `/p/${app.id}/creating`
+                        : `/p/${app.id}`
+                    );
+                  }}
+                  type="button"
+                >
+                  開く
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {open ? (
         <CreateDialog
