@@ -177,7 +177,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
     );
   }
 
-  const ready = workspace.ready;
+  const { ready } = workspace;
   const view = toChatView(messages ?? []);
   const changes = changeSummaryFromView(view);
   const pagesUrl = publicHttpUrl(workspace.cloudflarePagesUrl);

@@ -6,15 +6,12 @@ import {
   mergePagesProductionEnvVars,
   pagesConvexEnvUpdates,
 } from "./pagesEnv";
-import {
-  pagesEnvironmentsFrom,
-  type PagesDeployment,
-  type PagesEnvironments,
-} from "./pagesEnvironments";
+import { pagesEnvironmentsFrom } from "./pagesEnvironments";
+import type { PagesDeployment, PagesEnvironments } from "./pagesEnvironments";
 import { reconnectMessage } from "./tokenRefresh";
 
-export type { PagesDeployment, PagesEnvironments };
-export { pagesEnvironmentsFrom };
+export type { PagesDeployment, PagesEnvironments } from "./pagesEnvironments";
+export { pagesEnvironmentsFrom } from "./pagesEnvironments";
 
 export const pagesProjectName = (slug: string): string => slug.slice(0, 58);
 

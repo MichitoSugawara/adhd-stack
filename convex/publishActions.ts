@@ -304,17 +304,15 @@ export const refreshPagesDeploy = internalAction({
         pagesUrl: asStoredHttpUrl(workspace.cloudflarePagesUrl) ?? null,
       };
     }
-    const listed = await listedPagesUrls(
-      cloudflare.accessToken,
-      accountId,
-      projectName
-    );
-    const deployment = await getPagesDeployment(
-      cloudflare.accessToken,
-      accountId,
-      projectName,
-      workspace.pagesDeployId
-    );
+    const [listed, deployment] = await Promise.all([
+      listedPagesUrls(cloudflare.accessToken, accountId, projectName),
+      getPagesDeployment(
+        cloudflare.accessToken,
+        accountId,
+        projectName,
+        workspace.pagesDeployId
+      ),
+    ]);
     if (!deployment) {
       if (listed) {
         await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
