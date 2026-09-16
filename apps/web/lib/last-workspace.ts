@@ -51,8 +51,10 @@ export const rememberPath = (pathname: string, name = ""): void => {
   if (parts[1] !== "p" || !parts[2]) {
     return;
   }
+  const current = readLastWorkspace();
+  const kept = name || (current?.slug === parts[2] ? current.name : "");
   writeLastWorkspace({
-    name,
+    name: kept,
     path: pathname,
     slug: parts[2],
   });
@@ -67,15 +69,15 @@ const subscribe = (onStoreChange: () => void): (() => void) => {
   };
 };
 
-let cachedResult: { value: LastWorkspace | null; raw: string | null } = {
-  value: null,
+let cachedResult: { raw: string | null; value: LastWorkspace | null } = {
   raw: null,
+  value: null,
 };
 
 const getSnapshot = (): LastWorkspace | null => {
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (raw !== cachedResult.raw) {
-    cachedResult = { value: readLastWorkspace(), raw };
+    cachedResult = { raw, value: readLastWorkspace() };
   }
   return cachedResult.value;
 };

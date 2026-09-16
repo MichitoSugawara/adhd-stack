@@ -295,6 +295,18 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
       </div>
       <div className="border-line border-t px-5 py-3">
         <div className="mx-auto max-w-2xl">
+          <div className="mb-2 flex flex-wrap gap-2">
+            {STARTERS.map((starter) => (
+              <button
+                className="rounded-chip bg-field text-ink-3 h-7 px-2.5 text-[12px]"
+                disabled
+                key={starter}
+                type="button"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
           <PromptBar
             demo={false}
             disabled
