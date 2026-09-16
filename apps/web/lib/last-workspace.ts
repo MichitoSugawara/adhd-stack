@@ -67,5 +67,18 @@ const subscribe = (onStoreChange: () => void): (() => void) => {
   };
 };
 
+let cachedResult: { value: LastWorkspace | null; raw: string | null } = {
+  value: null,
+  raw: null,
+};
+
+const getSnapshot = (): LastWorkspace | null => {
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw !== cachedResult.raw) {
+    cachedResult = { value: readLastWorkspace(), raw };
+  }
+  return cachedResult.value;
+};
+
 export const useLastWorkspace = (): LastWorkspace | null =>
-  useSyncExternalStore(subscribe, readLastWorkspace, () => null);
+  useSyncExternalStore(subscribe, getSnapshot, () => null);
