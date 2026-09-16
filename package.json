@@ -5,11 +5,19 @@
   "scripts": {
     "build": "turbo run build",
     "check": "ultracite check --deny-warnings",
+    "convex:dev": "convex dev",
     "dev": "turbo run dev",
     "fix": "ultracite fix",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck && tsc --noEmit -p convex/tsconfig.json"
+  },
+  "dependencies": {
+    "@auth/core": "0.41.1",
+    "@convex-dev/auth": "^0.0.95",
+    "convex": "^1.45.0",
+    "convex-helpers": "^0.1.123"
   },
   "devDependencies": {
+    "@types/node": "26.4.1",
     "oxfmt": "^0.66.0",
     "oxlint": "^1.81.0",
     "oxlint-plugin-react-doctor": "^0.9.12",

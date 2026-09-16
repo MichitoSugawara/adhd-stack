@@ -1,5 +1,5 @@
-import { FrontendMock } from "../components/frontend-mock";
+import { LoginScreen } from "../components/screens/login-screen";
 
-export default function Home() {
-  return <FrontendMock />;
+export default function HomePage() {
+  return <LoginScreen />;
 }

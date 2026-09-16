@@ -3,18 +3,25 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "dev": "next dev",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node ./scripts/assert-forbidden-copy.mjs && node ./scripts/assert-app-slug.mjs && node ./scripts/assert-cursor-cloud-map.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-codex-task-snapshot.mjs && node ./scripts/assert-oauth-navigation.mjs && node ./scripts/assert-ux-copy.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-pages-environments.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-oc-connection-list.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-oc-provision.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-cloudflare-account.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-convex-function-push.mjs && node --experimental-strip-types --no-warnings=ExperimentalWarning ./scripts/assert-openconnector-timeout.mjs && tsc --noEmit"
   },
   "dependencies": {
-    "@cloudflare/kumo": "2.13.0",
-    "@phosphor-icons/react": "2.1.10",
-    "echarts": "6.1.0",
-    "konsta": "5.4.0",
+    "@central-icons-react/round-outlined-radius-2-stroke-2": "^1.1.319",
+    "@convex-dev/auth": "^0.0.95",
+    "@opennextjs/cloudflare": "^1.20.6",
+    "clsx": "^2.1.1",
+    "convex": "^1.45.0",
+    "glimm": "^0.3.1",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "shadow-plugin": "^2.1.0",
+    "tailwind-merge": "^3.7.0",
     "zod": "4.5.4"
   },
   "devDependencies": {
@@ -23,6 +30,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "tailwindcss": "4.3.3",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "wrangler": "^4.128.0"
   }
 }

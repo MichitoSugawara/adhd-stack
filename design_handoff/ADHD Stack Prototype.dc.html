@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-78e30c43-a263-44e7-a20c-fc0d9a2c2016/styles.css">
+<script src="_ds/broadsheet-78e30c43-a263-44e7-a20c-fc0d9a2c2016/_ds_bundle.js"></script>
+<style>
+html,body{height:100%;margin:0}
+body{background:var(--canvas-bg,var(--color-neutral-300));font-family:var(--font-body);color:var(--color-text)}
+a{color:var(--color-accent)}a:hover{color:var(--color-accent-600)}
+@keyframes ticker{0%,100%{opacity:1}50%{opacity:.35}}
+.seg-opt,.btn{white-space:nowrap}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+:root,[data-theme=light]{color-scheme:light;--color-bg:#f3f5f2;--color-surface:#e8ece7;--color-text:#1a201a;--color-accent:#0b7d24;--color-accent-2:#c9432a;--color-divider:color-mix(in srgb,#1a201a 16%,transparent);--color-neutral-100:#f6f8f5;--color-neutral-200:#e7ebe6;--color-neutral-300:#d3d9d2;--color-neutral-400:#b6bdb5;--color-neutral-500:#969d95;--color-neutral-600:#787f77;--color-neutral-700:#5c635b;--color-neutral-800:#414640;--color-neutral-900:#2a2f29;--color-accent-100:#e6f7e8;--color-accent-200:#c7edcc;--color-accent-300:#97dea1;--color-accent-400:#5cc46c;--color-accent-500:#2ea842;--color-accent-600:#0d8a27;--color-accent-700:#086e1f;--color-accent-800:#065418;--color-accent-900:#0a3812;--color-accent-2-100:#fdf0ec;--color-accent-2-200:#fbdcd4;--color-accent-2-300:#f7bcae;--color-accent-2-400:#f0917c;--color-accent-2-500:#e1664e;--color-accent-2-600:#c9432a;--color-accent-2-700:#a5301c;--color-accent-2-800:#7c2414;--color-accent-2-900:#4e1a0f;--color-process-yellow:#d9ae00;--shadow-sm:0 1px 2px color-mix(in srgb,#1a201a 14%,transparent);--shadow-md:0 3px 10px color-mix(in srgb,#1a201a 16%,transparent);--shadow-lg:0 12px 32px color-mix(in srgb,#1a201a 22%,transparent);--canvas-bg:#d3d9d2;--btn-primary-bg:initial;--btn-primary-fg:initial;--btn-primary-hover:initial;--btn-primary-active:initial;--seg-active-bg:initial;--seg-active-fg:initial;--backdrop:initial;--plate-blend:initial;--logo-filter:initial}
+[data-theme=dark]{color-scheme:dark;--color-bg:#121712;--color-surface:#0c150c;--color-text:#cfd4cf;--color-accent:#1fbf3a;--color-accent-2:#ef6a5c;--color-divider:color-mix(in srgb,#0e9c2d 40%,transparent);--color-neutral-100:#171d17;--color-neutral-200:#1f271f;--color-neutral-300:#2a342a;--color-neutral-400:#3d493d;--color-neutral-500:#5f6c5f;--color-neutral-600:#8b968b;--color-neutral-700:#a9b2a9;--color-neutral-800:#c7cec7;--color-neutral-900:#e3e8e3;--color-accent-100:#0c270c;--color-accent-200:#0e3a12;--color-accent-300:#0f4f17;--color-accent-400:#0e6a1c;--color-accent-500:#0e8a26;--color-accent-600:#22b33d;--color-accent-700:#4fd463;--color-accent-800:#8ce88f;--color-accent-900:#c9f5c6;--color-accent-2-100:#2c1512;--color-accent-2-200:#43201a;--color-accent-2-300:#5e2a21;--color-accent-2-400:#86392b;--color-accent-2-500:#b54b39;--color-accent-2-600:#e0644f;--color-accent-2-700:#f5897a;--color-accent-2-800:#ffb0a4;--color-accent-2-900:#ffd6ce;--color-process-yellow:#d7b53a;--shadow-sm:0 0 0 1px rgba(14,156,45,.18),0 1px 2px rgba(0,0,0,.5);--shadow-md:0 0 0 1px rgba(14,156,45,.18),0 3px 10px rgba(0,0,0,.55);--shadow-lg:0 0 0 1px rgba(14,156,45,.22),0 12px 32px rgba(0,0,0,.65);--canvas-bg:#060d06;--btn-primary-bg:#077015;--btn-primary-fg:#f2f6f2;--btn-primary-hover:#0ab320;--btn-primary-active:#0e9e2d;--seg-active-bg:#0e6a1c;--seg-active-fg:#eef5ee;--backdrop:rgba(0,0,0,.62);--plate-blend:screen;--logo-filter:grayscale(.35) contrast(1.15) invert(1) hue-rotate(180deg)}
+.btn-primary{background:var(--btn-primary-bg,var(--color-accent));color:var(--btn-primary-fg,var(--color-bg))}
+.btn-primary:hover{background:var(--btn-primary-hover,var(--color-accent-600))}
+.btn-primary:active{background:var(--btn-primary-active,var(--color-accent-700))}
+.seg-opt:has(input:checked){background:var(--seg-active-bg,var(--color-accent));color:var(--seg-active-fg,var(--color-bg))}
+.dialog-backdrop{background:var(--backdrop,color-mix(in srgb,var(--color-neutral-900) 50%,transparent))}
+.cmyk-num .plate,.cmyk-head .plate{mix-blend-mode:var(--plate-blend,multiply)}
+.halftone{filter:var(--logo-filter,grayscale(.35) contrast(1.15))}
+body[data-theme=dark]{background:var(--canvas-bg)}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:flex-start;padding:24px 24px 48px;gap:14px;box-sizing:border-box;overflow-x:auto">
+  <!-- prototype toolbar -->
+  <div style="width:1440px;flex:none;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--color-neutral-700)">
+    <span style="display:flex;gap:16px;align-items:center"><span class="nav-brand" style="margin:0;font-size:15px">ADHD Stack · プロトタイプ</span><span>画面：<b style="color:var(--color-text)">{{ screenLabel }}</b></span></span>
+    <span style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ goLogin }}">最初から</button>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ goConnect }}">接続</button>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ goProjects }}">一覧</button>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ goEditor }}">エディタ</button>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ goEnvs }}">環境</button>
+    </span>
+  </div>
+
+  <div data-theme="{{ themeAttr }}" style="width:1440px;flex:none;margin:0 auto;height:860px;background:var(--color-bg);color:var(--color-text);box-shadow:var(--shadow-md);position:relative;overflow:hidden;border-radius:var(--radius-sm);transition:background .25s,color .25s">
+
+    <!-- ========== LOGIN ========== -->
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+      <div style="height:100%;display:grid;grid-template-columns:1fr 480px;animation:fadein .25s ease">
+        <div style="padding:40px 64px;display:flex;flex-direction:column">
+          <span class="nav-brand" style="margin:0">ADHD Stack</span>
+          <div style="margin:auto 0;max-width:560px"><span style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">Connect once. Build anything.</span><h1 style="font-size:64px;line-height:1.05;margin:16px 0 0;letter-spacing:-.02em">何も考えずに、<br>始める。</h1><p style="font-size:18px;line-height:1.6;margin:24px 0 0;color:var(--color-neutral-800)">OpenAI・GitHub・Cloudflare・Convex をつなぐだけ。チャットで話すと、コードが書き換わり、自分の環境に公開される。IDEは開かない。</p><div style="display:flex;gap:28px;margin-top:40px;align-items:center"><img class="halftone" src="brands/chatgpt.png" alt="" style="width:28px;height:28px;object-fit:contain"><img class="halftone" src="brands/github.ico" alt="" style="width:28px;height:28px;object-fit:contain"><img class="halftone" src="brands/cloudflare.ico" alt="" style="width:28px;height:28px;object-fit:contain"><img class="halftone" src="brands/convex.ico" alt="" style="width:28px;height:28px;object-fit:contain"><span style="font-size:13px;color:var(--color-neutral-600)">4つの接続で完結</span></div></div>
+          <span style="font-size:12px;color:var(--color-neutral-600)">adhd.gawarago.com</span>
+        </div>
+        <div style="background:var(--color-surface);display:grid;place-items:center;padding:64px">
+          <div style="width:100%;display:flex;flex-direction:column;gap:20px"><h2 style="font-size:28px;margin:0">サインイン</h2><p style="font-size:14px;color:var(--color-neutral-700);margin:0;line-height:1.6">Google アカウントでログインします。続けて4つのサービスを接続します。</p><button class="btn btn-secondary btn-block" style="min-height:48px;font-size:15px;gap:10px;color:var(--color-text);background:var(--color-bg)" onClick="{{ goConnect }}"><img src="brands/google.svg" width="18" height="18" alt="">Googleで続ける</button><span style="font-size:12px;color:var(--color-neutral-600);line-height:1.6">続行すると利用規約に同意したことになります。プロトタイプ · 認証情報は保存されません。</span></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========== CONNECT ========== -->
+    <sc-if value="{{ isConnect }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:grid;grid-template-rows:auto 1fr;animation:fadein .25s ease">
+        <div class="nav" style="padding:14px 40px"><span class="nav-brand">ADHD Stack</span><a href="#" aria-current="page" onClick="{{ goConnect }}">接続</a><a href="#" style="color:var(--color-neutral-500)" onClick="{{ goProjectsIfReady }}">プロジェクト</a><span style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--color-neutral-700);margin-left:16px">michito@gmail.com<span style="width:28px;height:28px;border-radius:50%;background:var(--color-accent-100);color:var(--color-accent-800);display:grid;place-items:center;font-size:11px">MS</span></span></div>
+        <div style="padding:40px 40px 0;display:grid;grid-template-columns:1fr 320px;gap:56px;align-content:start">
+          <div style="display:flex;flex-direction:column;gap:32px">
+            <sc-if value="{{ banner }}" hint-placeholder-val="{{ false }}"><div class="card" style="padding:16px 20px;flex-direction:row;align-items:center;gap:14px;background:var(--color-accent-2-100);color:var(--color-accent-2-800)"><span class="tag tag-accent-2">切断</span><span style="flex:1;font-size:14px">{{ banner }}</span></div></sc-if>
+            <div><h1 style="font-size:36px;margin:0;line-height:1.1">{{ connectTitle }}</h1><p style="font-size:15px;color:var(--color-neutral-700);margin:10px 0 0">{{ connectSub }}</p></div>
+            <div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>準備の進捗</span><span style="color:var(--color-accent-700)">{{ connectedCount }} / 4</span></div><div style="height:4px;background:var(--color-neutral-200);border-radius:var(--radius-md);overflow:hidden"><div style="width:{{ progressPct }};height:100%;background:var(--color-accent);transition:width .4s ease"></div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+                <div class="card" style="padding:22px;gap:14px;outline:{{ s.outline }};opacity:{{ s.opacity }};transition:all .25s ease">
+                  <div style="display:flex;justify-content:space-between;align-items:center"><img class="halftone" src="{{ s.icon }}" alt="" style="width:32px;height:32px;object-fit:contain"><span class="{{ s.tagClass }}" style="animation:{{ s.tagAnim }}">{{ s.tagText }}</span></div>
+                  <div><div class="card-title" style="font-size:20px">{{ s.name }}</div><div class="card-body" style="margin-top:4px;opacity:1;color:{{ s.bodyColor }}">{{ s.body }}</div></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;min-height:32px"><span style="font-size:12px;color:var(--color-neutral-600)">{{ s.meta }}</span>
+                    <sc-if value="{{ s.canConnect }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary" style="padding:7px 14px;font-size:13px" onClick="{{ s.connect }}">{{ s.cta }}</button></sc-if>
+                    <sc-if value="{{ s.canDisconnect }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;color:var(--color-neutral-600)" onClick="{{ s.disconnect }}">切断</button></sc-if>
+                    <sc-if value="{{ s.canCancel }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onClick="{{ s.cancel }}">やめる</button></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:28px;padding-top:8px">
+            <div class="card" style="padding:22px;gap:16px;background:{{ nextBg }}"><span class="card-kicker" style="color:{{ nextKicker }}">{{ nextKickerText }}</span><div class="card-title" style="font-size:20px">{{ nextTitle }}</div><p class="card-body" style="opacity:1;color:{{ nextBody }};margin:0">{{ nextText }}</p><button class="btn btn-primary btn-block" style="opacity:{{ proceedOpacity }}" onClick="{{ goProjectsIfReady }}">{{ proceedLabel }}</button></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--color-neutral-700)"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">ログイン</span><span style="display:flex;justify-content:space-between"><span>Google</span><span>michito@gmail.com</span></span><a href="#" style="color:var(--color-neutral-600)" onClick="{{ goLogin }}">ログアウト</a></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--color-neutral-600)"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase">プロトタイプ操作</span><span>Convex の「接続する」→ 2秒後に成功／失敗を選べます</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========== PROJECTS ========== -->
+    <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:grid;grid-template-rows:auto 1fr;animation:fadein .25s ease">
+        <div class="nav" style="padding:14px 40px"><span class="nav-brand">ADHD Stack</span><a href="#" style="color:var(--color-neutral-500)" onClick="{{ goConnect }}">接続</a><a href="#" aria-current="page" onClick="{{ goProjects }}">プロジェクト</a><span style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--color-neutral-700);margin-left:16px">michito@gmail.com<span style="width:28px;height:28px;border-radius:50%;background:var(--color-accent-100);color:var(--color-accent-800);display:grid;place-items:center;font-size:11px">MS</span></span></div>
+        <div style="padding:40px 40px 0;display:flex;flex-direction:column;gap:28px">
+          <sc-if value="{{ hasReturnSummary }}" hint-placeholder-val="{{ false }}"><div><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">おかえりなさい · 最後に見たのは昨日 18:12</span><h1 style="font-size:36px;margin:12px 0 0;line-height:1.1">留守中に、2つ進みました。</h1></div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <a href="#" class="card elev-sm" style="padding:20px 22px;gap:10px;text-decoration:none;color:inherit;outline:1px solid var(--color-accent-2-300)" onClick="{{ goQuestion }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:10px;align-items:center"><span class="card-title" style="font-size:18px">ログイン導線</span><span class="tag tag-accent-2">あなたの返事待ち</span></span><span style="font-size:12px;color:var(--color-neutral-600)">task-board · 昨日 18:40</span></div><span style="font-size:14px;color:var(--color-neutral-800)">どのログイン方法を足しますか？ — GitHub / メール / 両方</span><span style="font-size:13px;color:var(--color-accent-700)">答える →</span></a>
+              <a href="#" class="card elev-sm" style="padding:20px 22px;gap:10px;text-decoration:none;color:inherit" onClick="{{ goEditor }}"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:10px;align-items:center"><span class="card-title" style="font-size:18px">モバイルUI</span><span class="tag tag-accent">できました</span></span><span style="font-size:12px;color:var(--color-neutral-600)">task-board · 8分前</span></div><span style="font-size:14px;color:var(--color-neutral-800)">タスク一覧を「今日やること」と「完了」に分けました。2ファイル、プレビューに反映済み。</span><span style="font-size:13px;color:var(--color-accent-700)">プレビューを見る →</span></a>
+            </div>
+            <a href="#" style="font-size:14px" onClick="{{ dismissSummary }}">すべてのプロジェクトを見る →</a>
+          </sc-if>
+          <sc-if value="{{ noReturnSummary }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><h1 style="font-size:36px;margin:0;line-height:1.1">プロジェクト</h1><p style="font-size:15px;color:var(--color-neutral-700);margin:10px 0 0">進行中のプレビューから、すぐ続きを始められます。</p></div><button class="btn btn-primary" onClick="{{ openNewProject }}">＋ 新しいプロジェクト</button></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+              <div class="card" style="padding:18px 20px;gap:6px"><span style="font-size:12px;color:var(--color-neutral-700)">作業中</span><span style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1;color:var(--color-accent-700)">2</span></div>
+              <div class="card" style="padding:18px 20px;gap:6px"><span style="font-size:12px;color:var(--color-neutral-700)">要確認</span><span style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1;color:var(--color-accent-2-700)">1</span></div>
+              <div class="card" style="padding:18px 20px;gap:6px"><span style="font-size:12px;color:var(--color-neutral-700)">検証待ち</span><span style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1">1</span></div>
+              <div class="card" style="padding:18px 20px;gap:6px"><span style="font-size:12px;color:var(--color-neutral-700)">今週の本番反映</span><span style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1">3</span></div>
+            </div>
+            <table class="table">
+              <thead><tr><th>プロジェクト</th><th>最新のプレビュー</th><th>状態</th><th>本番</th><th>更新</th><th></th></tr></thead>
+              <tbody>
+                <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+                  <tr><td style="font-family:var(--font-heading);font-weight:600;font-size:16px">{{ p.name }}</td><td>{{ p.session }}</td><td><span class="{{ p.tagClass }}">{{ p.status }}</span></td><td style="color:var(--color-neutral-700)">{{ p.url }}</td><td style="color:var(--color-neutral-700)">{{ p.updated }}</td><td style="text-align:right"><button class="btn btn-ghost" style="padding:5px 10px;font-size:13px" onClick="{{ p.open }}">開く →</button></td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========== CREATING ========== -->
+    <sc-if value="{{ isCreating }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:grid;grid-template-columns:1fr 1fr;gap:64px;padding:64px 120px;align-content:center;animation:fadein .25s ease;box-sizing:border-box">
+        <div style="display:flex;flex-direction:column;gap:24px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);display:flex;gap:8px;align-items:center"><i style="width:7px;height:7px;border-radius:50%;background:var(--color-accent);animation:ticker 1.2s ease-in-out infinite"></i>用意しています</span><h1 style="font-size:40px;line-height:1.1;margin:0">{{ newProjectName }} を<br>つくっています。</h1>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:15px">
+            <sc-for list="{{ creatingSteps }}" as="st" hint-placeholder-count="5"><span style="display:flex;gap:12px;align-items:baseline;color:{{ st.color }}"><span style="color:{{ st.markColor }};animation:{{ st.anim }}">{{ st.mark }}</span><span>{{ st.label }}</span></span></sc-for>
+          </div><span style="font-size:13px;color:var(--color-neutral-600)">この画面を閉じても進みます。終わったら通知します。</span></div>
+        <div class="card elev-md" style="padding:24px;gap:16px;align-self:center"><span style="font-family:var(--font-heading);font-weight:600;font-size:18px">待っている間に、最初の指示を書いておけます</span><textarea class="input" rows="5" placeholder="例: 今日やることを並べて、チェックで消せるだけのアプリ。スマホで使う。" style="resize:none;min-height:120px;font-size:15px"></textarea><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--color-neutral-600)">準備が終わり次第、自動で始めます</span><button class="btn btn-primary" onClick="{{ finishCreating }}">予約して始める</button></div></div>
+      </div>
+    </sc-if>
+
+    <!-- ========== EDITOR ========== -->
+    <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:grid;grid-template-columns:{{ editorCols }};grid-template-rows:auto minmax(0,1fr) {{ termRows }};animation:fadein .25s ease;transition:grid-template-columns .25s ease">
+        <aside style="grid-row:1/4;grid-column:1;background:var(--color-surface);padding:20px 16px;display:flex;flex-direction:column;gap:22px;font-size:14px;overflow:hidden">
+          <span class="nav-brand" style="margin:0 8px">ADHD Stack</span>
+          <a href="#" style="display:flex;justify-content:space-between;padding:8px;border-radius:var(--radius-md);text-decoration:none;color:inherit" onClick="{{ goProjects }}"><span style="font-family:var(--font-heading);font-weight:600">{{ projectName }}</span><span style="color:var(--color-neutral-500)">▾</span></a>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding:0 8px 6px">環境</span>
+            <a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:var(--radius-md);text-decoration:none;color:inherit" onClick="{{ goEnvs }}"><span style="display:flex;align-items:center;gap:8px"><i style="width:6px;height:6px;border-radius:50%;background:var(--color-text)"></i>本番</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ prodVersion }}</span></a>
+            <a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:var(--radius-md);text-decoration:none;color:inherit" onClick="{{ goEnvs }}"><span style="display:flex;align-items:center;gap:8px"><i style="width:6px;height:6px;border-radius:50%;background:var(--color-neutral-500)"></i>検証</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ stagingVersion }}</span></a>
+            <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding:14px 8px 6px">プレビュー · {{ previewCount }}</span>
+            <sc-for list="{{ previews }}" as="pv" hint-placeholder-count="3">
+              <a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:var(--radius-md);text-decoration:none;background:{{ pv.bg }};color:{{ pv.color }}" onClick="{{ pv.select }}"><span style="display:flex;align-items:center;gap:8px"><i style="width:6px;height:6px;border-radius:50%;background:{{ pv.dot }};border:{{ pv.dotBorder }};animation:{{ pv.anim }}"></i>{{ pv.name }}</span><span style="font-size:12px">{{ pv.state }}</span></a>
+            </sc-for>
+            <button class="btn btn-ghost" style="justify-content:flex-start;margin-top:6px;font-size:13px" onClick="{{ openNewPreview }}">＋ 新しいプレビュー</button>
+          </div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:0 8px;font-size:12px;color:var(--color-neutral-700)"><span style="display:flex;justify-content:space-between"><span>今日の AI 利用</span><span style="color:{{ usageColor }}">{{ usagePct }}%</span></span><div style="height:4px;background:var(--color-neutral-200);border-radius:var(--radius-md);overflow:hidden"><div style="width:{{ usagePct }}%;height:100%;background:{{ usageColor }};transition:width .4s"></div></div><div class="seg" style="align-self:flex-start;margin-top:8px"><label class="seg-opt" style="padding:4px 9px;font-size:11px"><input type="radio" name="theme" checked="{{ themeIsLight }}" onChange="{{ setLight }}">明</label><label class="seg-opt" style="padding:4px 9px;font-size:11px"><input type="radio" name="theme" checked="{{ themeIsDark }}" onChange="{{ setDark }}">暗</label><label class="seg-opt" style="padding:4px 9px;font-size:11px"><input type="radio" name="theme" checked="{{ themeIsAuto }}" onChange="{{ setAuto }}">自動</label></div><a href="#" style="color:inherit;text-decoration:none;margin-top:6px" onClick="{{ goProjects }}">← プロジェクト一覧</a><a href="#" style="color:inherit;text-decoration:none" onClick="{{ goConnect }}">接続を管理</a></div>
+        </aside>
+
+        <div style="grid-row:1;grid-column:2/4;display:flex;justify-content:space-between;align-items:center;padding:10px 16px 10px 24px;border-bottom:1px solid var(--color-neutral-200);gap:16px;min-width:0">
+          <span style="display:flex;align-items:center;gap:10px;font-size:13px;min-width:0;flex:1;color:var(--color-neutral-700)"><span style="white-space:nowrap">{{ projectName }}</span><span style="color:var(--color-neutral-500)">／</span><span style="font-family:var(--font-heading);font-weight:600;color:var(--color-text);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ activePreview.name }}</span><span class="{{ activePreview.tagClass }}" style="flex:none">{{ activePreview.state }}</span></span>
+          <span style="display:flex;align-items:center;gap:6px;flex:none">
+            <div class="seg"><label class="seg-opt" style="padding:6px 10px"><input type="radio" name="rtab" checked="{{ tabIsScreen }}" onChange="{{ tabScreen }}">ブラウザ</label><label class="seg-opt" style="padding:6px 10px"><input type="radio" name="rtab" checked="{{ tabIsSource }}" onChange="{{ tabSource }}">ソース</label><label class="seg-opt" style="padding:6px 10px"><input type="radio" name="rtab" checked="{{ tabIsChanges }}" onChange="{{ tabChanges }}">変更 {{ changeCount }}</label><label class="seg-opt" style="padding:6px 10px"><input type="radio" name="rtab" checked="{{ tabIsHistory }}" onChange="{{ tabHistory }}">履歴</label><label class="seg-opt" style="padding:6px 10px"><input type="radio" name="rtab" checked="{{ tabIsSide }}" onChange="{{ tabSide }}">相談</label></div>
+            <button class="btn btn-icon btn-ghost" style="width:34px;height:34px;background:{{ termBtnBg }}" title="ターミナル（下パネル）" onClick="{{ toggleTerminal }}"><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><path opacity=".2" d="M216 56v144a8 8 0 0 1-8 8H48a8 8 0 0 1-8-8V56a8 8 0 0 1 8-8h160a8 8 0 0 1 8 8Z"/><path d="M208 40H48a16 16 0 0 0-16 16v144a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V56a16 16 0 0 0-16-16Zm0 160H48V56h160Zm-91.2-73.6-32 24a8 8 0 0 1-9.6-12.8L98.7 120 75.2 102.4a8 8 0 0 1 9.6-12.8l32 24a8 8 0 0 1 0 12.8ZM184 160h-48a8 8 0 0 1 0-16h48a8 8 0 0 1 0 16Z"/></svg></button>
+            <button class="btn btn-icon btn-ghost" style="width:34px;height:34px;background:{{ panelBtnBg }}" title="{{ panelBtnTitle }}" onClick="{{ togglePanel }}"><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><path opacity=".2" d="M160 48v160h56a8 8 0 0 0 8-8V56a8 8 0 0 0-8-8Z"/><path d="M216 40H40a16 16 0 0 0-16 16v144a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V56a16 16 0 0 0-16-16ZM40 56h112v144H40Zm176 144h-48V56h48Z"/></svg></button>
+            <span style="width:1px;height:22px;background:var(--color-neutral-200);margin:0 4px"></span>
+            <button class="btn btn-icon btn-ghost" style="width:34px;height:34px" title="保存ポイントに名前を付ける" onClick="{{ nameSavepoint }}"><svg width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><path opacity=".2" d="M216 120v88a8 8 0 0 1-8 8H48a8 8 0 0 1-8-8V48a8 8 0 0 1 8-8h88Z"/><path d="M221.7 66.3l-32-32a8 8 0 0 0-11.4 0L72 140.7V184h43.3l106.4-106.3a8 8 0 0 0 0-11.4ZM108.7 168H88v-20.7l80-80L188.7 88ZM216 120v88a16 16 0 0 1-16 16H56a16 16 0 0 1-16-16V56a16 16 0 0 1 16-16h88a8 8 0 0 1 0 16H56v152h144v-88a8 8 0 0 1 16 0Z"/></svg></button><button class="btn btn-primary" style="padding:7px 14px;font-size:13px;opacity:{{ promoteOpacity }}" onClick="{{ openPromoteStaging }}">検証へ送る</button>
+          </span>
+        </div>
+        <div style="grid-row:2;grid-column:2;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0;border-right:1px solid var(--color-neutral-200)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px 6px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">チャット</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ activePreview.name }} と話しています</span></div>
+          <div style="padding:8px 24px;display:flex;flex-direction:column;gap:20px;overflow:auto;min-height:0" ref="{{ chatRef }}">
+            <sc-for list="{{ messages }}" as="m" hint-placeholder-count="3">
+              <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ false }}"><div style="align-self:flex-end;max-width:85%;padding:12px 16px;border-radius:var(--radius-md);background:var(--color-surface);font-size:15px;line-height:1.5;animation:fadein .2s ease">{{ m.text }}</div></sc-if>
+              <sc-if value="{{ m.isThinking }}" hint-placeholder-val="{{ false }}"><details open="{{ true }}" style="font-size:14px;animation:fadein .2s ease"><summary style="cursor:pointer;color:var(--color-neutral-600);list-style:none;display:flex;gap:8px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase">考え中</span><span style="color:var(--color-neutral-500)">· {{ m.meta }}</span></summary><p style="font-style:italic;color:var(--color-neutral-700);margin:10px 0 0;line-height:1.6;padding-left:12px;border-left:2px solid var(--color-neutral-200)">{{ m.text }}</p></details></sc-if>
+              <sc-if value="{{ m.isAi }}" hint-placeholder-val="{{ true }}"><p style="font-size:15px;line-height:1.65;margin:0;animation:fadein .2s ease">{{ m.text }}</p></sc-if>
+              <sc-if value="{{ m.isCmd }}" hint-placeholder-val="{{ false }}"><div class="card" style="padding:10px 14px;gap:2px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.8;color:var(--color-neutral-800);animation:fadein .2s ease"><sc-for list="{{ m.lines }}" as="ln" hint-placeholder-count="2"><div><span style="color:var(--color-accent)">$</span> {{ ln }}</div></sc-for></div></sc-if>
+              <sc-if value="{{ m.isStatus }}" hint-placeholder-val="{{ false }}"><p style="font-size:14px;color:var(--color-neutral-600);margin:0;display:flex;gap:8px;align-items:center;animation:fadein .2s ease"><span style="color:var(--color-accent);animation:ticker 1.2s ease-in-out infinite">●</span>{{ m.text }}</p></sc-if>
+              <sc-if value="{{ m.isChanges }}" hint-placeholder-val="{{ false }}"><div class="card" style="padding:12px 14px;gap:6px;font-size:13px;animation:fadein .2s ease"><span style="display:flex;justify-content:space-between"><span>変更 · {{ m.meta }}</span><a href="#" onClick="{{ tabChanges }}">変更を見る →</a></span><sc-for list="{{ m.files }}" as="f" hint-placeholder-count="2"><span style="display:flex;justify-content:space-between;color:var(--color-neutral-700)"><span>{{ f.path }}</span><span><span style="color:var(--color-accent-700)">{{ f.add }}</span> <span style="color:var(--color-accent-2-700)">{{ f.del }}</span></span></span></sc-for></div></sc-if>
+              <sc-if value="{{ m.isQuestion }}" hint-placeholder-val="{{ false }}"><div class="card elev-md" style="padding:20px;gap:14px;outline:1px solid var(--color-accent-2-300);animation:fadein .2s ease"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-2-700)">あなたの返事を待っています</span><span style="font-family:var(--font-heading);font-weight:600;font-size:18px;line-height:1.3">{{ m.text }}</span><div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ m.options }}" as="o" hint-placeholder-count="3"><button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;color:var(--color-text);padding:10px 14px" onClick="{{ o.pick }}"><span style="display:flex;flex-direction:column;gap:2px;align-items:flex-start"><span>{{ o.label }}</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ o.note }}</span></span></button></sc-for></div></div></sc-if>
+              <sc-if value="{{ m.isApproval }}" hint-placeholder-val="{{ false }}"><div class="card elev-md" style="padding:20px;gap:12px;outline:1px solid var(--color-accent-2-300);animation:fadein .2s ease"><span class="tag tag-accent-2" style="align-self:flex-start">確認が必要</span><span style="font-family:var(--font-heading);font-weight:600;font-size:18px;line-height:1.3">{{ m.text }}</span><p style="font-size:14px;line-height:1.6;margin:0;color:var(--color-neutral-800)">{{ m.note }}</p><div style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--color-neutral-800);background:var(--color-surface);padding:8px 12px;border-radius:var(--radius-sm)">{{ m.cmd }}</div><span style="font-size:13px;display:flex;gap:8px"><span style="color:var(--color-accent-700)">✓</span>消す前に保存ポイントを自動で作ります。7日間戻せます</span><div style="display:flex;gap:8px"><button class="btn btn-ghost" style="padding:8px 12px;font-size:13px" onClick="{{ m.deny }}">やめる（別の方法を頼む）</button><button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onClick="{{ m.approve }}">消していい</button></div></div></sc-if>
+              <sc-if value="{{ m.isSecret }}" hint-placeholder-val="{{ false }}"><div class="card elev-md" style="padding:20px;gap:14px;outline:1px solid var(--color-accent-300);animation:fadein .2s ease"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">鍵を入れる · プレビュー「{{ activePreview.name }}」用</span><div class="field"><label>STRIPE_SECRET_KEY</label><input class="input" type="password" placeholder="sk_test_…" style="font-family:ui-monospace,Menlo,monospace"></div><div class="field"><label>STRIPE_WEBHOOK_SECRET</label><input class="input" type="password" placeholder="whsec_…" style="font-family:ui-monospace,Menlo,monospace"></div><span style="font-size:12px;color:var(--color-neutral-600)">チャットの記録には残らず、環境ごとに暗号化して保存します。本番に反映する時に本番用を聞きます。</span><div style="display:flex;gap:8px"><button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onClick="{{ m.save }}">保存して続ける</button><button class="btn btn-ghost" style="padding:8px 12px;font-size:13px" onClick="{{ m.later }}">あとで</button></div></div></sc-if>
+              <sc-if value="{{ m.isLimit }}" hint-placeholder-val="{{ false }}"><div class="card" style="padding:20px;gap:12px;background:var(--color-accent-2-100);color:var(--color-accent-2-800);animation:fadein .2s ease"><span class="tag tag-accent-2" style="align-self:flex-start">今日の上限に達しました</span><span style="font-family:var(--font-heading);font-weight:600;font-size:18px;line-height:1.3">ここまでの作業は保存してあります。</span><span style="font-size:14px;line-height:1.6">OpenAI の利用枠（5時間ごと）を使い切りました。14:00 に自動で続きから再開します。</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" style="padding:8px 16px;font-size:13px" onClick="{{ m.wait }}">14:00 に自動再開（通知する）</button><button class="btn btn-secondary" style="padding:8px 16px;font-size:13px;color:var(--color-text);background:var(--color-bg)" onClick="{{ m.resetUsage }}">別の鍵で続ける</button></div></div></sc-if>
+              <sc-if value="{{ m.isPublished }}" hint-placeholder-val="{{ false }}"><div class="card elev-md" style="padding:20px;gap:12px;background:var(--color-accent-100);animation:fadein .2s ease"><span class="card-kicker">{{ m.meta }}</span><a href="#" style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.15;color:var(--color-accent-800)">{{ m.text }}</a><div style="display:flex;gap:8px"><button class="btn btn-primary" style="padding:8px 16px;font-size:13px">開く</button><button class="btn btn-secondary" style="padding:8px 16px;font-size:13px;color:var(--color-text);background:var(--color-bg)">URLをコピー</button></div></div></sc-if>
+            </sc-for>
+          </div>
+          <div style="padding:12px 24px 20px"><div class="card elev-sm" style="padding:8px 8px 8px 16px;flex-direction:row;align-items:center;gap:10px;opacity:{{ composerOpacity }}"><input placeholder="{{ composerPlaceholder }}" value="{{ draft }}" onChange="{{ setDraft }}" onKeyDown="{{ onKey }}" style="flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:15px;color:inherit;min-width:0"><button class="btn btn-icon btn-ghost" style="width:40px;height:40px" onClick="{{ toggleVoice }}" title="音声入力"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor" style="color:{{ voiceColor }}"><path opacity=".2" d="M176 64v64a48 48 0 0 1-96 0V64a48 48 0 0 1 96 0Z"/><path d="M128 176a48.05 48.05 0 0 0 48-48V64a48 48 0 0 0-96 0v64a48.05 48.05 0 0 0 48 48ZM96 64a32 32 0 0 1 64 0v64a32 32 0 0 1-64 0Zm40 143.6V232a8 8 0 0 1-16 0v-24.4A80.1 80.1 0 0 1 48 128a8 8 0 0 1 16 0 64 64 0 0 0 128 0 8 8 0 0 1 16 0 80.1 80.1 0 0 1-72 79.6Z"/></svg></button><button class="btn btn-icon btn-primary" style="width:40px;height:40px" onClick="{{ sendOrStop }}"><sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><rect x="56" y="56" width="144" height="144" rx="12"/></svg></sc-if><sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M205.7 122.3l-72-72a8 8 0 0 0-11.4 0l-72 72a8 8 0 0 0 11.4 11.4L120 75.3V216a8 8 0 0 0 16 0V75.3l58.3 58.4a8 8 0 0 0 11.4-11.4Z"/></svg></sc-if></button></div>
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"><span style="font-size:11px;color:var(--color-neutral-600);align-self:center;margin-right:4px">試す：</span><button class="tag tag-neutral" style="cursor:pointer;font:inherit;font-size:12px" onClick="{{ demoQuestion }}">質問される</button><button class="tag tag-neutral" style="cursor:pointer;font:inherit;font-size:12px" onClick="{{ demoApproval }}">危険操作</button><button class="tag tag-neutral" style="cursor:pointer;font:inherit;font-size:12px" onClick="{{ demoSecret }}">鍵を要求</button><button class="tag tag-neutral" style="cursor:pointer;font:inherit;font-size:12px" onClick="{{ demoLimit }}">上限</button><button class="tag tag-neutral" style="cursor:pointer;font:inherit;font-size:12px" onClick="{{ demoDisconnect }}">切断</button></div>
+          </div>
+        </div>
+
+        <sc-if value="{{ panelOpen }}" hint-placeholder-val="{{ true }}"><div style="grid-row:2;grid-column:3;display:grid;grid-template-rows:auto minmax(0,1fr);min-width:0;min-height:0;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px 10px;gap:16px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">{{ panelTitle }}</span><span style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--color-neutral-600)"><span>{{ panelSub }}</span><button class="btn btn-icon btn-ghost" style="width:28px;height:28px" title="閉じる" onClick="{{ togglePanel }}">×</button></span></div>
+
+          <!-- tab: screen -->
+          <sc-if value="{{ tabIsScreen }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-rows:auto minmax(0,1fr);margin:0 24px 20px 0;min-height:0;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-icon btn-ghost" style="width:32px;height:32px" title="再読み込み" onClick="{{ reloadBrowser }}"><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M224 128a96 96 0 1 1-28.1-67.9l17.4-17.4A8 8 0 0 1 227 48.4V96a8 8 0 0 1-8 8h-47.6a8 8 0 0 1-5.7-13.7l18.9-18.9A80 80 0 1 0 208 128a8 8 0 0 1 16 0Z"/></svg></button>
+                <div class="card" style="flex:1;flex-direction:row;align-items:center;gap:8px;padding:5px 8px 5px 12px;min-width:0"><span style="color:{{ liveDotColor }};font-size:10px">●</span><input value="{{ browserUrl }}" onChange="{{ setBrowserUrl }}" onKeyDown="{{ browserKey }}" spellCheck="{{ false }}" style="flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:13px;color:inherit;min-width:0"><span style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap">{{ screenStamp }}</span></div>
+                <div class="seg"><label class="seg-opt" style="padding:5px 9px;font-size:12px"><input type="radio" name="dev" checked="{{ devIsPhone }}" onChange="{{ setPhone }}">スマホ</label><label class="seg-opt" style="padding:5px 9px;font-size:12px"><input type="radio" name="dev" checked="{{ devIsDesk }}" onChange="{{ setDesk }}">PC</label></div>
+                <a class="btn btn-icon btn-ghost" style="width:32px;height:32px" title="新しいタブで開く" href="{{ browserHref }}" target="_blank" rel="noreferrer"><svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor"><path d="M224 104a8 8 0 0 1-16 0V59.3l-66.3 66.4a8 8 0 0 1-11.4-11.4L196.7 48H152a8 8 0 0 1 0-16h64a8 8 0 0 1 8 8Zm-40 24a8 8 0 0 0-8 8v72H48V80h72a8 8 0 0 0 0-16H48a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16v-72a8 8 0 0 0-8-8Z"/></svg></a>
+              </div>
+              <div style="display:grid;place-items:center;background:var(--color-surface);border-radius:var(--radius-md);position:relative;min-height:0;overflow:hidden;padding:{{ devPad }}">
+                <sc-if value="{{ browserIsLive }}" hint-placeholder-val="{{ false }}"><iframe key="{{ browserKey_ }}" src="{{ browserHref }}" title="preview" style="width:{{ devW }};height:{{ devH }};max-height:100%;border:0;background:var(--color-bg);border-radius:{{ devRadius }};box-shadow:var(--shadow-md);opacity:{{ screenOpacity }};transition:opacity .3s"></iframe></sc-if>
+                <sc-if value="{{ browserIsMock }}" hint-placeholder-val="{{ true }}">
+                  <div style="width:{{ devW }};height:{{ devH }};max-height:100%;overflow:auto;background:var(--color-bg);border-radius:{{ devRadius }};box-shadow:var(--shadow-md);padding:40px 20px;display:flex;flex-direction:column;gap:14px;font-size:14px;box-sizing:border-box;transition:opacity .3s;opacity:{{ screenOpacity }}">
+                    <span style="font-family:var(--font-heading);font-weight:600;font-size:22px">今日やること</span>
+                    <sc-for list="{{ openTasks }}" as="t" hint-placeholder-count="3"><div class="card" style="padding:12px 14px;flex-direction:row;gap:10px;align-items:center;cursor:pointer" onClick="{{ t.toggle }}"><i style="width:16px;height:16px;border:1.5px solid var(--color-neutral-500);border-radius:var(--radius-sm)"></i>{{ t.title }}</div></sc-for>
+                    <sc-if value="{{ splitDone }}" hint-placeholder-val="{{ false }}"><span style="font-family:var(--font-heading);font-weight:600;font-size:16px;color:var(--color-neutral-600);margin-top:8px">完了 · {{ doneCount }}</span></sc-if>
+                    <sc-for list="{{ doneTasks }}" as="t" hint-placeholder-count="2"><div class="card" style="padding:12px 14px;flex-direction:row;gap:10px;align-items:center;opacity:{{ doneOpacity }};text-decoration:line-through;cursor:pointer" onClick="{{ t.toggle }}"><i style="width:16px;height:16px;background:var(--color-accent);border-radius:var(--radius-sm)"></i>{{ t.title }}</div></sc-for>
+                    <span class="btn btn-primary btn-block" style="margin-top:auto;flex:none">＋ 追加</span>
+                  </div>
+                  <span style="position:absolute;left:16px;bottom:10px;font-size:11px;color:var(--color-neutral-600)">プロトタイプ描画（URL に https:// を入れると実ページを表示）</span>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- tab: source -->
+          <sc-if value="{{ tabIsSource }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:220px 1fr;min-height:0">
+              <div style="padding:8px 12px 20px 24px;font-size:13px;display:flex;flex-direction:column;gap:2px;overflow:auto">
+                <sc-for list="{{ fileTree }}" as="f" hint-placeholder-count="8"><a href="#" onClick="{{ f.open }}" style="display:flex;justify-content:space-between;padding:5px 8px;margin-left:{{ f.indent }};border-radius:var(--radius-md);background:{{ f.bg }};color:{{ f.color }};font-weight:{{ f.weight }};font-family:{{ f.font }};text-decoration:none;cursor:{{ f.cursor }}">{{ f.label }}<span style="font-size:11px;color:{{ f.badgeColor }}">{{ f.badge }}</span></a></sc-for>
+              </div>
+              <div style="margin:0 24px 20px 0;background:var(--color-surface);border-radius:var(--radius-md);padding:16px 0;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.8;color:var(--color-neutral-800);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px;font-family:var(--font-body);font-size:12px;color:var(--color-neutral-600)"><span>{{ sourceFile }}</span><span style="display:flex;gap:8px;align-items:center"><span>{{ sourceNote }}</span>
+                  <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}"><button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onClick="{{ askAboutFile }}">このファイルについて聞く</button><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;color:var(--color-text)" onClick="{{ startEdit }}">編集する</button></sc-if>
+                  <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onClick="{{ cancelEdit }}">やめる</button><button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onClick="{{ saveEdit }}">保存して反映</button></sc-if>
+                </span></div>
+                <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:40px 1fr;column-gap:16px;padding:0 20px;overflow:auto;align-content:start">
+                  <sc-for list="{{ sourceLines }}" as="ln" hint-placeholder-count="12"><span style="color:{{ ln.numColor }};text-align:right;background:{{ ln.bg }}">{{ ln.n }}</span><span style="background:{{ ln.bg }};white-space:pre">{{ ln.code }}</span></sc-for>
+                </div></sc-if>
+                <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}"><textarea value="{{ editDraft }}" onChange="{{ setEditDraft }}" spellCheck="{{ false }}" style="margin:0 20px;border:0;outline:0;resize:none;background:transparent;color:inherit;font:inherit;line-height:inherit;white-space:pre;overflow:auto;min-height:0;height:100%;box-sizing:border-box;padding:0 0 0 56px"></textarea></sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- tab: changes -->
+          <sc-if value="{{ tabIsChanges }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:240px 1fr;min-height:0">
+              <div style="padding:8px 12px 20px 24px;font-size:13px;display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding:0 0 8px">変更 · {{ changeCount }}ファイル</span>
+                <sc-for list="{{ changedFiles }}" as="f" hint-placeholder-count="2"><span style="display:flex;justify-content:space-between;padding:7px 8px;border-radius:var(--radius-md);background:{{ f.bg }};color:{{ f.color }}"><span>{{ f.path }}</span><span><span style="color:var(--color-accent-700)">{{ f.add }}</span> <span style="color:var(--color-accent-2-700)">{{ f.del }}</span></span></span></sc-for>
+                <sc-if value="{{ noChanges }}" hint-placeholder-val="{{ false }}"><span style="color:var(--color-neutral-600);padding:8px 0">最後の保存ポイント以降、変更はありません。</span></sc-if>
+                <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px"><button class="btn btn-ghost" style="justify-content:flex-start;font-size:13px;opacity:{{ promoteOpacity }}" onClick="{{ revertChanges }}">元に戻す</button></div>
+              </div>
+              <div style="margin:0 24px 20px 0;background:var(--color-surface);border-radius:var(--radius-md);padding:16px 20px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.75;color:var(--color-neutral-800);overflow:hidden">
+                <sc-for list="{{ diffLines }}" as="d" hint-placeholder-count="10"><div style="color:{{ d.color }};background:{{ d.bg }};white-space:pre">{{ d.text }}</div></sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- tab: side chat -->
+          <sc-if value="{{ tabIsSide }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-rows:auto minmax(0,1fr) auto;margin:0 24px 20px 0;min-height:0;gap:10px">
+              <div class="card" style="padding:12px 14px;gap:4px;font-size:13px;background:var(--color-accent-100);color:var(--color-accent-800)"><span style="font-family:var(--font-heading);font-weight:600">作業を止めずに聞ける相談窓口</span><span style="line-height:1.5">ここでの会話はコードを変えません。「これどういう意味？」「この後どうする？」を左の作業と並行して。使えそうな答えは「左に送る」で指示にできます。</span></div>
+              <div style="display:flex;flex-direction:column;gap:14px;overflow:auto;min-height:0;padding:4px 2px" ref="{{ sideRef }}">
+                <sc-for list="{{ sideMessages }}" as="sm" hint-placeholder-count="2">
+                  <sc-if value="{{ sm.isUser }}" hint-placeholder-val="{{ false }}"><div style="align-self:flex-end;max-width:85%;padding:10px 14px;border-radius:var(--radius-md);background:var(--color-surface);font-size:14px;line-height:1.5;animation:fadein .2s ease">{{ sm.text }}</div></sc-if>
+                  <sc-if value="{{ sm.isAi }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:6px;animation:fadein .2s ease"><p style="font-size:14px;line-height:1.6;margin:0">{{ sm.text }}</p><sc-if value="{{ sm.hasAction }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" style="align-self:flex-start;padding:4px 10px;font-size:12px" onClick="{{ sm.sendLeft }}">← 左に送る「{{ sm.action }}」</button></sc-if></div></sc-if>
+                  <sc-if value="{{ sm.isStatus }}" hint-placeholder-val="{{ false }}"><p style="font-size:13px;color:var(--color-neutral-600);margin:0;display:flex;gap:8px;align-items:center"><span style="color:var(--color-accent);animation:ticker 1.2s ease-in-out infinite">●</span>{{ sm.text }}</p></sc-if>
+                </sc-for>
+              </div>
+              <div class="card elev-sm" style="padding:6px 6px 6px 14px;flex-direction:row;align-items:center;gap:8px"><input placeholder="相談する… 例: このファイルは何？" value="{{ sideDraft }}" onChange="{{ setSideDraft }}" onKeyDown="{{ sideKey }}" style="flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:inherit;min-width:0"><button class="btn btn-icon btn-primary" style="width:36px;height:36px" onClick="{{ sideSend }}"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M205.7 122.3l-72-72a8 8 0 0 0-11.4 0l-72 72a8 8 0 0 0 11.4 11.4L120 75.3V216a8 8 0 0 0 16 0V75.3l58.3 58.4a8 8 0 0 0 11.4-11.4Z"/></svg></button></div>
+            </div>
+          </sc-if>
+
+          <!-- tab: history -->
+          <sc-if value="{{ tabIsHistory }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 24px 24px 32px;display:grid;grid-template-columns:24px 1fr;column-gap:20px;align-content:start;font-size:14px;overflow:auto;min-height:0">
+              <sc-for list="{{ history }}" as="h" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:{{ h.dot }};margin-top:22px;flex:none"></i><i style="flex:1;width:1px;background:var(--color-neutral-200)"></i></div>
+                <div style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;border-radius:var(--radius-md);background:{{ h.bg }};margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:16px">{{ h.title }}</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ h.when }}</span></div><span style="font-size:13px;color:var(--color-neutral-700)">{{ h.meta }}</span><sc-if value="{{ h.canRevert }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;margin-top:2px;font-size:13px"><a href="#" onClick="{{ h.revert }}">この時点に戻す</a></div></sc-if></div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div></sc-if>
+        <sc-if value="{{ termOpen }}" hint-placeholder-val="{{ false }}"><div style="grid-row:3;grid-column:2/4;border-top:1px solid var(--color-neutral-200);background:var(--color-surface);display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 24px 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)"><span style="display:flex;gap:14px;align-items:center"><span>ターミナル</span><span style="letter-spacing:0;text-transform:none;font-size:12px;color:var(--color-neutral-500)">Cloudflare Sandbox · {{ activePreview.name }} · /workspace/{{ projectName }}</span></span><span style="display:flex;gap:6px;align-items:center"><button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;letter-spacing:0;text-transform:none" onClick="{{ clearTerm }}">消去</button><button class="btn btn-icon btn-ghost" style="width:24px;height:24px" onClick="{{ toggleTerminal }}">×</button></span></div>
+          <div style="padding:0 24px 10px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.7;color:var(--color-neutral-800);overflow:auto;min-height:0" ref="{{ termRef }}"><sc-for list="{{ termLines }}" as="t" hint-placeholder-count="4"><div style="white-space:pre-wrap;color:{{ t.color }}">{{ t.text }}</div></sc-for><div style="display:flex;gap:8px;align-items:center"><span style="color:var(--color-accent)">$</span><input value="{{ termDraft }}" onChange="{{ setTermDraft }}" onKeyDown="{{ termKey }}" placeholder="コマンドを入力… 例: pnpm test" style="flex:1;border:0;outline:0;background:transparent;font:inherit;color:inherit;min-width:0"></div></div>
+        </div></sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ========== ENVIRONMENTS ========== -->
+    <sc-if value="{{ isEnvs }}" hint-placeholder-val="{{ false }}">
+      <div style="height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);animation:fadein .25s ease">
+        <div class="nav" style="padding:14px 40px"><span class="nav-brand">ADHD Stack</span><a href="#" onClick="{{ goProjects }}">プロジェクト</a><a href="#" style="font-family:var(--font-heading);font-weight:600" onClick="{{ goEditor }}">{{ projectName }}</a><a href="#" aria-current="page">環境</a></div>
+        <div style="padding:40px 40px 40px;display:flex;flex-direction:column;gap:36px;overflow:auto;min-height:0">
+          <sc-if value="{{ deployFailed }}" hint-placeholder-val="{{ false }}"><div class="card" style="padding:18px 22px;gap:10px;background:var(--color-accent-2-100);color:var(--color-accent-2-800)"><div style="display:flex;justify-content:space-between;align-items:center"><span class="tag tag-accent-2">反映に失敗</span><span style="font-size:12px">たった今</span></div><span style="font-family:var(--font-heading);font-weight:600;font-size:22px">本番は {{ prodVersion }} のまま動いています。</span><span style="font-size:14px;line-height:1.6">検証 {{ stagingVersion }} → 本番 の反映がビルドの途中で止まりました。本番の環境変数に RESEND_API_KEY がありません。誰にも影響は出ていません。</span><div style="display:flex;gap:10px;margin-top:6px"><button class="btn btn-primary" onClick="{{ fixAndRetry }}">鍵を入れてやり直す</button><button class="btn btn-secondary" style="color:var(--color-text);background:var(--color-bg)" onClick="{{ goEditor }}">AI に直させる</button><button class="btn btn-ghost" onClick="{{ dismissFail }}">今回はやめる</button></div></div></sc-if>
+          <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><h1 style="font-size:36px;margin:0;line-height:1.1">環境</h1><p style="font-size:15px;color:var(--color-neutral-700);margin:10px 0 0">プレビューで試し、検証で確かめ、本番に出す。プレビューはいくつでも作れます。</p></div><button class="btn btn-primary" onClick="{{ openNewPreview }}">＋ 新しいプレビュー</button></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;display:flex;gap:10px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:var(--color-accent)"></i>プレビュー <span style="color:var(--color-neutral-600);font-weight:400">{{ previewCount }}</span></span><span style="font-size:12px;color:var(--color-neutral-600)">自由に作って壊せる</span></div>
+              <sc-for list="{{ previews }}" as="pv" hint-placeholder-count="3">
+                <div class="card" style="padding:20px;gap:12px;outline:{{ pv.outline }}"><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-title" style="font-size:20px">{{ pv.name }}</span><span class="{{ pv.tagClass }}">{{ pv.state }}</span></div><a href="#" style="font-size:13px">{{ pv.url }} ↗</a><span style="font-size:13px;color:var(--color-neutral-700)">{{ pv.meta }}</span><div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;color:var(--color-text)" onClick="{{ pv.open }}">開く</button><sc-if value="{{ pv.canPromote }}" hint-placeholder-val="{{ false }}"><button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onClick="{{ pv.promote }}">検証へ送る</button></sc-if><sc-if value="{{ pv.canDelete }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onClick="{{ pv.remove }}">削除</button></sc-if></div></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;display:flex;gap:10px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:var(--color-neutral-500)"></i>検証</span><span style="font-size:12px;color:var(--color-neutral-600)">本番に出す前に確かめる</span></div>
+              <div class="card" style="padding:20px;gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-title" style="font-size:20px">{{ stagingVersion }}</span><span class="{{ stagingTagClass }}">{{ stagingTag }}</span></div><a href="#" style="font-size:13px">staging.adhd.gawarago.com ↗</a><span style="font-size:13px;color:var(--color-neutral-700)">{{ stagingMeta }}</span><div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--color-neutral-700);margin-top:4px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">本番との差</span><span>{{ stagingDiff }}</span></div><div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;color:var(--color-text)">差を見る</button><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;opacity:{{ prodPromoteOpacity }}" onClick="{{ openPromoteProd }}">本番へ反映</button></div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;display:flex;gap:10px;align-items:center"><i style="width:10px;height:10px;border-radius:50%;background:var(--color-text)"></i>本番</span><span style="font-size:12px;color:var(--color-neutral-600)">みんなが見る場所</span></div>
+              <div class="card elev-md" style="padding:20px;gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-title" style="font-size:20px">{{ prodVersion }}</span><span class="tag tag-accent">公開中</span></div><a href="#" style="font-size:13px">adhd.gawarago.com ↗</a><span style="font-size:13px;color:var(--color-neutral-700)">{{ prodMeta }}</span><div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-secondary" style="padding:6px 12px;font-size:12px;color:var(--color-text)">開く</button><button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;opacity:{{ rollbackOpacity }}" onClick="{{ rollbackProd }}">前の版に戻す</button></div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--color-neutral-700);padding:8px 4px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">本番の履歴</span><sc-for list="{{ prodHistory }}" as="ph" hint-placeholder-count="2"><span style="display:flex;justify-content:space-between"><span>{{ ph.label }}</span><span>{{ ph.when }}</span></span></sc-for></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========== DIALOGS ========== -->
+    <sc-if value="{{ dlgNewProject }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:560px;padding:36px;gap:22px" onClick="{{ stop }}"><div class="dialog-title" style="font-size:26px">新しいプロジェクト</div><div class="field"><label>プロジェクト名 · そのままリポジトリ名になります</label><input class="input" value="{{ newProjectName }}" onChange="{{ setNewProjectName }}" style="font-size:17px;min-height:46px"></div><div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--color-neutral-700)"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">自動で用意されるもの</span><span style="display:flex;justify-content:space-between"><span>GitHub</span><span style="font-family:ui-monospace,Menlo,monospace">MichitoSugawara/{{ newProjectName }}</span></span><span style="display:flex;justify-content:space-between"><span>実行環境</span><span>Cloudflare Sandbox</span></span><span style="display:flex;justify-content:space-between"><span>本番 / 検証</span><span style="font-family:ui-monospace,Menlo,monospace">{{ newProjectName }}.pages.dev</span></span><span style="display:flex;justify-content:space-between"><span>Convex</span><span style="font-family:ui-monospace,Menlo,monospace">gawa/{{ newProjectName }}</span></span></div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button><button class="btn btn-primary" onClick="{{ createProject }}">作ってエディタへ</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgNewPreview }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:540px;padding:36px;gap:22px" onClick="{{ stop }}"><div class="dialog-title" style="font-size:26px">新しいプレビュー</div><div class="field"><label>名前 · URL にもなります</label><input class="input" value="{{ newPreviewName }}" onChange="{{ setNewPreviewName }}" style="font-size:17px;min-height:46px"><span style="font-size:12px;color:var(--color-neutral-600);margin-top:6px;display:block">{{ newPreviewSlug }}.preview.adhd.gawarago.com</span></div><div class="field"><label>どこから始める</label><div style="display:flex;flex-direction:column;gap:8px;margin-top:4px"><label class="radio" style="display:flex;gap:10px;align-items:flex-start"><input type="radio" name="src" defaultChecked="{{ true }}"><span class="dot"></span><span style="display:flex;flex-direction:column;gap:2px"><span>検証 {{ stagingVersion }} の状態から</span><span style="font-size:12px;color:var(--color-neutral-600)">いま確認中の最新</span></span></label><label class="radio" style="display:flex;gap:10px;align-items:flex-start"><input type="radio" name="src"><span class="dot"></span><span style="display:flex;flex-direction:column;gap:2px"><span>本番 {{ prodVersion }} の状態から</span><span style="font-size:12px;color:var(--color-neutral-600)">みんなが見ているもの</span></span></label></div></div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button><button class="btn btn-primary" onClick="{{ createPreview }}">作って開く</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgPromoteStaging }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:600px;padding:36px;gap:22px" onClick="{{ stop }}"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">{{ activePreview.name }} → 検証</span><div class="dialog-title" style="font-size:26px">検証へ送りますか？</div><p class="dialog-body" style="margin:0;line-height:1.7">staging.adhd.gawarago.com が新しい版になります。本番には影響しません。</p><div style="display:flex;flex-direction:column;gap:8px;font-size:14px"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">含まれる保存ポイント</span><sc-for list="{{ promoteItems }}" as="pi" hint-placeholder-count="2"><span style="display:flex;justify-content:space-between"><span>{{ pi.title }}</span><span style="color:var(--color-neutral-600)">{{ pi.when }}</span></span></sc-for></div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button><button class="btn btn-primary" onClick="{{ promoteToStaging }}">検証へ送る</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgConflict }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:820px;padding:36px;gap:22px" onClick="{{ stop }}"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-2)">{{ activePreview.name }} → 検証</span><div class="dialog-title" style="font-size:26px">「ログイン導線」と同じ場所を変えています</div><p class="dialog-body" style="margin:0;line-height:1.7">先に検証へ送られた「ログイン導線」が app/layout.tsx のヘッダーを変えていて、こちらも同じ場所を変えています。どうしますか？</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.7"><div class="card" style="padding:12px 14px;gap:4px"><span style="font-family:var(--font-body);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">検証にあるもの</span><div>&lt;header&gt;</div><div style="background:var(--color-accent-100);color:var(--color-accent-800)">&nbsp;&nbsp;&lt;Logo /&gt;&lt;LoginMenu /&gt;</div><div>&lt;/header&gt;</div></div><div class="card" style="padding:12px 14px;gap:4px"><span style="font-family:var(--font-body);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">あなたのプレビュー</span><div>&lt;header&gt;</div><div style="background:var(--color-accent-100);color:var(--color-accent-800)">&nbsp;&nbsp;&lt;Logo compact /&gt;&lt;MenuButton /&gt;</div><div>&lt;/header&gt;</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-secondary" style="justify-content:flex-start;text-align:left;color:var(--color-text);padding:10px 14px" onClick="{{ resolveMerge }}"><span style="display:flex;flex-direction:column;gap:2px;align-items:flex-start"><span>AI に両方を活かしてまとめてもらう（おすすめ）</span><span style="font-size:12px;color:var(--color-neutral-600)">まとめ案をプレビューで確認してから送ります</span></span></button><button class="btn btn-secondary" style="justify-content:flex-start;color:var(--color-text);padding:10px 14px" onClick="{{ resolveMine }}">自分の変更を優先する</button><button class="btn btn-secondary" style="justify-content:flex-start;color:var(--color-text);padding:10px 14px" onClick="{{ resolveTheirs }}">検証にあるものを優先する</button></div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgPromoteProd }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:600px;padding:36px;gap:22px" onClick="{{ stop }}"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)">検証 {{ stagingVersion }} → 本番</span><div class="dialog-title" style="font-size:26px">本番へ反映しますか？</div><p class="dialog-body" style="margin:0;line-height:1.7">adhd.gawarago.com が {{ stagingVersion }} になります。反映は約20秒。うまくいかなければ「前の版に戻す」で {{ prodVersion }} にすぐ戻せます。</p><div class="card" style="padding:14px 16px;gap:6px;background:var(--color-accent-100);color:var(--color-accent-800);font-size:13px"><span style="font-family:var(--font-heading);font-weight:600">データについて</span><span>本番のデータ（Convex gawa/{{ projectName }}）はそのまま。新しい列は自動で追加されます。</span></div><div style="font-size:12px;color:var(--color-neutral-600)">プロトタイプ：成功／失敗を選べます</div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button><button class="btn btn-secondary" style="color:var(--color-text)" onClick="{{ promoteProdFail }}">反映（失敗を試す）</button><button class="btn btn-primary" onClick="{{ promoteProdOk }}">本番へ反映</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgSavepoint }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0" onClick="{{ closeDialog }}"><div class="dialog" style="width:480px;padding:36px;gap:22px" onClick="{{ stop }}"><div class="dialog-title" style="font-size:24px">保存ポイントに名前を付ける</div><p class="dialog-body" style="margin:0;line-height:1.6">保存は AI の各ターン後に自動でされています。名前は履歴で見つけやすくするためだけのものです。</p><div class="field"><label>名前（任意）</label><input class="input" value="{{ savepointName }}" onChange="{{ setSavepointName }}" placeholder="例: 完了を下に寄せた" style="min-height:44px"></div><div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeDialog }}">やめる</button><button class="btn btn-primary" onClick="{{ saveSavepoint }}">付ける</button></div></div></div>
+    </sc-if>
+    <sc-if value="{{ dlgOauth }}" hint-placeholder-val="{{ false }}">
+      <div class="dialog-backdrop" style="position:absolute;inset:0"><div class="dialog" style="width:420px;padding:32px;gap:18px;text-align:center;align-items:center"><img class="halftone" src="{{ oauthIcon }}" alt="" style="width:40px;height:40px;object-fit:contain"><div class="dialog-title" style="font-size:22px">{{ oauthName }} で認可</div><p class="dialog-body" style="margin:0;line-height:1.6">別ウィンドウで {{ oauthName }} のアカウントを選ぶと、ここに戻ってきます。</p><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-secondary" style="color:var(--color-text)" onClick="{{ oauthFail }}">拒否された（失敗を試す）</button><button class="btn btn-primary" onClick="{{ oauthOk }}">許可した</button></div></div></div>
+    </sc-if>
+
+    <!-- toast -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}"><div class="card elev-lg" style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);padding:12px 18px;flex-direction:row;gap:12px;align-items:center;font-size:14px;animation:fadein .2s ease;background:var(--color-text);color:var(--color-bg)"><span style="color:var(--color-accent-300)">●</span>{{ toast }}</div></sc-if>
+  </div>
+  <div style="width:1440px;flex:none;margin:0 auto;font-size:12px;color:var(--color-neutral-700);line-height:1.6">操作：Google で続ける → Convex を接続 → 一覧 → 新規プロジェクト → エディタでチャット（Enter 送信）／画面のタスクをタップ → 検証へ送る → 環境で本番へ反映（失敗も試せる）。エディタ下の「試す：」で質問・危険操作・鍵・上限・切断を再現。</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1488,&quot;height&quot;:960},&quot;colorMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;,&quot;auto&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'|'auto'&quot;,&quot;section&quot;:&quot;テーマ&quot;}}">
+const FILES = () => ({
+  'app/layout.tsx': ['import "./globals.css";', 'import type { ReactNode } from "react";', '', 'export const metadata = { title: "task-board" };', '', 'export default function RootLayout({ children }: { children: ReactNode }) {', '  return (', '    <html lang="ja">', '      <body>{children}</body>', '    </html>', '  );', '}'],
+  'app/tasks/page.tsx': ['"use client";', 'import { useMutation, useQuery } from "convex/react";', 'import { api } from "../../convex/_generated/api";', '', 'export default function TasksPage() {', '  const tasks = useQuery(api.tasks.list) ?? [];', '  const toggle = useMutation(api.tasks.toggle);', '', '  const open = tasks.filter((t) => !t.done);', '  const done = tasks.filter((t) => t.done);', '', '  return (', '    <main className="tasks">', '      <h1>今日やること</h1>', '      <TaskList items={open} onToggle={toggle} />', '      <h2 className="muted">完了 · {done.length}</h2>', '      <TaskList items={done} onToggle={toggle} muted />', '    </main>', '  );', '}', '', 'function TaskList({ items, onToggle, muted }) {', '  return (', '    <ul className={muted ? "list muted" : "list"}>', '      {items.map((t) => (', '        <li key={t._id} onClick={() => onToggle({ id: t._id })}>{t.title}</li>', '      ))}', '    </ul>', '  );', '}'],
+  'app/globals.css': ['.tasks { padding: 20px; display: grid; gap: 14px; }', '.list { display: grid; gap: 10px; }', '.list.muted { opacity: .5; text-decoration: line-through; }', '.muted { color: var(--neutral-600); font-size: 16px; margin-top: 8px; }'],
+  'convex/schema.ts': ['import { defineSchema, defineTable } from "convex/server";', 'import { v } from "convex/values";', '', 'export default defineSchema({', '  tasks: defineTable({', '    title: v.string(),', '    done: v.boolean(),', '    createdAt: v.number(),', '  }),', '});'],
+  'convex/tasks.ts': ['import { mutation, query } from "./_generated/server";', 'import { v } from "convex/values";', '', 'export const list = query({', '  handler: (ctx) => ctx.db.query("tasks").order("desc").collect(),', '});', 'export const add = mutation({', '  args: { title: v.string() },', '  handler: (ctx, { title }) => ctx.db.insert("tasks", { title, done: false, createdAt: Date.now() }),', '});', 'export const toggle = mutation({', '  args: { id: v.id("tasks") },', '  handler: async (ctx, { id }) => { const t = await ctx.db.get(id); if (t) await ctx.db.patch(id, { done: !t.done }); },', '});'],
+  'package.json': ['{', '  "name": "task-board",', '  "private": true,', '  "scripts": { "dev": "next dev", "build": "next build" },', '  "dependencies": { "convex": "^1.17.0", "next": "^15.0.0", "react": "^19.0.0" }', '}'],
+});
+const HL = { 'app/tasks/page.tsx': [9, 10, 14, 15, 16, 17, 22, 23, 24, 25, 26, 27, 28, 29, 30], 'app/globals.css': [1, 2, 3, 4] };
+const INITIAL = () => ({
+    panelOpen: true, device: 'phone', browserUrl: '', browserKey: 0, sideDraft: '', sideBusy: false, sideMessages: [{ type: 'ai', text: '左の作業とは別に、ここで何でも聞けます。コードは変えません。' }], termOpen: false, termDraft: '', termLines: [{ text: '$ pnpm dlx convex dev --once', color: 'inherit' }, { text: '✓ Convex functions ready (2.1s)', color: 'var(--color-neutral-600)' }, { text: '$ pnpm --filter web typecheck', color: 'inherit' }, { text: '✓ 1.8s', color: 'var(--color-neutral-600)' }], themeOverride: '', sourceFile: 'app/tasks/page.tsx', editing: false, editDraft: '', edited: [], files: FILES(),
+    screen: 'login', tab: 'screen', dialog: null, toast: '',
+    connected: { openai: true, github: true, cloudflare: true, convex: false },
+    connecting: null, failed: null, banner: '',
+    returnSummary: false,
+    projectName: 'task-board', newProjectName: 'task-board', creatingStep: 0,
+    previews: [
+      { id: 'mobile', name: 'モバイルUI', slug: 'mobile-ui', state: '作業中', savepoints: [{ title: '見出しを2段に分けた', when: '昨日 18:20' }], conflict: false },
+      { id: 'login', name: 'ログイン導線', slug: 'login', state: '要確認', savepoints: [{ title: 'GitHub ログインの下書き', when: '昨日 18:40' }], conflict: true },
+      { id: 'dark', name: 'ダークモード実験', slug: 'dark', state: '3日前', savepoints: [], conflict: false },
+    ],
+    activeId: 'mobile', newPreviewName: '決済フロー',
+    messages: [
+      { type: 'user', text: 'タスク一覧をモバイルで見やすくして。完了したものは下に。' },
+      { type: 'thinking', meta: '3秒', text: 'page.tsx の一覧を done で2つに分け、完了側は薄く。CSS は1ファイルで足りる。' },
+      { type: 'ai', text: '一覧を「今日やること」と「完了」に分けました。完了は薄いグレーで下に寄せています。右の「画面」で確認できます。' },
+      { type: 'changes', meta: '2ファイル', files: [{ path: 'app/tasks/page.tsx', add: '+18', del: '−6' }, { path: 'app/globals.css', add: '+9', del: '' }] },
+    ],
+    draft: '', busy: false, voice: false, splitDone: true, dirty: true, usage: 62,
+    tasks: [{ id: 1, title: '買い物リストを送る', done: false }, { id: 2, title: '請求書を確認', done: false }, { id: 3, title: 'ADHD Stack のUIを直す', done: false }, { id: 4, title: '朝の薬', done: true }, { id: 5, title: 'ゴミ出し', done: true }],
+    staging: 13, prod: 12, stagingFromPreview: '', deployFailed: false, savepointName: '',
+    history: [
+      { title: '完了を下に寄せた', when: '今', meta: '2ファイル · +27 −6 · モバイルUI に反映済み', dot: 'var(--color-accent)', current: true },
+      { title: '見出しを2段に分けた', when: '昨日 18:20', meta: '1ファイル · +12 −4', dot: 'var(--color-accent)' },
+      { title: 'プレビュー「モバイルUI」を作成', when: '昨日 17:02', meta: '検証 v13 から分岐', dot: 'var(--color-accent)' },
+      { title: 'v13 · タスク管理アプリ', when: '3日前', meta: '検証に反映 · staging.adhd.gawarago.com', dot: 'var(--color-neutral-500)' },
+      { title: 'v12 · 初期セットアップ', when: '先週', meta: '本番に反映 · adhd.gawarago.com', dot: 'var(--color-text)' },
+    ],
+    prodHistory: [{ label: 'v12 初期セットアップ', when: '先週' }, { label: 'v11 空のサイト', when: '先週' }],
+});
+class Component extends DCLogic {
+  state = INITIAL();
+  timers = [];
+  chatRef = React.createRef();
+  termRef = React.createRef();
+  sideRef = React.createRef();
+  term(lines) { this.setState(s => ({ termLines: [...s.termLines, ...lines.map(t => typeof t === "string" ? { text: t, color: t.startsWith("$") ? "inherit" : "var(--color-neutral-600)" } : t)] })); this.later(30, () => { const el = this.termRef.current; if (el) el.scrollTop = el.scrollHeight; }); }
+  componentDidMount() { try { const t = localStorage.getItem('adhd-stack-theme'); if (t) this.setState({ themeOverride: t }); } catch (e) {} if (typeof matchMedia !== 'undefined') { this.mq = matchMedia('(prefers-color-scheme: dark)'); this.mqFn = () => this.forceUpdate(); this.mq.addEventListener('change', this.mqFn); } }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); if (this.mq) this.mq.removeEventListener('change', this.mqFn); }
+  extraVals(s, a) {
+    const mode = s.themeOverride || this.props.colorMode || 'light';
+    const dark = mode === 'dark' || (mode === 'auto' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const setMode = m => () => { try { localStorage.setItem('adhd-stack-theme', m); } catch (e) {} this.setState({ themeOverride: m }); };
+    const lines = s.files[s.sourceFile] || [];
+    const changed = p => (s.dirty && (p === 'app/tasks/page.tsx' || p === 'app/globals.css')) || s.edited.includes(p);
+    const hl = changed(s.sourceFile) ? (HL[s.sourceFile] || lines.map((_, i) => i + 1)) : [];
+    const treeDef = [['app/', 'dir', 0], ['app/layout.tsx', 'file', 1, 'layout.tsx'], ['app/tasks/page.tsx', 'file', 1, 'tasks/page.tsx'], ['app/globals.css', 'file', 1, 'globals.css'], ['convex/', 'dir', 0], ['convex/schema.ts', 'file', 1, 'schema.ts'], ['convex/tasks.ts', 'file', 1, 'tasks.ts'], ['package.json', 'file', 0, 'package.json']];
+    const fileTree = treeDef.map(([path, kind, depth, label]) => { const act = kind === 'file' && path === s.sourceFile; return { path, label: label || path, indent: depth ? '6px' : '-8px', bg: act ? 'var(--color-accent-100)' : 'transparent', color: act ? 'var(--color-accent-800)' : kind === 'dir' ? 'var(--color-text)' : 'var(--color-neutral-700)', weight: kind === 'dir' ? 600 : 400, font: kind === 'dir' ? 'var(--font-heading)' : 'inherit', cursor: kind === 'dir' ? 'default' : 'pointer', badge: kind === 'file' && changed(path) ? '変更' : '', badgeColor: act ? 'inherit' : 'var(--color-accent-700)', open: e => { e.preventDefault(); if (kind === 'file' && s.files[path]) this.setState({ sourceFile: path, editing: false }); } }; });
+    return {
+      themeAttr: (typeof document !== 'undefined' && (document.body.dataset.theme = dark ? 'dark' : 'light')) || (dark ? 'dark' : 'light'), 
+      themeIsLight: mode === 'light', themeIsDark: mode === 'dark', themeIsAuto: mode === 'auto', setLight: setMode('light'), setDark: setMode('dark'), setAuto: setMode('auto'),
+      panelOpen: s.panelOpen, panelClosed: !s.panelOpen, togglePanel: () => this.setState(st => ({ panelOpen: !st.panelOpen })),
+      editorCols: s.panelOpen ? '240px 460px 1fr' : '240px 1fr 0px',
+      fileTree, sourceFile: s.sourceFile,
+      sourceLines: lines.map((code, i) => ({ n: i + 1, code, bg: hl.includes(i + 1) ? 'var(--color-accent-100)' : 'transparent', numColor: hl.includes(i + 1) ? 'var(--color-accent-700)' : 'var(--color-neutral-500)' })),
+      sourceNote: s.busy ? 'AI が編集中' : s.editing ? '編集中 · Tab はスペース' : '',
+      editing: s.editing, notEditing: !s.editing, editDraft: s.editDraft, setEditDraft: e => this.setState({ editDraft: e.target.value }),
+      startEdit: () => this.setState({ editing: true, editDraft: lines.join('\n') }), cancelEdit: () => this.setState({ editing: false }),
+      saveEdit: () => { const f = s.sourceFile; const short = f.split('/').pop(); this.setState(st => ({ editing: false, files: { ...st.files, [f]: st.editDraft.split('\n') }, edited: st.edited.includes(f) ? st.edited : [...st.edited, f], dirty: true, history: [{ title: '手で編集 · ' + short, when: '今', meta: '1ファイル · 自動保存 · プレビューに反映', dot: 'var(--color-accent)', current: true }, ...st.history.map(x => ({ ...x, current: false }))] })); this.setPreview(a.id, { state: '作業中' }); this.push({ type: 'status', text: short + ' の手編集をプレビューに反映しています…' }); this.later(1500, () => { this.replaceLast({ type: 'ai', text: short + ' の変更を反映しました。typecheck も通っています（✓）。' }); this.setPreview(a.id, { state: '反映済み' }); }); this.toast('保存ポイントを自動で作りました'); },
+      askAboutFile: () => this.setState({ draft: s.sourceFile + ' は何をしている？わかりやすく説明して' }),
+      panelTitle: ({ screen: 'ブラウザ', source: 'ソース', changes: '変更', history: '履歴', side: '相談' })[s.tab], panelSub: s.tab === 'screen' ? '' : s.tab === 'history' ? '● 本番 · ● 検証 · ● このプレビュー' : s.tab === 'side' ? 'コードは変えない' : '',
+      tabIsSide: s.tab === 'side', tabSide: () => this.setState({ tab: 'side', panelOpen: true }),
+      browserUrl: s.browserUrl || (a.slug + '.preview.adhd.gawarago.com'), browserHref: /^https?:\/\//.test(s.browserUrl) ? s.browserUrl : 'https://' + (s.browserUrl || a.slug + '.preview.adhd.gawarago.com'),
+      browserIsLive: /^https?:\/\/.+\..+/.test(s.browserUrl), browserIsMock: !/^https?:\/\/.+\..+/.test(s.browserUrl), browserKey_: s.browserKey, liveDotColor: s.busy ? 'var(--color-accent-2)' : 'var(--color-accent)',
+      setBrowserUrl: e => this.setState({ browserUrl: e.target.value }), browserKey: e => { if (e.key === 'Enter') this.setState(st => ({ browserKey: st.browserKey + 1 })); }, reloadBrowser: () => this.setState(st => ({ browserKey: st.browserKey + 1 })),
+      devIsPhone: s.device === 'phone', devIsDesk: s.device === 'desk', setPhone: () => this.setState({ device: 'phone' }), setDesk: () => this.setState({ device: 'desk' }),
+      devW: s.device === 'phone' ? '360px' : '100%', devH: s.device === 'phone' ? '640px' : '100%', devRadius: s.device === 'phone' ? 'var(--radius-lg)' : 'var(--radius-sm)', devPad: s.device === 'phone' ? '20px 24px' : '0',
+      sideMessages: s.sideMessages.map((m, i) => ({ ...m, key: i, isUser: m.type === 'user', isAi: m.type === 'ai', isStatus: m.type === 'status', hasAction: !!m.action, sendLeft: () => { this.setState({ draft: m.action, tab: 'screen' }); this.toast('左の入力欄に入れました。Enter で送ります'); } })),
+      sideDraft: s.sideDraft, setSideDraft: e => this.setState({ sideDraft: e.target.value }), sideRef: this.sideRef, sideKey: e => { if (e.key === 'Enter') this.sideAsk(s.sideDraft); }, sideSend: () => this.sideAsk(s.sideDraft),
+      panelBtnBg: s.panelOpen ? 'var(--color-accent-100)' : 'transparent', panelBtnTitle: s.panelOpen ? '右パネルを閉じる' : '右パネルを開く',
+      termOpen: s.termOpen, termRows: s.termOpen ? '220px' : '0px', termBtnBg: s.termOpen ? 'var(--color-accent-100)' : 'transparent', toggleTerminal: () => this.setState(st => ({ termOpen: !st.termOpen })),
+      termLines: s.termLines, termDraft: s.termDraft, termRef: this.termRef, setTermDraft: e => this.setState({ termDraft: e.target.value }), clearTerm: () => this.setState({ termLines: [] }),
+      termKey: e => { if (e.key !== 'Enter') return; const c = s.termDraft.trim(); if (!c) return; this.setState({ termDraft: '' }); if (c === 'clear') { this.setState({ termLines: [] }); return; }
+        const out = c === 'ls' ? ['app  convex  node_modules  package.json  pnpm-lock.yaml  tsconfig.json'] : c.startsWith('pnpm test') ? ['✓ 12 passed (1.4s)'] : c.startsWith('pnpm dev') ? ['▲ Next.js 15 · localhost:3000 → ' + a.slug + '.preview.adhd.gawarago.com'] : c.startsWith('git ') ? [{ text: 'ヒント: ここでは git を直接使わなくて大丈夫です。保存ポイント・反映は上のボタンから。', color: 'var(--color-accent-700)' }] : c === 'pwd' ? ['/workspace/' + s.projectName] : [{ text: c.split(' ')[0] + ': この環境にはありません（AI に「' + c + ' を実行して」と頼めます）', color: 'var(--color-accent-2-700)' }];
+        this.term(['$ ' + c, ...out]); },
+    };
+  }
+  later(ms, fn) { this.timers.push(setTimeout(fn, ms)); }
+  toast(t) { this.setState({ toast: t }); this.later(2600, () => this.setState(s => s.toast === t ? { toast: '' } : null)); }
+  go(screen) { this.setState({ screen, dialog: null }); }
+  push(m) { this.setState(s => ({ messages: [...s.messages, m] })); this.later(30, () => { const el = this.chatRef.current; if (el) el.scrollTop = el.scrollHeight; }); }
+  replaceLast(m) { this.setState(s => ({ messages: [...s.messages.slice(0, -1), m] })); }
+  active() { return this.state.previews.find(p => p.id === this.state.activeId) || this.state.previews[0]; }
+  setPreview(id, patch) { this.setState(s => ({ previews: s.previews.map(p => p.id === id ? { ...p, ...patch } : p) })); }
+  connectedCount() { return Object.values(this.state.connected).filter(Boolean).length; }
+
+  // ---- AI turn simulation ----
+  runTurn(text) {
+    if (!text.trim() || this.state.busy) return;
+    if (this.state.usage >= 100) { this.push({ type: 'user', text }); this.push({ type: 'limit' }); this.setState({ draft: '' }); return; }
+    this.push({ type: 'user', text }); this.setState({ draft: '', busy: true });
+    const a = this.active(); this.setPreview(a.id, { state: '作業中' });
+    this.later(500, () => this.push({ type: 'thinking', meta: '2秒', text: `「${text.slice(0, 18)}${text.length > 18 ? '…' : ''}」— 影響は page.tsx と globals.css に限られる。既存のデータ構造は変えない。` }));
+    this.later(1600, () => this.push({ type: 'status', text: 'app/tasks/page.tsx を編集中…' }));
+    this.later(2600, () => { this.replaceLast({ type: 'cmd', lines: ['pnpm --filter web typecheck  ✓ 1.8s', 'pnpm --filter web lint  ✓'] }); this.term(['$ pnpm --filter web typecheck', '✓ 1.8s', '$ pnpm --filter web lint', '✓ no problems']); this.setState({ dirty: true }); });
+    this.later(3400, () => this.push({ type: 'status', text: 'プレビューに反映しています…' }));
+    this.later(4600, () => {
+      this.replaceLast({ type: 'ai', text: '反映しました。右の「画面」で確認できます。気になる所があれば、要素をタップしてそのまま話しかけてください。' });
+      this.push({ type: 'changes', meta: '2ファイル', files: [{ path: 'app/tasks/page.tsx', add: '+11', del: '−3' }, { path: 'app/globals.css', add: '+4', del: '' }] });
+      this.setState(s => ({ busy: false, usage: Math.min(100, s.usage + 9), history: [{ title: text.slice(0, 22), when: '今', meta: '2ファイル · +15 −3 · 自動保存', dot: 'var(--color-accent)', current: true }, ...s.history.map(h => ({ ...h, current: false }))] }));
+      this.setPreview(a.id, { state: '反映済み', savepoints: [{ title: text.slice(0, 22), when: '今' }, ...a.savepoints] });
+      this.toast('保存ポイントを自動で作りました');
+    });
+  }
+
+  renderVals() {
+    const s = this.state, a = this.active();
+    const labels = { login: 'ログイン', connect: '接続', projects: 'プロジェクト', creating: '作成中', editor: 'エディタ', envs: '環境' };
+    const svcDef = [
+      { key: 'openai', name: 'OpenAI Codex', icon: 'brands/chatgpt.png', body: 'API キーでつなぐ（Codex SDK）', meta: 'sk-…7f2a', cta: 'キーを入れる' },
+      { key: 'github', name: 'GitHub', icon: 'brands/github.ico', body: 'リポジトリを自動作成', meta: '@MichitoSugawara', cta: '接続する' },
+      { key: 'cloudflare', name: 'Cloudflare', icon: 'brands/cloudflare.ico', body: 'Pages と実行環境', meta: 'michito.cloudflare', cta: '接続する' },
+      { key: 'convex', name: 'Convex', icon: 'brands/convex.ico', body: 'データベースと関数', meta: 'team: gawa', cta: '接続する' },
+    ];
+    const services = svcDef.map(d => {
+      const on = s.connected[d.key], busy = s.connecting === d.key, fail = s.failed === d.key;
+      return { ...d,
+        tagClass: on ? 'tag tag-accent' : busy ? 'tag tag-accent' : fail ? 'tag tag-accent-2' : 'tag tag-neutral',
+        tagText: on ? '接続済み' : busy ? '接続中…' : fail ? '失敗' : '未接続', tagAnim: busy ? 'ticker 1.2s ease-in-out infinite' : 'none',
+        body: fail ? '認可が拒否されました（access_denied）' : d.body, bodyColor: fail ? 'var(--color-accent-2-700)' : 'var(--color-neutral-700)',
+        meta: on ? d.meta : busy ? 'アカウントを選択中' : '', opacity: 1,
+        outline: fail ? '1px solid var(--color-accent-2-300)' : (!on && !busy) ? '1px solid var(--color-accent-300)' : 'none',
+        canConnect: !on && !busy, canDisconnect: on, canCancel: busy, cta: fail ? 'もう一度' : d.cta,
+        connect: () => this.setState({ connecting: d.key, failed: null, dialog: 'oauth' }),
+        disconnect: () => this.setState(st => ({ connected: { ...st.connected, [d.key]: false } })),
+        cancel: () => this.setState({ connecting: null, dialog: null }),
+      };
+    });
+    const n = this.connectedCount(), ready = n === 4, missing = svcDef.find(d => !s.connected[d.key]);
+    const projects = [
+      { name: s.projectName, session: a.name, status: a.state, tagClass: a.state === '要確認' ? 'tag tag-accent-2' : 'tag tag-accent', url: `${s.projectName}.pages.dev`, updated: '5分前', open: () => this.go('editor') },
+      { name: 'micronix-mas250', session: '計測フローを確認', status: '作業中', tagClass: 'tag tag-accent', url: 'micronix.pages.dev', updated: '18分前', open: () => this.toast('プロトタイプでは task-board のみ開けます') },
+      { name: 'withx-replace', session: 'Gate 0 review', status: '検証待ち', tagClass: 'tag tag-neutral', url: 'withx.pages.dev', updated: '昨日 16:42', open: () => this.toast('プロトタイプでは task-board のみ開けます') },
+    ];
+    const stepsDef = ['GitHub にリポジトリ MichitoSugawara/' + s.newProjectName, 'Convex に本番・検証のデータ置き場', 'Cloudflare Pages に ' + s.newProjectName + '.pages.dev', '作業用の実行環境を起動（Cloudflare Sandbox）', '最初のプレビュー「はじめに」を作成'];
+    const creatingSteps = stepsDef.map((label, i) => ({ label, mark: i < s.creatingStep ? '✓' : i === s.creatingStep ? '●' : '○', markColor: i < s.creatingStep ? 'var(--color-accent-700)' : i === s.creatingStep ? 'var(--color-accent)' : 'var(--color-neutral-500)', color: i <= s.creatingStep ? 'inherit' : 'var(--color-neutral-500)', anim: i === s.creatingStep ? 'ticker 1.2s ease-in-out infinite' : 'none' }));
+    const stateTag = st => st === '要確認' ? 'tag tag-accent-2' : (st === '作業中' || st === '反映済み') ? 'tag tag-accent' : 'tag tag-neutral';
+    const previews = s.previews.map(p => {
+      const act = p.id === s.activeId;
+      return { ...p, url: `${p.slug}.preview.adhd.gawarago.com`, tagClass: stateTag(p.state),
+        bg: act ? (p.state === '要確認' ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)') : 'transparent', color: act ? (p.state === '要確認' ? 'var(--color-accent-2-800)' : 'var(--color-accent-800)') : (p.state === '3日前' ? 'var(--color-neutral-600)' : 'inherit'),
+        dot: p.state === '要確認' ? 'var(--color-accent-2)' : (p.state === '作業中' || p.state === '反映済み') ? 'var(--color-accent)' : 'transparent', dotBorder: p.state === '3日前' ? '1px solid var(--color-neutral-500)' : 'none', anim: p.state === '作業中' ? 'ticker 1.4s ease-in-out infinite' : 'none',
+        outline: act ? '1px solid var(--color-accent-300)' : 'none', meta: p.savepoints.length ? `${p.savepoints.length}つの保存ポイント · 最新: ${p.savepoints[0].title}` : '保存ポイントなし',
+        canPromote: p.state === '反映済み' || p.state === '作業中', canDelete: p.state === '3日前',
+        select: () => { this.setState({ activeId: p.id }); if (p.state === '要確認' && !s.messages.some(m => m.type === 'question')) this.demoQuestion(); },
+        open: () => { this.setState({ activeId: p.id }); this.go('editor'); },
+        promote: () => { this.setState({ activeId: p.id }); this.openPromoteStaging(); },
+        remove: () => { this.setState(st => ({ previews: st.previews.filter(x => x.id !== p.id), activeId: st.activeId === p.id ? st.previews[0].id : st.activeId })); this.toast('プレビューを削除しました（履歴には残ります）'); },
+      };
+    });
+    const activePreview = previews.find(p => p.id === a.id) || previews[0];
+    const wrap = (m, i) => ({ ...m, key: i, isUser: m.type === 'user', isThinking: m.type === 'thinking', isAi: m.type === 'ai', isCmd: m.type === 'cmd', isStatus: m.type === 'status', isChanges: m.type === 'changes', isQuestion: m.type === 'question', isApproval: m.type === 'approval', isSecret: m.type === 'secret', isLimit: m.type === 'limit', isPublished: m.type === 'published',
+      options: (m.options || []).map(o => ({ ...o, pick: () => this.answerQuestion(o.label) })),
+      approve: () => this.resolveApproval(true), deny: () => this.resolveApproval(false),
+      save: () => this.resolveSecret(true), later: () => this.resolveSecret(false),
+      wait: () => { this.toast('14:00 に再開します。終わったら通知します'); }, resetUsage: () => { this.setState({ usage: 12 }); this.push({ type: 'ai', text: '別の鍵で続けます。中断したところから再開しました。' }); },
+    });
+    const tabs = ['screen', 'source', 'changes', 'history'], tabBg = {}, tabColor = {};
+    tabs.forEach(t => { tabBg[t] = s.tab === t ? 'var(--color-text)' : 'transparent'; tabColor[t] = s.tab === t ? 'var(--color-bg)' : 'inherit'; });
+    const open = s.tasks.filter(t => !t.done), done = s.tasks.filter(t => t.done);
+    const mk = t => ({ ...t, toggle: () => { this.setState(st => ({ tasks: st.tasks.map(x => x.id === t.id ? { ...x, done: !x.done } : x) })); } });
+    const hl = 'var(--color-accent-100)', src = [
+      [20, 'export default function TasksPage() {'], [21, '  const tasks = useQuery(api.tasks.list) ?? [];'], [22, '  const toggle = useMutation(api.tasks.toggle);'], [23, ''],
+      [24, '  const open = tasks.filter((t) => !t.done);', 1], [25, '  const done = tasks.filter((t) => t.done);', 1], [26, ''], [27, '  return ('], [28, '    <main className="tasks">'],
+      [29, '      <h1>今日やること</h1>', 1], [30, '      <TaskList items={open} onToggle={toggle} />', 1], [31, '      <h2 className="muted">完了 · {done.length}</h2>', 1], [32, '      <TaskList items={done} onToggle={toggle} muted />', 1],
+      [33, '    </main>'], [34, '  );'], [35, '}'],
+    ];
+    const sourceLines = src.map(([n, code, c]) => ({ n, code, bg: c && s.dirty ? hl : 'transparent', numColor: c && s.dirty ? 'var(--color-accent-700)' : 'var(--color-neutral-500)' }));
+    const changedFiles = [...(s.dirty ? [{ path: 'app/tasks/page.tsx', add: '+18', del: '−6', bg: 'var(--color-accent-100)', color: 'var(--color-accent-800)' }, { path: 'app/globals.css', add: '+9', del: '', bg: 'transparent', color: 'inherit' }] : []), ...s.edited.filter(p => p !== 'app/tasks/page.tsx' && p !== 'app/globals.css').map(p => ({ path: p, add: '手で編集', del: '', bg: 'transparent', color: 'inherit' }))];
+    const add = 'var(--color-accent-800)', addBg = 'var(--color-accent-100)', del = 'var(--color-accent-2-700)', delBg = 'var(--color-accent-2-100)', nc = 'var(--color-neutral-800)';
+    const diffLines = s.dirty ? [
+      { text: '@@ -20,8 +20,16 @@', color: 'var(--color-neutral-500)', bg: 'transparent' },
+      { text: '  const toggle = useMutation(api.tasks.toggle);', color: nc, bg: 'transparent' },
+      { text: '+ const open = tasks.filter((t) => !t.done);', color: add, bg: addBg }, { text: '+ const done = tasks.filter((t) => t.done);', color: add, bg: addBg },
+      { text: '  return (', color: nc, bg: 'transparent' }, { text: '    <main className="tasks">', color: nc, bg: 'transparent' },
+      { text: '-     <h1>タスク</h1>', color: del, bg: delBg }, { text: '-     <ul>{tasks.map((t) => <li key={t._id}>{t.title}</li>)}</ul>', color: del, bg: delBg },
+      { text: '+     <h1>今日やること</h1>', color: add, bg: addBg }, { text: '+     <TaskList items={open} onToggle={toggle} />', color: add, bg: addBg },
+      { text: '+     <h2 className="muted">完了 · {done.length}</h2>', color: add, bg: addBg }, { text: '+     <TaskList items={done} onToggle={toggle} muted />', color: add, bg: addBg },
+      { text: '    </main>', color: nc, bg: 'transparent' },
+    ] : [{ text: '変更はありません。', color: 'var(--color-neutral-500)', bg: 'transparent' }];
+    const history = s.history.map((h, i) => ({ ...h, bg: h.current ? 'var(--color-accent-100)' : 'transparent', canRevert: !h.current && i < 3, revert: () => { this.setState(st => ({ dirty: false, history: st.history.map((x, j) => ({ ...x, current: j === i })) })); this.push({ type: 'ai', text: `「${h.title}」の時点に戻しました。いまの状態も保存ポイントとして残っています。` }); this.toast('戻しました'); } }));
+    const slug = (s.newPreviewName || 'preview').replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '') || 'preview';
+    const dlg = k => s.dialog === k;
+    const oauth = svcDef.find(d => d.key === s.connecting) || svcDef[3];
+    return {
+      screenLabel: labels[s.screen], isLogin: s.screen === 'login', isConnect: s.screen === 'connect', isProjects: s.screen === 'projects', isCreating: s.screen === 'creating', isEditor: s.screen === 'editor', isEnvs: s.screen === 'envs',
+      goLogin: () => { this.timers.forEach(clearTimeout); this.timers = []; this.setState(INITIAL()); }, goConnect: () => this.go('connect'), goProjects: () => this.go('projects'), goEditor: () => this.go('editor'), goEnvs: () => this.go('envs'),
+      goProjectsIfReady: () => ready ? this.go('projects') : this.toast(`あと${4 - n}つつなぐと進めます`),
+      // connect
+      banner: s.banner, services, connectedCount: n, progressPct: (n * 25) + '%',
+      connectTitle: s.banner ? '接続' : n === 0 ? 'ようこそ。まず4つをつなぎます。' : ready ? '4つそろいました。' : s.failed ? '接続' : '接続',
+      connectSub: s.failed ? `${oauth.name} がつながりませんでした。ほかはそのままです。` : ready ? '考えることは、もうありません。' : `あと${4 - n}つ。それぞれ数十秒で終わります。`,
+      nextBg: s.failed ? 'var(--color-accent-2-100)' : 'var(--color-accent-100)', nextKicker: s.failed ? 'var(--color-accent-2-700)' : 'var(--color-accent-700)', nextBody: s.failed ? 'var(--color-accent-2-800)' : 'var(--color-accent-800)',
+      nextKickerText: s.failed ? 'うまくいかないとき' : ready ? '準備完了' : '次のステップ', nextTitle: s.failed ? `${oauth.name} 側で認可を拒否` : ready ? 'プロジェクトへ' : `${missing ? missing.name : ''} をつなぐ`,
+      nextText: s.failed ? 'チームの管理者権限がないと拒否されることがあります。個人チームを選ぶか、管理者に依頼してください。' : ready ? '最初のプロジェクトを作りましょう。名前を決めるだけです。' : (missing ? missing.body + '。' : ''),
+      proceedOpacity: ready ? 1 : .45, proceedLabel: s.banner ? 'セッションに戻る' : 'プロジェクトへ進む',
+      dlgOauth: dlg('oauth'), oauthIcon: oauth.icon, oauthName: oauth.name,
+      oauthOk: () => { const k = s.connecting; this.setState(st => ({ connected: { ...st.connected, [k]: true }, connecting: null, failed: null, dialog: null })); this.toast(`${oauth.name} をつなぎました`); if (s.banner) { this.later(900, () => { this.setState({ banner: '' }); this.go('editor'); this.toast('作業中のセッションに戻りました'); }); } },
+      oauthFail: () => this.setState({ connecting: null, failed: s.connecting, dialog: null }),
+      // projects
+      hasReturnSummary: s.returnSummary, noReturnSummary: !s.returnSummary, dismissSummary: () => this.setState({ returnSummary: false }), projects,
+      goQuestion: () => { this.setState({ activeId: 'login', returnSummary: false }); this.go('editor'); this.later(200, () => this.demoQuestion()); },
+      openNewProject: () => this.setState({ dialog: 'newProject' }), newProjectName: s.newProjectName, setNewProjectName: e => this.setState({ newProjectName: e.target.value }),
+      createProject: () => { this.setState({ screen: 'creating', dialog: null, creatingStep: 0 }); [1, 2, 3, 4, 5].forEach(i => this.later(900 * i, () => this.setState({ creatingStep: i }))); this.later(5000, () => { if (this.state.screen === 'creating') this.finishCreating(); }); },
+      creatingSteps, finishCreating: () => this.finishCreating(),
+      // editor
+      projectName: s.projectName, prodVersion: 'v' + s.prod, stagingVersion: 'v' + s.staging, previewCount: s.previews.length, previews, activePreview,
+      usagePct: s.usage, usageColor: s.usage >= 100 ? 'var(--color-accent-2)' : s.usage >= 80 ? 'var(--color-accent-2-500)' : 'var(--color-accent)',
+      openNewPreview: () => this.setState({ dialog: 'newPreview' }), newPreviewName: s.newPreviewName, newPreviewSlug: slug, setNewPreviewName: e => this.setState({ newPreviewName: e.target.value }),
+      createPreview: () => { const id = 'p' + Date.now(); this.setState(st => ({ previews: [{ id, name: st.newPreviewName || '新しいプレビュー', slug, state: '作業中', savepoints: [], conflict: false }, ...st.previews], activeId: id, dialog: null, screen: 'editor', messages: [{ type: 'ai', text: `プレビュー「${st.newPreviewName}」を検証 v${st.staging} の状態から作りました。何をしますか？` }], dirty: false })); this.toast('プレビューを作りました'); },
+      messages: s.messages.map(wrap), chatRef: this.chatRef,
+      draft: s.draft, setDraft: e => this.setState({ draft: e.target.value }), onKey: e => { if (e.key === 'Enter') this.runTurn(this.state.draft); },
+      composerPlaceholder: s.busy ? '作業中… 止めるには ■' : a.state === '要確認' ? 'または、ここに書く…' : '続きを話す…', composerOpacity: 1,
+      sendOrStop: () => s.busy ? (this.timers.forEach(clearTimeout), this.setState({ busy: false }), this.push({ type: 'ai', text: '止めました。ここまでの変更は保存ポイントに残っています。' })) : this.runTurn(s.draft),
+      busy: s.busy, idle: !s.busy, toggleVoice: () => { this.setState(st => ({ voice: !st.voice })); if (!s.voice) this.later(1800, () => this.setState({ voice: false, draft: '完了したタスクも件数だけは見せて' })); }, voiceColor: s.voice ? 'var(--color-accent-2)' : 'inherit',
+      demoQuestion: () => this.demoQuestion(), demoApproval: () => this.push({ type: 'approval', text: 'プレビューのデータを 42 件消してもいい？', note: '「1か月より前の完了タスクを削除」をプレビューのデータに対して実行しようとしています。本番と検証のデータには触れません。', cmd: 'convex run tasks:purgeCompleted --before 2026-08-04' }),
+      demoSecret: () => { this.push({ type: 'user', text: 'Stripe で月額 500 円の課金を追加' }); this.later(500, () => this.push({ type: 'ai', text: '組み込みます。Stripe の鍵が2つ必要です。Stripe ダッシュボードの「開発者 → API キー」からコピーしてください。' })); this.later(900, () => this.push({ type: 'secret' })); },
+      demoLimit: () => { this.setState({ usage: 100 }); this.push({ type: 'limit' }); },
+      demoDisconnect: () => { this.setState(st => ({ connected: { ...st.connected, github: false }, banner: `GitHub のトークンが期限切れです。${st.projectName} / ${a.name} から戻ってきました。つなぎ直すと自動でセッションに戻ります。` })); this.go('connect'); },
+      tabScreen: () => this.setState({ tab: 'screen', panelOpen: true }), tabSource: () => this.setState({ tab: 'source', panelOpen: true }), tabChanges: () => this.setState({ tab: 'changes', panelOpen: true }), tabHistory: () => this.setState({ tab: 'history', panelOpen: true }),
+      tabBg, tabColor, tabIsScreen: s.tab === 'screen', tabIsSource: s.tab === 'source', tabIsChanges: s.tab === 'changes', tabIsHistory: s.tab === 'history', changeCount: (s.dirty ? 2 : 0) + s.edited.filter(p => p !== 'app/tasks/page.tsx' && p !== 'app/globals.css').length,
+      nameSavepoint: () => this.setState({ dialog: 'savepoint' }), dlgSavepoint: dlg('savepoint'), savepointName: s.savepointName, setSavepointName: e => this.setState({ savepointName: e.target.value }),
+      saveSavepoint: () => { const nm = s.savepointName || '名前なし'; this.setState(st => ({ dialog: null, savepointName: '', history: st.history.map((h, i) => i === 0 ? { ...h, title: nm } : h) })); this.toast(`保存ポイント「${nm}」`); },
+      promoteOpacity: s.dirty ? 1 : .45, openPromoteStaging: () => this.openPromoteStaging(), dlgPromoteStaging: dlg('promoteStaging'), promoteItems: a.savepoints.slice(0, 3),
+      promoteToStaging: () => { if (a.conflict) { this.setState({ dialog: 'conflict' }); return; } this.doPromoteStaging(); },
+      dlgConflict: dlg('conflict'), resolveMerge: () => { this.setState({ dialog: null }); this.go('editor'); this.setPreview(a.id, { conflict: false }); this.push({ type: 'ai', text: '両方を活かしました — 小さいロゴ＋メニューボタンの中にログインを入れています。プレビューで確認して、よければもう一度「検証へ送る」を押してください。' }); }, resolveMine: () => { this.setPreview(a.id, { conflict: false }); this.doPromoteStaging(); }, resolveTheirs: () => { this.setPreview(a.id, { conflict: false }); this.doPromoteStaging(); },
+      screenStamp: s.busy ? '反映中…' : '最新', screenOpacity: s.busy ? .5 : 1, openTasks: open.map(mk), doneTasks: done.map(mk), doneCount: done.length, splitDone: s.splitDone, doneOpacity: .5,
+      sourceLines, sourceBadge: s.dirty ? '変更' : '', sourceNote: s.busy ? 'AI が編集中' : '読み取り専用',
+      changedFiles, noChanges: !s.dirty, diffLines, revertChanges: () => { if (!s.dirty) return; this.setState({ dirty: false }); this.push({ type: 'ai', text: '最後の保存ポイントまで戻しました。' }); this.toast('元に戻しました'); },
+      history,
+      // envs
+      deployFailed: s.deployFailed, dismissFail: () => this.setState({ deployFailed: false }), fixAndRetry: () => { this.setState({ deployFailed: false, dialog: 'promoteProd' }); this.toast('RESEND_API_KEY を本番に保存しました'); },
+      stagingTag: s.staging > s.prod ? '本番より新しい' : '本番と同じ', stagingTagClass: 'tag tag-neutral', stagingMeta: s.stagingFromPreview ? `${s.stagingFromPreview} から · たった今` : 'タスク管理アプリ · 3日前に反映', stagingDiff: s.staging > s.prod ? '4ファイル · +152 −22' : 'なし',
+      prodPromoteOpacity: s.staging > s.prod ? 1 : .45, openPromoteProd: () => s.staging > s.prod ? this.setState({ dialog: 'promoteProd' }) : this.toast('本番と検証は同じ版です'), dlgPromoteProd: dlg('promoteProd'),
+      promoteProdOk: () => { const v = s.staging; this.setState(st => ({ dialog: null, prod: v, prodHistory: [{ label: `v${v} ${a.savepoints[0] ? a.savepoints[0].title : 'タスク管理アプリ'}`, when: '今' }, ...st.prodHistory] })); this.toast(`本番を v${v} にしました · adhd.gawarago.com`); this.push({ type: 'published', meta: '本番に反映しました', text: 'adhd.gawarago.com' }); },
+      promoteProdFail: () => this.setState({ dialog: null, deployFailed: true }),
+      prodMeta: `${s.prodHistory[0].label.replace(/^v\d+ /, '')} · ${s.prodHistory[0].when}`, prodHistory: s.prodHistory,
+      rollbackOpacity: s.prodHistory.length > 1 ? 1 : .45, rollbackProd: () => { if (s.prodHistory.length < 2) return; const prev = s.prodHistory[1]; const v = parseInt(prev.label); this.setState(st => ({ prod: v, prodHistory: [{ label: prev.label + '（戻した）', when: '今' }, ...st.prodHistory] })); this.toast(`本番を v${v} に戻しました`); },
+      // dialogs common
+      dlgNewProject: dlg('newProject'), dlgNewPreview: dlg('newPreview'), closeDialog: () => this.setState({ dialog: null }), stop: e => e.stopPropagation(), toast: s.toast,
+      ...this.extraVals(s, a),
+    };
+  }
+  sideAsk(text) {
+    if (!text.trim() || this.state.sideBusy) return;
+    const pushS = m => { this.setState(st => ({ sideMessages: [...st.sideMessages, m] })); this.later(30, () => { const el = this.sideRef.current; if (el) el.scrollTop = el.scrollHeight; }); };
+    pushS({ type: 'user', text }); this.setState({ sideDraft: '', sideBusy: true });
+    pushS({ type: 'status', text: '考えています…' });
+    const q = text.toLowerCase();
+    const ans = q.includes('ファイル') || q.includes('何') ? { text: this.state.sourceFile + ' は画面の本体です。Convex から一覧を取り、「今日やること」と「完了」に分けて表示しています。変えたいのは見た目なら globals.css、並び順なら tasks.ts です。', action: '完了の並び順を新しいものが上になるようにして' }
+      : q.includes('次') || q.includes('どう') ? { text: 'この後の順番のおすすめ：①スマホで一度触って崩れを確認 → ②「検証へ送る」 → ③検証 URL を家族や友人に開いてもらう → ④本番へ。今は①が終わっていません。', action: 'スマホ幅で崩れていないか一通り確認して直して' }
+      : q.includes('検証') || q.includes('本番') ? { text: '検証は「本番に出す前に確かめる場所」、本番は「みんなが見る場所」です。検証へ送っても本番は変わりません。', action: '' }
+      : { text: 'いまのプレビュー「' + this.active().name + '」は ' + (this.state.dirty ? '未反映の変更が2ファイルあります。' : '最新の状態です。') + ' 左の作業を止めずに、ここで続けて聞けます。', action: '' };
+    this.later(1300, () => { this.setState(st => ({ sideMessages: [...st.sideMessages.filter(m => m.type !== 'status'), { type: 'ai', text: ans.text, action: ans.action }], sideBusy: false })); this.later(30, () => { const el = this.sideRef.current; if (el) el.scrollTop = el.scrollHeight; }); });
+  }
+  openPromoteStaging() { const a = this.active(); if (!this.state.dirty && !a.savepoints.length) { this.toast('送るものがありません'); return; } this.setState({ dialog: 'promoteStaging' }); }
+  doPromoteStaging() { const a = this.active(); this.setState(s => ({ dialog: null, staging: s.staging + 1, stagingFromPreview: a.name, dirty: false, history: [{ title: `v${s.staging + 1} · ${a.name}`, when: '今', meta: '検証に反映 · staging.adhd.gawarago.com', dot: 'var(--color-neutral-500)', current: true }, ...s.history.map(h => ({ ...h, current: false }))] })); this.setPreview(a.id, { state: '検証済み' }); this.toast(`検証を v${this.state.staging + 1} にしました`); this.push({ type: 'ai', text: `検証へ送りました。staging.adhd.gawarago.com で確認できます。問題なければ「環境」から本番へ反映できます。` }); }
+  finishCreating() { const nm = this.state.newProjectName || 'task-board'; this.setState({ screen: 'editor', projectName: nm, activeId: 'first', previews: [{ id: 'first', name: 'はじめに', slug: 'first', state: '作業中', savepoints: [], conflict: false }, ...this.state.previews], messages: [{ type: 'ai', text: `${nm} の用意ができました。リポジトリ・実行環境・本番/検証の置き場は揃っています。何を作りますか？` }], dirty: false, tab: 'screen' }); this.toast('できました — 最初の指示から始められます'); }
+  demoQuestion() { const a = this.active(); this.setPreview(a.id, { state: '要確認' }); if (!this.state.messages.some(m => m.type === 'user' && m.text.includes('ログイン'))) { this.push({ type: 'user', text: 'ログインを Google 以外でもできるようにして' }); } this.push({ type: 'ai', text: 'できます。先に1つだけ決めてください — メール＋パスワードを増やすと、パスワード再設定のメール送信が必要になります。' }); this.push({ type: 'question', text: 'どのログイン方法を足しますか？', options: [{ label: 'GitHub ログイン', note: '追加設定なし。おすすめ' }, { label: 'メール＋パスワード', note: 'メール送信サービス（Resend）のキーが必要' }, { label: '両方', note: '' }] }); }
+  answerQuestion(label) { this.setState(s => ({ messages: s.messages.filter(m => m.type !== 'question') })); const a = this.active(); this.setPreview(a.id, { state: '作業中' }); this.runTurn(label + ' で進めて'); }
+  resolveApproval(ok) { this.setState(s => ({ messages: s.messages.filter(m => m.type !== 'approval') })); this.push({ type: 'ai', text: ok ? '保存ポイント「削除前」を作ってから、42 件を削除しました。7日以内なら履歴から戻せます。' : 'わかりました。削除せず、古い完了タスクを「アーカイブ」に移す方法に変えます。' }); if (ok) this.toast('保存ポイント「削除前」を作りました'); }
+  resolveSecret(ok) { this.setState(s => ({ messages: s.messages.filter(m => m.type !== 'secret') })); if (ok) { this.toast('プレビュー用の鍵を保存しました'); this.runTurn('鍵を入れたので Stripe の月額課金を続けて'); } else { this.push({ type: 'ai', text: '了解です。鍵なしで進められる画面側だけ先に作っておきます。決済ボタンは押せない状態にしておきます。' }); } }
+}
+</script>
+</body>
+</html>

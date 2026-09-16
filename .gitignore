@@ -1,6 +1,11 @@
 node_modules
 .next
+.open-next
 .turbo
+.wrangler
+.dev.vars
 *.tsbuildinfo
 .env*
 !.env.example
+__pycache__/
+*.pyc
