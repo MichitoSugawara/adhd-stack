@@ -85,6 +85,7 @@ export const PublishPanel = ({
   const showFunctionGap =
     convex !== null && !hasFunctionPushOutcome(shownNotes);
   const waitLabel = pending ? "公開しています" : "Pages をビルドしています";
+  const phase = statusLabel(pending, inFlight, pagesDeployStatus);
 
   return (
     <section className="rounded-card bg-surface shadow-card max-w-2xl p-5">
@@ -92,9 +93,11 @@ export const PublishPanel = ({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-ink-3 text-[12px]">公開</p>
-            <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px] font-medium">
-              {statusLabel(pending, inFlight, pagesDeployStatus)}
-            </span>
+            {phase === "公開" ? null : (
+              <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px] font-medium">
+                {phase}
+              </span>
+            )}
           </div>
           <p className="text-ink-2 mt-2 text-[13px] leading-6">
             開いているアプリを、つながっている Pages と Convex に出します。
