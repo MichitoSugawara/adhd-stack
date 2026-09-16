@@ -18,7 +18,7 @@ export const StatusChip = ({
 }) => (
   <span
     className={cn(
-      "rounded-chip px-2 py-1 text-[12px] font-medium",
+      "rounded-chip whitespace-nowrap shrink-0 px-2 py-1 text-[12px] font-medium",
       TONE_CLASS[tone]
     )}
   >
