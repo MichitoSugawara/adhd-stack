@@ -5,11 +5,15 @@ import { useEffect, useState } from "react";
 
 import PromptBar from "@/components/primitives/PromptBar";
 import StreamingText from "@/components/primitives/StreamingText";
-import ThinkingState from "@/components/primitives/ThinkingState";
-import ToolChips from "@/components/primitives/ToolChips";
-import { PublishPanel } from "@/components/screens/publish-panel";
+import TaskRows from "@/components/primitives/TaskRows";
+import { UrlChip } from "@/components/screens/url-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import {
+  laterSettlesTools,
+  taskRowsFromThinking,
+  taskRowsFromTools,
+} from "@/lib/chat-tasks";
 import { toChatView } from "@/lib/chat-view";
 import {
   useChatMessages,
@@ -17,54 +21,79 @@ import {
   useWorkspaceBySlug,
 } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
-import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
 import { writeLastWorkspace } from "@/lib/last-workspace";
-import { OFFLINE_PUBLISH_NOTE } from "@/lib/publish-copy";
+import { publicHttpUrl } from "@/lib/public-url";
 import { usePublishFlow } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
-const hostingHint = (
-  board:
-    | {
-        connections: readonly {
-          provider: string;
-          status: string;
-        }[];
-      }
-    | undefined,
-  hasRepo: boolean
-): string | null => {
-  if (!board) {
-    return null;
-  }
-  const missing: string[] = [];
-  for (const row of board.connections) {
-    if (row.status === "connected") {
-      continue;
-    }
-    if (row.provider === "cloudflare") {
-      missing.push("Cloudflare");
-    }
-    if (row.provider === "convex") {
-      missing.push("Convex");
-    }
-  }
-  const parts: string[] = [];
-  if (!hasRepo) {
-    parts.push("GitHub リポジトリの準備が終わるまで公開できません。");
-  }
-  if (missing.length > 0) {
-    parts.push(`${missing.join(" と ")} がつながっていません。`);
-  }
-  return parts.length > 0 ? parts.join(" ") : null;
-};
+const STARTERS = [
+  "通知をやさしくする",
+  "時間の区切りを足す",
+  "色を落ち着かせる",
+];
+
+const EditorHeader = ({
+  name,
+  pagesUrl,
+  previewHref,
+  publishHref,
+  waiting,
+}: {
+  name: string;
+  pagesUrl: string | null;
+  previewHref: string | null;
+  publishHref: string;
+  waiting: boolean;
+}) => (
+  <header className="border-line flex flex-col gap-3 border-b px-5 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p className="text-ink-3 text-[12px]">チャット</p>
+        <h1 className="text-[16px] font-semibold">{name}</h1>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {previewHref ? (
+          <a
+            className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[13px] font-medium"
+            href={previewHref}
+            rel="noreferrer"
+            target="_blank"
+          >
+            プレビュー
+          </a>
+        ) : (
+          <span className="rounded-control bg-field text-ink-3 inline-flex h-8 items-center px-3 text-[13px]">
+            プレビュー
+          </span>
+        )}
+        <Link
+          className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
+          href={publishHref}
+        >
+          公開
+        </Link>
+      </div>
+    </div>
+    {pagesUrl ? <UrlChip href={pagesUrl} waiting={waiting} /> : null}
+    {waiting ? (
+      <p className="text-ink-3 text-[13px]">
+        Pages のビルドを待っています。完了はまだ見ていません。
+        <Link
+          className="text-ink ml-2 underline underline-offset-2"
+          href={publishHref}
+        >
+          公開画面
+        </Link>
+      </p>
+    ) : null}
+  </header>
+);
 
 const EditorLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
-  const { board } = useConnectionsPort();
   const publishFlow = usePublishFlow(slug, workspace);
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -99,7 +128,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
     workspace.githubRepoUrl && workspace.codingEnvironmentId
   );
   const view = toChatView(messages ?? []);
-  const lastPublishError = publishFlow.error;
+  const pagesUrl = publicHttpUrl(workspace.cloudflarePagesUrl);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
@@ -123,36 +152,18 @@ const EditorLive = ({ slug }: { slug: string }) => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-line flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
-        <div>
-          <p className="text-ink-3 text-[12px]">チャット</p>
-          <h1 className="text-[16px] font-semibold">{workspace.name}</h1>
-        </div>
-        <Link
-          className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
-          href={`/p/${slug}/envs`}
-        >
-          環境
-        </Link>
-      </header>
+      <EditorHeader
+        name={workspace.name}
+        pagesUrl={pagesUrl}
+        previewHref={pagesUrl}
+        publishHref={`/p/${slug}/publish`}
+        waiting={publishFlow.waiting}
+      />
       <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
-          <PublishPanel
-            convexUrl={workspace.convexUrl}
-            error={lastPublishError}
-            hint={hostingHint(board, Boolean(workspace.githubRepoUrl))}
-            notes={publishFlow.notes}
-            onPublish={() => {
-              void publishFlow.publish();
-            }}
-            pagesDeployStatus={publishFlow.pagesDeployStatus}
-            pagesUrl={workspace.cloudflarePagesUrl}
-            pending={publishFlow.pending}
-            waiting={publishFlow.waiting}
-          />
           {ready ? (
             <p className="shell-note">
-              指示は実行環境に送られます。公開は上の欄です。
+              指示は実行環境に送られます。公開は右上です。
             </p>
           ) : (
             <p className="shell-note">
@@ -168,7 +179,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
               最初の指示を書いてください。
             </p>
           ) : null}
-          {view.map((item) => {
+          {view.map((item, index) => {
             if (item.type === "user") {
               return (
                 <div
@@ -188,26 +199,33 @@ const EditorLive = ({ slug }: { slug: string }) => {
             }
             if (item.type === "thinking") {
               return (
-                <ThinkingState
-                  active={item.active ? "考えています" : "思考"}
-                  done="思考"
+                <TaskRows
+                  className="max-w-none"
                   key={item.id}
-                  rows={item.body
-                    .split("\n")
-                    .filter((line) => line.length > 0)
-                    .slice(0, 8)
-                    .map((line) => ({ primary: line }))}
-                  variant="Steps"
+                  labels={{
+                    completed: "完了",
+                    failed: "失敗",
+                    running: "処理中",
+                    waiting: "待機",
+                  }}
+                  rows={taskRowsFromThinking(item)}
+                  variant="List"
                 />
               );
             }
             if (item.type === "tools") {
               return (
-                <ToolChips
-                  diffs={item.diffs}
+                <TaskRows
+                  className="max-w-none"
                   key={item.id}
-                  labels={{ header: "ツール", more: "" }}
-                  steps={item.steps}
+                  labels={{
+                    completed: "完了",
+                    failed: "失敗",
+                    running: "処理中",
+                    waiting: "待機",
+                  }}
+                  rows={taskRowsFromTools(item, laterSettlesTools(view, index))}
+                  variant="List"
                 />
               );
             }
@@ -226,13 +244,31 @@ const EditorLive = ({ slug }: { slug: string }) => {
       </div>
       <div className="border-line border-t px-5 py-3">
         <div className="mx-auto max-w-2xl">
+          <div className="mb-2 flex flex-wrap gap-2">
+            {STARTERS.map((starter) => (
+              <button
+                className="rounded-chip bg-field text-ink-2 hover:bg-hover h-7 px-2.5 text-[12px]"
+                disabled={!ready || sending}
+                key={starter}
+                onClick={() => {
+                  void send(starter);
+                }}
+                type="button"
+              >
+                {starter}
+              </button>
+            ))}
+          </div>
           <PromptBar
             demo={false}
             disabled={!ready || sending}
             onSend={(text) => {
               void send(text);
             }}
-            placeholder={ready ? "指示を書く" : "準備が終わるまで送れません"}
+            placeholder={
+              ready ? "何を作りたいですか？" : "準備が終わるまで送れません"
+            }
+            sendLabel="送信"
           />
         </div>
       </div>
@@ -243,36 +279,17 @@ const EditorLive = ({ slug }: { slug: string }) => {
 const EditorSkeleton = ({ appId }: { appId: string }) => {
   const shell = useShell();
   const app = shell.state.apps.find((item) => item.id === appId);
-  const [publishNote, setPublishNote] = useState<string | null>(null);
-
-  return shell.hydrated && !app ? (
-    <main className="px-8 py-10">
-      <h1 className="text-[24px] font-semibold">アプリが見つかりません</h1>
-    </main>
-  ) : (
+  return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-line flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
-        <div>
-          <p className="text-ink-3 text-[12px]">チャット</p>
-          <h1 className="text-[16px] font-semibold">{app?.name ?? appId}</h1>
-        </div>
-        <Link
-          className="rounded-control text-ink-2 hover:bg-hover flex h-8 items-center px-3 text-[13px]"
-          href={`/p/${appId}/envs`}
-        >
-          環境
-        </Link>
-      </header>
+      <EditorHeader
+        name={app?.name ?? appId}
+        pagesUrl={null}
+        previewHref={null}
+        publishHref={`/p/${appId}/publish`}
+        waiting={false}
+      />
       <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
-          <PublishPanel
-            error={publishNote}
-            hint={OFFLINE_PUBLISH_NOTE}
-            onPublish={() => {
-              setPublishNote(OFFLINE_PUBLISH_NOTE);
-            }}
-            pending={false}
-          />
           <p className="shell-note">Convex 未設定のため会話は送れません。</p>
         </div>
       </div>
@@ -282,6 +299,7 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
             demo={false}
             disabled
             placeholder="Convex 未設定のため送れません"
+            sendLabel="送信"
           />
         </div>
       </div>

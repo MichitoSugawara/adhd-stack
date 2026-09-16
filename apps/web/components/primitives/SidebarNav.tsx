@@ -5,9 +5,10 @@ import { createPortal } from "react-dom";
 import { IconArrowBoxLeft } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconArrowBoxLeft";
 import { IconCheckmark1Small } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconCheckmark1Small";
 import { IconChevronDownSmall } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconChevronDownSmall";
+import { IconConnectors1 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconConnectors1";
 import { IconCrossSmall } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconCrossSmall";
 import { IconEditBig } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconEditBig";
-import { IconHome } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconHome";
+import { IconGlobe } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconGlobe";
 import { IconMagnifyingGlass } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconMagnifyingGlass";
 import { IconPopsicle2 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconPopsicle2";
 import { IconSettingsGear1 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconSettingsGear1";
@@ -24,9 +25,16 @@ import GlideMenu from "@/components/primitives/GlideMenu";
 const WORKSPACE = { key: "adhd", name: "ADHD Stack", monogram: "A" };
 
 const NAV_ITEMS = [
-  { key: "connect", label: "接続", icon: <IconHome size={18} /> },
-  { key: "projects", label: "アプリ", icon: <IconEditBig size={18} /> },
+  { key: "connect", label: "接続", icon: <IconConnectors1 size={16} /> },
+  { key: "editor", label: "エディタ", icon: <IconEditBig size={16} /> },
+  { key: "publish", label: "公開", icon: <IconGlobe size={16} /> },
 ];
+
+export type SidebarSetupItem = {
+  id: string;
+  label: string;
+  status: "connected" | "idle" | "waiting";
+};
 
 export type SidebarRecent = {
   id: string;
@@ -52,6 +60,8 @@ type SidebarNavProps = {
   recents?: SidebarRecent[];
   recentsLabel?: string;
   newChatLabel?: string;
+  setupItems?: SidebarSetupItem[];
+  connectCount?: string;
   searchPlaceholder?: string;
   emptyRecentsLabel?: string;
   signOutLabel?: string;
@@ -112,14 +122,14 @@ function RailButton({
       data-row
       type="button"
       onClick={onClick}
-      className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-[8px] px-2 text-left
+      className={`sidebar-row relative z-10 mx-2 flex h-7 items-center rounded-[8px] px-2 text-left
         transition-[width,background-color,color,transform] duration-150 active:scale-[0.98]
-        ${active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""}`}
+        ${active ? "bg-accent-tint group-hover/glide:bg-transparent" : ""}`}
     >
-      <span className={`flex size-5 shrink-0 items-center justify-center ${active ? "text-ink" : "text-ink-2"}`}>
+      <span className={`flex size-5 shrink-0 items-center justify-center ${active ? "text-accent-ink" : "text-ink-2"}`}>
         {icon}
       </span>
-      <span className={`sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-[14px] font-medium ${active ? "text-ink" : "text-ink-2"}`}>
+      <span className={`sidebar-copy ml-1.5 min-w-0 flex-1 truncate text-[13px] font-medium ${active ? "text-accent-ink" : "text-ink-2"}`}>
         {label}
       </span>
       {count && (
@@ -206,6 +216,8 @@ export default function SidebarNav({
   recents = DEFAULT_RECENTS,
   recentsLabel = "アプリ",
   newChatLabel = "新しいアプリ",
+  setupItems = [],
+  connectCount,
   searchPlaceholder = "アプリを探す",
   emptyRecentsLabel = "まだアプリがありません",
   signOutLabel = "シェルを閉じる",
@@ -353,10 +365,39 @@ export default function SidebarNav({
               icon={item.icon}
               label={item.label}
               active={currentNav === item.key}
+              count={item.key === "connect" ? connectCount : undefined}
               onClick={() => selectNav(item.key)}
             />
           ))}
         </GlideGroup>
+
+        {setupItems.length > 0 ? (
+          <div className="mt-3">
+            <div className="sidebar-copy mx-2 mb-1 px-2 text-[11px] font-medium tracking-[0.08em] text-ink-3 uppercase">
+              サービス
+            </div>
+            <div className="flex flex-col gap-px">
+              {setupItems.map((item) => (
+                <div
+                  className="sidebar-row relative z-10 mx-2 flex h-7 items-center rounded-[8px] px-2"
+                  key={item.id}
+                >
+                  <span
+                    className={`size-1.5 shrink-0 rounded-full ${
+                      item.status === "connected" ? "bg-accent" : "bg-ink-3"
+                    }`}
+                  />
+                  <span className="sidebar-copy text-ink-2 ml-1.5 min-w-0 flex-1 truncate text-[13px]">
+                    {item.label}
+                  </span>
+                  <span className="sidebar-copy text-ink-3 shrink-0 text-[11px]">
+                    {item.status === "connected" ? "済" : "未"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-3 min-h-0 flex-1 overflow-y-auto">
           <div className="sidebar-copy relative mx-2 mb-1 h-8">
@@ -433,11 +474,11 @@ export default function SidebarNav({
                     if (activeTitle === undefined) setDemoActiveTitle(item.label);
                     onPick?.(item.id, item.label, item.prompt);
                   }}
-                  className={`sidebar-row relative z-10 mx-2 flex h-8 items-center rounded-[8px] px-2 text-left transition-[width,background-color,color,transform] duration-150 active:scale-[0.98] ${
-                    active ? "bg-hover-2 group-hover/glide:bg-transparent" : ""
+                  className={`sidebar-row relative z-10 mx-2 flex h-7 items-center rounded-[8px] px-2 text-left transition-[width,background-color,color,transform] duration-150 active:scale-[0.98] ${
+                    active ? "bg-accent-tint group-hover/glide:bg-transparent" : ""
                   }`}
                 >
-                  <span className={`sidebar-copy min-w-0 flex-1 truncate text-[14px] font-medium ${active ? "text-ink" : "text-ink-2"}`}>
+                  <span className={`sidebar-copy min-w-0 flex-1 truncate text-[13px] font-medium ${active ? "text-accent-ink" : "text-ink-2"}`}>
                     {item.label}
                   </span>
                 </button>

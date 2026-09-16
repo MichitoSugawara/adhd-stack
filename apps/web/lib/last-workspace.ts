@@ -16,7 +16,8 @@ const isSlug = (value: string): boolean => /^[a-z0-9-]+$/u.test(value);
 const isAppPath = (path: string, slug: string): boolean =>
   path === `/p/${slug}` ||
   path === `/p/${slug}/creating` ||
-  path === `/p/${slug}/envs`;
+  path === `/p/${slug}/envs` ||
+  path === `/p/${slug}/publish`;
 
 export const writeLastWorkspace = (value: LastWorkspace): void => {
   if (!isSlug(value.slug) || !isAppPath(value.path, value.slug)) {

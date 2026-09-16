@@ -150,6 +150,7 @@ export default function PromptBar({
   placeholder,
   onSend,
   disabled = false,
+  sendLabel,
 }: {
   variant?: string;
   /** the self-running walkthrough; turn off when embedding in a real surface */
@@ -159,6 +160,7 @@ export default function PromptBar({
   placeholder?: string;
   onSend?: (text: string) => void;
   disabled?: boolean;
+  sendLabel?: string;
 }) {
   const pill = variant === "Pill";
   const [draft, setDraft] = useState("");
@@ -585,9 +587,13 @@ export default function PromptBar({
         <div
           ref={controlsRef}
           className={`grid items-end gap-x-1 gap-y-1.5 ${
-            wide
-              ? "grid-cols-[28px_auto_minmax(0,1fr)_28px_28px]"
-              : "grid-cols-[28px_minmax(0,1fr)_auto_28px_28px]"
+            sendLabel
+              ? wide
+                ? "grid-cols-[28px_auto_minmax(0,1fr)_28px_auto]"
+                : "grid-cols-[28px_minmax(0,1fr)_auto_28px_auto]"
+              : wide
+                ? "grid-cols-[28px_auto_minmax(0,1fr)_28px_28px]"
+                : "grid-cols-[28px_minmax(0,1fr)_auto_28px_28px]"
           }`}
         >
           <button
@@ -694,18 +700,24 @@ export default function PromptBar({
           {/* send — tactile square (round in the pill variant) */}
           <button
             type="button"
-            aria-label="Send"
+            aria-label={sendLabel ?? "Send"}
             disabled={!canSend}
             onClick={send}
-            className={`flex size-7 shrink-0 items-center justify-center transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.94] ${
+            className={`flex h-7 shrink-0 items-center justify-center transition-[background-color,color,transform] duration-200 enabled:active:scale-[0.94] ${
+              sendLabel ? "min-w-7 px-2.5" : "size-7"
+            } ${
               pill ? "rounded-full" : "rounded-[8px]"
             } ${wide ? "col-start-5 row-start-2" : "col-start-5 row-start-1"}`}
             style={{
-              background: canSend ? "var(--ink)" : "var(--line-strong)",
-              color: canSend ? "var(--surface)" : "var(--ink-2)",
+              background: canSend ? "var(--accent)" : "var(--line-strong)",
+              color: canSend ? "var(--page)" : "var(--ink-2)",
             }}
           >
-            <Icon size={16} strokeWidth={2.4}><path d="M12 19V5M5 12l7-7 7 7" /></Icon>
+            {sendLabel ? (
+              <span className="text-[12px] font-medium">{sendLabel}</span>
+            ) : (
+              <Icon size={16} strokeWidth={2.4}><path d="M12 19V5M5 12l7-7 7 7" /></Icon>
+            )}
           </button>
         </div>
       </div>

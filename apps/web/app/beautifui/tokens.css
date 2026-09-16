@@ -12,8 +12,8 @@
   --ink: #cfd4cf;
   --ink-2: #a9b2a9;
   --ink-3: #7d877d;
-  --line: color-mix(in srgb, #0e9c2d 40%, #121712);
-  --line-strong: color-mix(in srgb, #0e9c2d 55%, #121712);
+  --line: color-mix(in srgb, #0e9c2d 22%, #121712);
+  --line-strong: color-mix(in srgb, #0e9c2d 38%, #121712);
   --line-soft: #152015;
   --field: #101810;
   --stripe: rgb(31 191 58 / 6%);
@@ -21,6 +21,10 @@
   --accent: #1fbf3a;
   --accent-ink: #8ee89a;
   --accent-tint: rgb(31 191 58 / 16%);
+  --radius-card: 14px;
+  --radius-window: 16px;
+  --shadow-card: 0 0 0 1px color-mix(in srgb, #0e9c2d 16%, #121712),
+    0 10px 28px rgb(0 0 0 / 22%);
   --green: #1fbf3a;
   --green-tint: rgb(31 191 58 / 14%);
   --orange: #d7a13b;
@@ -40,6 +44,29 @@ body {
 }
 
 .shell-note {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--inset);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--page);
+}
+
+.btn-accent:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn-accent:disabled {
+  opacity: 0.4;
+}
+
+.info-note {
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   background: var(--inset);

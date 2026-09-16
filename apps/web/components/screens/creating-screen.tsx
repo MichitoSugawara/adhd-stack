@@ -54,7 +54,7 @@ const statusOf = (value: string | undefined): TaskRow["status"] => {
   if (value === "running") {
     return "running";
   }
-  return "running";
+  return "waiting";
 };
 
 const rowsFromSteps = (
@@ -167,7 +167,12 @@ const CreatingLive = ({ slug }: { slug: string }) => {
       ) : null}
       <TaskRows
         className="max-w-xl"
-        labels={{ completed: "済", failed: "失敗" }}
+        labels={{
+          completed: "完了",
+          failed: "失敗",
+          running: "処理中",
+          waiting: "待機",
+        }}
         rows={rowsFromSteps(
           workspace.provisionSteps,
           workspace.provisionStatus
@@ -249,7 +254,12 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
       <LoadingState label="用意しています" variant="Drive" />
       <TaskRows
         className="max-w-xl"
-        labels={{ completed: "済", failed: "失敗" }}
+        labels={{
+          completed: "完了",
+          failed: "失敗",
+          running: "処理中",
+          waiting: "待機",
+        }}
         rows={rowsForTick(tick)}
         variant="List"
       />

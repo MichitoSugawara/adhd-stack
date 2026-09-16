@@ -5,24 +5,48 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import SidebarNav from "@/components/primitives/SidebarNav";
+import type { SidebarSetupItem } from "@/components/primitives/SidebarNav";
 import { WithSignOut } from "@/components/shell/with-sign-out";
-import { rememberPath } from "@/lib/last-workspace";
+import { useConnectionsPort } from "@/lib/connections-port";
+import { hasConvexUrl } from "@/lib/env";
+import { rememberPath, useLastWorkspace } from "@/lib/last-workspace";
+import { SERVICES } from "@/lib/services";
 import { useShell } from "@/lib/shell-state";
+
+const idleSetup = (): SidebarSetupItem[] =>
+  SERVICES.map((service) => ({
+    id: service.id,
+    label: service.label,
+    status: "idle",
+  }));
 
 const navFromPath = (pathname: string): string => {
   if (pathname.startsWith("/connect")) {
     return "connect";
   }
-  if (pathname.startsWith("/p/") || pathname.startsWith("/projects")) {
-    return "projects";
+  if (pathname.includes("/publish")) {
+    return "publish";
   }
-  return "projects";
+  return "editor";
 };
 
-export const AppFrame = ({ children }: { children: ReactNode }) => {
+const editorPath = (slug?: string): string =>
+  slug ? `/p/${slug}` : "/projects";
+
+const publishPath = (slug?: string): string =>
+  slug ? `/p/${slug}/publish` : "/projects";
+
+const FrameSidebar = ({
+  connectCount,
+  setupItems,
+}: {
+  connectCount?: string;
+  setupItems: SidebarSetupItem[];
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const shell = useShell();
+  const lastWorkspace = useLastWorkspace();
   const [narrow, setNarrow] = useState(false);
 
   useEffect(() => {
@@ -42,51 +66,86 @@ export const AppFrame = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <div className="bg-page text-ink flex min-h-dvh">
-      <WithSignOut>
-        {(signOut) => (
-          <SidebarNav
-            activeNav={navFromPath(pathname)}
-            fill
-            onFooterClick={() => {
+    <WithSignOut>
+      {(signOut) => (
+        <SidebarNav
+          activeNav={navFromPath(pathname)}
+          connectCount={connectCount}
+          defaultCollapsed={narrow}
+          fill
+          onFooterClick={() => {
+            router.push("/connect");
+          }}
+          onNavigate={(key) => {
+            if (key === "connect") {
               router.push("/connect");
-            }}
-            onNavigate={(key) => {
-              if (key === "connect") {
-                router.push("/connect");
-                return;
-              }
-              router.push("/projects");
-            }}
-            onNewChat={() => {
-              router.push("/projects?new=1");
-            }}
-            onPick={(id) => {
-              const app = shell.state.apps.find((item) => item.id === id);
-              if (!app) {
-                return;
-              }
-              router.push(
-                app.status === "creating"
-                  ? `/p/${app.id}/creating`
-                  : `/p/${app.id}`
-              );
-            }}
-            onSignOut={() => {
-              void (async () => {
-                await signOut();
-                router.push("/");
-              })();
-            }}
-            defaultCollapsed={narrow}
-            recents={shell.state.apps.map((app) => ({
-              id: app.id,
-              label: app.name,
-            }))}
-          />
-        )}
-      </WithSignOut>
-      <div className="flex min-w-0 flex-1 flex-col">{children}</div>
-    </div>
+              return;
+            }
+            if (key === "publish") {
+              router.push(publishPath(lastWorkspace?.slug));
+              return;
+            }
+            router.push(editorPath(lastWorkspace?.slug));
+          }}
+          onNewChat={() => {
+            router.push("/projects?new=1");
+          }}
+          onPick={(id) => {
+            const app = shell.state.apps.find((item) => item.id === id);
+            if (!app) {
+              return;
+            }
+            router.push(
+              app.status === "creating"
+                ? `/p/${app.id}/creating`
+                : `/p/${app.id}`
+            );
+          }}
+          onSignOut={() => {
+            void (async () => {
+              await signOut();
+              router.push("/");
+            })();
+          }}
+          recents={shell.state.apps.map((app) => ({
+            id: app.id,
+            label: app.name,
+          }))}
+          setupItems={setupItems}
+        />
+      )}
+    </WithSignOut>
   );
 };
+
+const LiveSidebar = () => {
+  const { board } = useConnectionsPort();
+  const setupItems = SERVICES.map((service) => {
+    const row = board?.connections.find((item) => item.provider === service.id);
+    return {
+      id: service.id,
+      label: service.label,
+      status: row?.status === "connected" ? "connected" : "idle",
+    } satisfies SidebarSetupItem;
+  });
+  const connected = setupItems.filter(
+    (item) => item.status === "connected"
+  ).length;
+  return (
+    <FrameSidebar
+      connectCount={`${String(connected)}/4`}
+      setupItems={setupItems}
+    />
+  );
+};
+
+export const AppFrame = ({ children }: { children: ReactNode }) => (
+  <div className="bg-page text-ink flex min-h-dvh">
+    {hasConvexUrl() ? (
+      <LiveSidebar />
+    ) : (
+      <FrameSidebar connectCount="0/4" setupItems={idleSetup()} />
+    )}
+    <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+  </div>
+);

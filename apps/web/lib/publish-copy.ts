@@ -18,6 +18,11 @@ export const hasFunctionPushOutcome = (notes: readonly string[]): boolean =>
 export const hasPagesDeployStarted = (notes: readonly string[]): boolean =>
   notes.some((note) => /ビルドを始めました|完了はまだ見ていません/u.test(note));
 
+export const isPublishInfoNote = (note: string): boolean =>
+  /デプロイキー|関数は Pages|関数は次の|関数の自動プッシュ|関数は未実施|完了はまだ見ていません|ビルドを始めました/u.test(
+    note
+  );
+
 export const isPagesBuildPending = (
   pending: boolean,
   status?: PagesDeployStatus | null,

@@ -83,7 +83,7 @@ export type TaskRow = {
   key: string;
   label: string;
   amount: string;
-  status: "done" | "failed" | "running" | "sequence";
+  status: "done" | "failed" | "running" | "sequence" | "waiting";
   step?: number;
   details: TaskDetail[];
 };
@@ -91,11 +91,15 @@ export type TaskRow = {
 export type TaskRowsLabels = {
   completed: string;
   failed: string;
+  running: string;
+  waiting: string;
 };
 
 const DEFAULT_LABELS: TaskRowsLabels = {
-  completed: "Completed",
-  failed: "Failed",
+  completed: "完了",
+  failed: "失敗",
+  running: "処理中",
+  waiting: "待機",
 };
 
 const TASK_ROWS: TaskRow[] = [
@@ -154,6 +158,7 @@ export default function TaskRows({
   const badgeFor = (row: TaskRow) => {
     if (row.status === "done") return <Badge tone="green">{CheckIcon}</Badge>;
     if (row.status === "failed") return <Badge tone="red">{XIcon}</Badge>;
+    if (row.status === "waiting") return <SpinnerRing>{row.step}</SpinnerRing>;
     if (row.status === "running") return <SpinnerRing active>{row.step}</SpinnerRing>;
     return row2 === "pending" ? (
       <SpinnerRing>{row.step}</SpinnerRing>
@@ -177,7 +182,18 @@ export default function TaskRows({
           {copy.failed}
         </span>
       );
-    if (row.status === "running") return null;
+    if (row.status === "running")
+      return (
+        <span className="inline-flex h-5.5 items-center rounded-full bg-accent-tint px-2 text-[11.5px] font-medium text-accent-ink">
+          {copy.running}
+        </span>
+      );
+    if (row.status === "waiting")
+      return (
+        <span className="inline-flex h-5.5 items-center rounded-full bg-field px-2 text-[11.5px] font-medium text-ink-3">
+          {copy.waiting}
+        </span>
+      );
     return row2 === "failed" ? (
       <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[11.5px] font-medium text-red" style={{ animation: "fade-in 200ms ease-out both" }}>
         {copy.failed} <span style={{ animation: "spin 1.2s linear infinite" }} className="flex">{RetryIcon}</span>
