@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import SidebarNav from "@/components/primitives/SidebarNav";
 import { WithSignOut } from "@/components/shell/with-sign-out";
+import { rememberPath } from "@/lib/last-workspace";
 import { useShell } from "@/lib/shell-state";
 
 const navFromPath = (pathname: string): string => {
@@ -23,6 +24,10 @@ export const AppFrame = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const shell = useShell();
   const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    rememberPath(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");

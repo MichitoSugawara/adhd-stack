@@ -9,6 +9,7 @@ import type { CloudflarePagesProject } from "./lib/cloudflarePages";
 import {
   attachPagesGitHubSource,
   ensurePagesProject,
+  getPagesDeployment,
   triggerPagesDeployment,
 } from "./lib/cloudflarePages";
 import {
@@ -20,14 +21,18 @@ import {
   ensureConvexProject,
   getConvexProductionDeployment,
 } from "./lib/convexProject";
-import type { PublishResult } from "./lib/publishResult";
+import type { PagesRefreshResult, PublishResult } from "./lib/publishResult";
 import {
   asStoredHttpUrl,
+  noteForPagesOutcome,
+  notesAfterPagesRefresh,
   PAGES_DEPLOY_STARTED_NOTE,
+  pagesStatusFromStage,
+  publishErrorAfterPagesRefresh,
   summarizePublish,
 } from "./lib/publishResult";
 import { reconnectMessage } from "./lib/tokenRefresh";
-import { publishResultValidator } from "./validators";
+import { pagesRefreshValidator, publishResultValidator } from "./validators";
 
 export const publishWorkspace = internalAction({
   args: {
@@ -167,6 +172,8 @@ export const publishWorkspace = internalAction({
       errors.push("Convex: つながっていません");
     }
 
+    let { pagesDeployId, pagesDeployStatus } = workspace;
+
     if (cloudflare && pagesProject) {
       try {
         const deployment = await triggerPagesDeployment(
@@ -174,11 +181,25 @@ export const publishWorkspace = internalAction({
           pagesProject.accountId,
           pagesProject.name
         );
+        const {
+          id: triggeredId,
+          status: triggeredStatus,
+          url: triggeredUrl,
+        } = deployment;
         cloudflarePagesUrl =
-          asStoredHttpUrl(deployment.url) ?? cloudflarePagesUrl;
-        notes.push(PAGES_DEPLOY_STARTED_NOTE);
-        if (deployment.status === "failure" || deployment.status === "failed") {
+          asStoredHttpUrl(triggeredUrl) ?? cloudflarePagesUrl;
+        pagesDeployId = triggeredId ?? pagesDeployId;
+        pagesDeployStatus = pagesStatusFromStage(triggeredStatus);
+        if (pagesDeployStatus === "started") {
+          notes.push(PAGES_DEPLOY_STARTED_NOTE);
+        } else if (pagesDeployStatus === "failure") {
+          notes.push("Pages のビルドは失敗しました。");
           errors.push("Pages: デプロイが失敗しました");
+        } else {
+          const outcome = noteForPagesOutcome("success", notes);
+          if (outcome) {
+            notes.push(outcome);
+          }
         }
       } catch (error) {
         errors.push(
@@ -194,6 +215,7 @@ export const publishWorkspace = internalAction({
       convexUrl: convexUrl ?? null,
       error: errors.length > 0 ? errors.join(" / ") : null,
       notes,
+      pagesDeployStatus,
     };
 
     await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
@@ -204,8 +226,11 @@ export const publishWorkspace = internalAction({
       convexProjectSlug,
       convexTeamSlug,
       convexUrl,
+      pagesDeployId,
+      pagesDeployStatus,
       provisionStatus: workspace.provisionStatus,
       publishError: result.error ?? "",
+      publishNotes: notes,
       workspaceId: args.workspaceId,
     });
     await ctx.runMutation(internal.workspaceInternal.insertSystemMessage, {
@@ -216,4 +241,92 @@ export const publishWorkspace = internalAction({
     return result;
   },
   returns: publishResultValidator,
+});
+
+export const refreshPagesDeploy = internalAction({
+  args: {
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args): Promise<PagesRefreshResult> => {
+    const workspace = await ctx.runQuery(
+      internal.workspaceInternal.getWorkspace,
+      { workspaceId: args.workspaceId }
+    );
+    if (!workspace) {
+      return {
+        error: "アプリが見つかりません",
+        notes: [],
+        pagesDeployStatus: null,
+        pagesUrl: null,
+      };
+    }
+    const notes = [...(workspace.publishNotes ?? [])];
+    const cloudflare = await loadFreshConnection(
+      ctx,
+      args.userId,
+      "cloudflare"
+    );
+    const accountId = workspace.cloudflareAccountId;
+    const projectName = workspace.cloudflareProjectName;
+    if (!(cloudflare && accountId && projectName)) {
+      return {
+        error: cloudflare ? null : reconnectMessage("cloudflare"),
+        notes,
+        pagesDeployStatus: workspace.pagesDeployStatus ?? null,
+        pagesUrl: asStoredHttpUrl(workspace.cloudflarePagesUrl) ?? null,
+      };
+    }
+    const deployment = await getPagesDeployment(
+      cloudflare.accessToken,
+      accountId,
+      projectName,
+      workspace.pagesDeployId
+    );
+    if (!deployment) {
+      return {
+        error: null,
+        notes,
+        pagesDeployStatus: workspace.pagesDeployStatus ?? "started",
+        pagesUrl: asStoredHttpUrl(workspace.cloudflarePagesUrl) ?? null,
+      };
+    }
+    const pagesDeployStatus = pagesStatusFromStage(deployment.status);
+    const pagesUrl =
+      asStoredHttpUrl(deployment.url) ??
+      asStoredHttpUrl(workspace.cloudflarePagesUrl) ??
+      null;
+    const outcome = noteForPagesOutcome(pagesDeployStatus, notes);
+    const nextNotes = notesAfterPagesRefresh(notes, pagesDeployStatus, outcome);
+    const publishError = publishErrorAfterPagesRefresh(
+      pagesDeployStatus,
+      workspace.publishError
+    );
+    await ctx.runMutation(internal.workspaceInternal.patchWorkspace, {
+      cloudflarePagesUrl: pagesUrl ?? workspace.cloudflarePagesUrl,
+      pagesDeployId: deployment.id ?? workspace.pagesDeployId,
+      pagesDeployStatus,
+      provisionStatus: workspace.provisionStatus,
+      publishError,
+      publishNotes: nextNotes,
+      workspaceId: args.workspaceId,
+    });
+    if (
+      outcome &&
+      workspace.pagesDeployStatus !== pagesDeployStatus &&
+      pagesDeployStatus !== "started"
+    ) {
+      await ctx.runMutation(internal.workspaceInternal.insertSystemMessage, {
+        body: outcome,
+        workspaceId: args.workspaceId,
+      });
+    }
+    return {
+      error: pagesDeployStatus === "failure" ? publishError : null,
+      notes: nextNotes,
+      pagesDeployStatus,
+      pagesUrl,
+    };
+  },
+  returns: pagesRefreshValidator,
 });

@@ -1,24 +1,24 @@
 export const SERVICES = [
   {
-    body: "Codex Cloud 用のデバイスログイン。画面のコードを入力します。",
+    body: "画面のコードを ChatGPT に入れます。",
     id: "chatgpt",
     label: "ChatGPT",
     logo: "/brands/chatgpt.png",
   },
   {
-    body: "ソース置き場。リポジトリは名前を付けて作る。",
+    body: "ソースの置き場です。",
     id: "github",
     label: "GitHub",
     logo: "/brands/github.ico",
   },
   {
-    body: "ユーザーの Cloudflare Pages へ公開する。",
+    body: "公開先の Pages です。",
     id: "cloudflare",
     label: "Cloudflare",
     logo: "/brands/cloudflare.ico",
   },
   {
-    body: "ユーザーの Convex にデータと関数を置く。",
+    body: "データと関数の置き場です。",
     id: "convex",
     label: "Convex",
     logo: "/brands/convex.ico",

@@ -45,18 +45,17 @@ const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
 const ProjectsReadyNote = () => {
   const port = useConnectionsPort();
   if (!port.board) {
-    return <p className="shell-note max-w-3xl">接続状態を確認しています。</p>;
+    return <p className="shell-note max-w-3xl">接続を確認しています。</p>;
   }
   if (port.board.allConnected) {
     return (
       <p className="shell-note max-w-3xl">
-        4つの接続は揃っています。名前を付けると GitHub
-        リポジトリと実行環境を作ります。
+        4つそろっています。名前を付けると、リポジトリと実行環境を作ります。
       </p>
     );
   }
   return (
-    <p className="shell-note max-w-3xl">接続が揃うまで作成は始めません。</p>
+    <p className="shell-note max-w-3xl">接続がそろうまで、作成は始めません。</p>
   );
 };
 

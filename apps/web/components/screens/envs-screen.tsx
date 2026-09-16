@@ -1,17 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { useWorkspaceBySlug } from "@/lib/coding-port";
 import { hasConvexUrl } from "@/lib/env";
+import { writeLastWorkspace } from "@/lib/last-workspace";
 import { publicHttpUrl } from "@/lib/public-url";
 import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
 import { useShell } from "@/lib/shell-state";
 
 const EnvsLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
+
+  useEffect(() => {
+    if (!workspace) {
+      return;
+    }
+    writeLastWorkspace({
+      name: workspace.name,
+      path: `/p/${slug}/envs`,
+      slug,
+    });
+  }, [slug, workspace]);
+
   if (workspace === undefined) {
     return <p className="text-ink-2 mt-2 text-[14px]">読み込んでいます…</p>;
   }
@@ -29,8 +43,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
         {workspace.name}
       </h1>
       <p className="shell-note max-w-2xl">
-        v1 の公開は一本です。プレビュー / 検証 / 本番の多環境は post-v1（tahcode
-        テンプレートでタダなら後で出す）。公開操作はチャット画面です。
+        公開は一本です。操作はチャット画面です。
       </p>
       <div className="rounded-card bg-surface shadow-card max-w-2xl p-4 text-[13px] leading-6">
         <p>
@@ -63,9 +76,19 @@ const EnvsLive = ({ slug }: { slug: string }) => {
             <span className="text-ink-2 ml-2">まだありません</span>
           )}
         </p>
+        {workspace.pagesDeployStatus === "started" ? (
+          <p className="text-ink-2 mt-3">
+            Pages をビルドしています。完了はまだ見ていません。
+          </p>
+        ) : null}
         {convex ? (
           <p className="text-ink-2 mt-3">{CONVEX_FUNCTION_PUSH_NOTE}</p>
         ) : null}
+        {workspace.publishNotes?.map((note) => (
+          <p className="text-ink-2 mt-2" key={note}>
+            {note}
+          </p>
+        ))}
         {workspace.publishError ? (
           <p className="text-red mt-3">{workspace.publishError}</p>
         ) : null}
@@ -96,8 +119,7 @@ export const EnvsScreen = ({ appId }: { appId: string }) => {
                   {title}
                 </h1>
                 <p className="shell-note max-w-2xl">
-                  v1 の公開は一本です。Convex 未設定のため URL
-                  は出しません。公開操作はチャット画面です。
+                  Convex 未設定のため URL は出しません。公開はチャット画面です。
                 </p>
               </>
             )}

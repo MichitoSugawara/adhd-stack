@@ -249,11 +249,30 @@ export const configurePagesForConvexDeploy = async (args: {
   throw new Error(lastMessage);
 };
 
+export interface PagesDeployment {
+  id?: string;
+  status?: string;
+  url?: string;
+}
+
+const pagesDeploymentFrom = (
+  payload: Record<string, unknown>
+): PagesDeployment => {
+  const listed = asList(payload.result);
+  const row =
+    listed.length > 0 ? asRecord(listed[0]) : asRecord(payload.result);
+  return {
+    id: asString(row.id),
+    status: asString(asRecord(row.latest_stage).status),
+    url: asString(row.url),
+  };
+};
+
 export const triggerPagesDeployment = async (
   token: string,
   accountId: string,
   projectName: string
-): Promise<{ status?: string; url?: string }> => {
+): Promise<PagesDeployment> => {
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/deployments`,
     {
@@ -262,15 +281,34 @@ export const triggerPagesDeployment = async (
     }
   );
   const payload = await readJson(response);
-  const result = asRecord(payload.result);
   if (!response.ok) {
     throw new Error(
       asString(asRecord(asList(payload.errors)[0]).message) ??
         `Pages のデプロイを開始できませんでした: HTTP ${response.status}`
     );
   }
-  return {
-    status: asString(asRecord(result.latest_stage).status),
-    url: asString(result.url),
-  };
+  return pagesDeploymentFrom(payload);
+};
+
+export const getPagesDeployment = async (
+  token: string,
+  accountId: string,
+  projectName: string,
+  deploymentId?: string
+): Promise<PagesDeployment | undefined> => {
+  const suffix = deploymentId
+    ? `/deployments/${deploymentId}`
+    : "/deployments?per_page=1";
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}${suffix}`,
+    { headers: headersFor(token) }
+  );
+  if (!response.ok) {
+    return undefined;
+  }
+  const parsed = pagesDeploymentFrom(await readJson(response));
+  if (!(parsed.id || parsed.status || parsed.url)) {
+    return undefined;
+  }
+  return parsed;
 };

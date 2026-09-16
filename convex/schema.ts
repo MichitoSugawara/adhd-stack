@@ -7,6 +7,7 @@ import {
   connectionStatusValidator,
   messageKindValidator,
   messageRoleValidator,
+  pagesDeployStatusValidator,
   providerValidator,
   provisionStatusValidator,
   provisionStepsValidator,
@@ -123,10 +124,13 @@ export default defineSchema({
     githubRepoUrl: v.optional(v.string()),
     name: v.string(),
     originRepoUrl: v.optional(v.string()),
+    pagesDeployId: v.optional(v.string()),
+    pagesDeployStatus: v.optional(pagesDeployStatusValidator),
     provisionError: v.optional(v.string()),
     provisionStatus: provisionStatusValidator,
     provisionSteps: v.optional(provisionStepsValidator),
     publishError: v.optional(v.string()),
+    publishNotes: v.optional(v.array(v.string())),
     slug: v.optional(v.string()),
     templateKind: v.optional(
       v.union(v.literal("tahcode_seed"), v.literal("tahcode_template"))

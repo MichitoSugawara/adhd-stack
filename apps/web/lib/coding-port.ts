@@ -22,3 +22,6 @@ export const useChatMessages = (workspaceId?: Id<"workspaces">) =>
 export const useSendChat = () => useMutation(api.chat.send);
 
 export const usePublishApp = () => useAction(api.workspacePublish.publish);
+
+export const useRefreshPages = () =>
+  useAction(api.workspacePublish.refreshPages);

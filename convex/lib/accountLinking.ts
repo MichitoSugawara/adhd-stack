@@ -587,6 +587,12 @@ export const mergeUserPair = async (
         keepWorkspace.originRepoUrl,
         absorbWorkspace.originRepoUrl
       ),
+      pagesDeployId: preferText(
+        keepWorkspace.pagesDeployId,
+        absorbWorkspace.pagesDeployId
+      ),
+      pagesDeployStatus:
+        keepWorkspace.pagesDeployStatus ?? absorbWorkspace.pagesDeployStatus,
       provisionError: keepWorkspace.provisionError,
       provisionStatus: pickProvisionStatus(
         keepWorkspace.provisionStatus,
@@ -596,6 +602,10 @@ export const mergeUserPair = async (
         keepWorkspace.publishError,
         absorbWorkspace.publishError
       ),
+      publishNotes:
+        keepWorkspace.publishNotes && keepWorkspace.publishNotes.length > 0
+          ? keepWorkspace.publishNotes
+          : absorbWorkspace.publishNotes,
       slug: keepWorkspace.slug ?? absorbWorkspace.slug ?? slug,
       updatedAt: Date.now(),
     });

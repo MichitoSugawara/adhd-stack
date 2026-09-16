@@ -57,8 +57,8 @@ export const LoginScreen = () => {
           >
             接続へ進む
           </button>
-          <p className="shell-note mt-5">
-            偽のログイン成功は出しません。接続画面で本物の認可だけを始めます。
+          <p className="text-ink-3 mt-5 text-[13px] leading-6">
+            接続画面で、本物の認可だけを始めます。
           </p>
         </div>
       </section>

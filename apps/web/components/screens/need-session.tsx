@@ -9,10 +9,10 @@ export const NeedSession = () => (
         ADHD Stack
       </p>
       <h1 className="mt-3 text-[28px] font-semibold tracking-tight">
-        先にシェルを開いてください
+        先に入口を開いてください
       </h1>
       <p className="text-ink-2 mt-2 text-[14px]">
-        先に入口でシェルを開いてください。接続は接続画面で本物の認可だけを始めます。
+        接続は、入口のあとで始めます。
       </p>
       <Link
         className="rounded-control bg-ink text-surface mt-6 inline-flex h-10 items-center px-4 text-[13px] font-medium"

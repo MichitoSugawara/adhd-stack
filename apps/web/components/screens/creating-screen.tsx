@@ -11,6 +11,7 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { useRetryProvision, useWorkspaceBySlug } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
+import { writeLastWorkspace } from "@/lib/last-workspace";
 import { useShell } from "@/lib/shell-state";
 
 const STEPS = [
@@ -104,6 +105,17 @@ const CreatingLive = ({ slug }: { slug: string }) => {
   const retry = useRetryProvision();
   const [retrying, setRetrying] = useState(false);
   const [failNote, setFailNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!workspace) {
+      return;
+    }
+    writeLastWorkspace({
+      name: workspace.name,
+      path: `/p/${slug}/creating`,
+      slug,
+    });
+  }, [slug, workspace]);
 
   if (workspace === undefined) {
     return (

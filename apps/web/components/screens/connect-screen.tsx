@@ -10,6 +10,7 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { useLastWorkspace } from "@/lib/last-workspace";
 import { openOauthTab } from "@/lib/oauth-navigation";
 import {
   clearPendingOc,
@@ -36,15 +37,60 @@ interface PendingOc {
 const ctaLabelFor = (
   boardReady: boolean,
   busy: ServiceId | null,
-  id: ServiceId
+  id: ServiceId,
+  waitingDevice: boolean
 ): string => {
   if (!boardReady) {
     return "確認中…";
   }
+  if (id === "chatgpt" && waitingDevice) {
+    return "入力待ち";
+  }
   if (busy === id) {
-    return "接続中…";
+    return "認可待ち";
   }
   return "つなぐ";
+};
+
+const boardNote = (
+  allConnected: boolean,
+  count: number,
+  last?: { name: string; slug: string } | null
+): string => {
+  const label = last ? last.name || last.slug : "";
+  if (allConnected && last) {
+    return `${count} / 4。ChatGPT は画面のコードです。 ${label} に戻れます。`;
+  }
+  if (allConnected) {
+    return `${count} / 4。ChatGPT は画面のコードです。 4つそろいました。`;
+  }
+  if (last) {
+    return `${count} / 4。ChatGPT は画面のコードです。 そろったら ${label} に戻れます。`;
+  }
+  return `${count} / 4。ChatGPT は画面のコードです。 そろってから作成できます。`;
+};
+
+const nextLabel = (allConnected: boolean, hasLast: boolean): string => {
+  if (allConnected && hasLast) {
+    return "アプリに戻る";
+  }
+  if (allConnected) {
+    return "一覧へ";
+  }
+  return "一覧を見る";
+};
+
+const nextHint = (
+  allConnected: boolean,
+  last?: { name: string; slug: string } | null
+): string => {
+  if (allConnected && last) {
+    return `${last.name || last.slug} へ戻ります。`;
+  }
+  if (allConnected) {
+    return "4つそろいました。";
+  }
+  return "作成は、4つそろってからです。";
 };
 
 const ConnectBoard = () => {
@@ -60,6 +106,7 @@ const ConnectBoard = () => {
     signInWithTicket,
   } = useConnectionsPort();
   const banner = useConnectBanner();
+  const lastWorkspace = useLastWorkspace();
   const [errors, setErrors] = useState<Partial<Record<ServiceId, string>>>({});
   const [busy, setBusy] = useState<ServiceId | null>(null);
   const [device, setDevice] = useState<DeviceSession | null>(null);
@@ -229,32 +276,29 @@ const ConnectBoard = () => {
   return (
     <>
       <p className="text-ink-2 mt-2 text-[14px] leading-6">
-        つながったように見せません。未設定なら押せません。
+        足りないものだけつなぎます。
       </p>
       {banner ? <p className="shell-note mt-4 max-w-3xl">{banner}</p> : null}
       <p className="shell-note mt-4 max-w-3xl">
-        {connectedCount} / 4 接続。ChatGPT
-        は画面のコード、ほかはつなぐボタンです。
+        {boardNote(Boolean(board?.allConnected), connectedCount, lastWorkspace)}
       </p>
-      <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
+      {device ? (
+        <ChatgptDevicePanel
+          onCancel={() => {
+            setDevice(null);
+            setBusy(null);
+          }}
+          userCode={device.userCode}
+          verificationUrl={device.verificationUrl}
+        />
+      ) : null}
+      <div className="mt-4 grid max-w-3xl gap-3 sm:grid-cols-2">
         {SERVICES.map((service) => {
           const connection = board?.connections.find(
             (row) => row.provider === service.id
           );
           let extra = null;
-          if (service.id === "chatgpt" && device) {
-            extra = (
-              <ChatgptDevicePanel
-                busy={busy === "chatgpt"}
-                onCancel={() => {
-                  setDevice(null);
-                  setBusy(null);
-                }}
-                userCode={device.userCode}
-                verificationUrl={device.verificationUrl}
-              />
-            );
-          } else if (service.id === pendingOc?.service) {
+          if (service.id === pendingOc?.service) {
             extra = (
               <p className="text-ink-3 mt-3 text-[12px]">
                 新しいタブで認可しています。終わったらこのタブに戻ってください。
@@ -266,7 +310,12 @@ const ConnectBoard = () => {
               configured={configured?.[service.id] ?? true}
               connection={connection}
               ctaDisabled={busy !== null || board === undefined}
-              ctaLabel={ctaLabelFor(board !== undefined, busy, service.id)}
+              ctaLabel={ctaLabelFor(
+                board !== undefined,
+                busy,
+                service.id,
+                device !== null
+              )}
               error={errors[service.id]}
               extra={extra}
               key={service.id}
@@ -281,20 +330,22 @@ const ConnectBoard = () => {
           );
         })}
       </div>
-      <div className="flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap gap-3">
         <button
           className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
           onClick={() => {
+            if (board?.allConnected && lastWorkspace) {
+              router.push(lastWorkspace.path);
+              return;
+            }
             router.push("/projects");
           }}
           type="button"
         >
-          {board?.allConnected ? "一覧へ" : "一覧の骨格を見る"}
+          {nextLabel(Boolean(board?.allConnected), lastWorkspace !== null)}
         </button>
         <p className="text-ink-3 self-center text-[13px]">
-          {board?.allConnected
-            ? "4つそろいました。"
-            : "未接続のまま、一覧の骨格を見ます。作成は接続が揃ってからです。"}
+          {nextHint(Boolean(board?.allConnected), lastWorkspace)}
         </p>
       </div>
     </>
@@ -310,10 +361,10 @@ const ConnectOffline = () => {
   return (
     <>
       <p className="text-ink-2 mt-2 text-[14px] leading-6">
-        バックエンド URL が未設定です。つながったようには見せません。
+        バックエンド URL が未設定です。つなぐボタンは使えません。
       </p>
       <p className="shell-note mt-4 max-w-3xl">
-        0 / 4 接続。接続ボタンは使えません。
+        0 / 4。接続ボタンは使えません。
       </p>
       <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
         {SERVICES.map((service) => (
@@ -336,7 +387,7 @@ const ConnectOffline = () => {
           }}
           type="button"
         >
-          一覧の骨格を見る
+          一覧を見る
         </button>
       </div>
     </>

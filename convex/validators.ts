@@ -40,6 +40,12 @@ export const provisionStepsValidator = v.object({
   template: provisionStepValidator,
 });
 
+export const pagesDeployStatusValidator = v.union(
+  v.literal("failure"),
+  v.literal("started"),
+  v.literal("success")
+);
+
 export const workspacePublicValidator = v.object({
   _id: v.id("workspaces"),
   cloudflarePagesUrl: v.optional(v.string()),
@@ -50,10 +56,12 @@ export const workspacePublicValidator = v.object({
   githubRepoUrl: v.optional(v.string()),
   name: v.string(),
   originRepoUrl: v.optional(v.string()),
+  pagesDeployStatus: v.optional(pagesDeployStatusValidator),
   provisionError: v.optional(v.string()),
   provisionStatus: provisionStatusValidator,
   provisionSteps: v.optional(provisionStepsValidator),
   publishError: v.optional(v.string()),
+  publishNotes: v.optional(v.array(v.string())),
   slug: v.string(),
 });
 
@@ -62,6 +70,14 @@ export const publishResultValidator = v.object({
   convexUrl: v.union(v.string(), v.null()),
   error: v.union(v.string(), v.null()),
   notes: v.array(v.string()),
+  pagesDeployStatus: v.optional(pagesDeployStatusValidator),
+});
+
+export const pagesRefreshValidator = v.object({
+  error: v.union(v.string(), v.null()),
+  notes: v.array(v.string()),
+  pagesDeployStatus: v.union(pagesDeployStatusValidator, v.null()),
+  pagesUrl: v.union(v.string(), v.null()),
 });
 
 export const messageKindValidator = v.union(

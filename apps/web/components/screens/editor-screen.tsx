@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PromptBar from "@/components/primitives/PromptBar";
 import StreamingText from "@/components/primitives/StreamingText";
@@ -13,14 +13,15 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { toChatView } from "@/lib/chat-view";
 import {
   useChatMessages,
-  usePublishApp,
   useSendChat,
   useWorkspaceBySlug,
 } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { writeLastWorkspace } from "@/lib/last-workspace";
 import { OFFLINE_PUBLISH_NOTE } from "@/lib/publish-copy";
+import { usePublishFlow } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
 const hostingHint = (
@@ -63,13 +64,21 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
-  const publishApp = usePublishApp();
   const { board } = useConnectionsPort();
+  const publishFlow = usePublishFlow(slug, workspace);
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [publishing, setPublishing] = useState(false);
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const [publishNotes, setPublishNotes] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!workspace) {
+      return;
+    }
+    writeLastWorkspace({
+      name: workspace.name,
+      path: `/p/${slug}`,
+      slug,
+    });
+  }, [slug, workspace]);
 
   if (workspace === undefined) {
     return (
@@ -90,7 +99,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
     workspace.githubRepoUrl && workspace.codingEnvironmentId
   );
   const view = toChatView(messages ?? []);
-  const lastPublishError = publishError ?? (workspace.publishError || null);
+  const lastPublishError = publishFlow.error;
 
   const send = async (text: string) => {
     const trimmed = text.trim();
@@ -109,24 +118,6 @@ const EditorLive = ({ slug }: { slug: string }) => {
       setFailNote(connectErrorMessage(error));
     } finally {
       setSending(false);
-    }
-  };
-
-  const publish = async () => {
-    if (publishing) {
-      return;
-    }
-    setPublishing(true);
-    setPublishError(null);
-    try {
-      const result = await publishApp({ slug });
-      setPublishNotes(result.notes);
-      setPublishError(result.error);
-    } catch (error) {
-      setPublishNotes([]);
-      setPublishError(connectErrorMessage(error));
-    } finally {
-      setPublishing(false);
     }
   };
 
@@ -150,16 +141,18 @@ const EditorLive = ({ slug }: { slug: string }) => {
             convexUrl={workspace.convexUrl}
             error={lastPublishError}
             hint={hostingHint(board, Boolean(workspace.githubRepoUrl))}
-            notes={publishNotes}
+            notes={publishFlow.notes}
             onPublish={() => {
-              void publish();
+              void publishFlow.publish();
             }}
+            pagesDeployStatus={publishFlow.pagesDeployStatus}
             pagesUrl={workspace.cloudflarePagesUrl}
-            pending={publishing}
+            pending={publishFlow.pending}
+            waiting={publishFlow.waiting}
           />
           {ready ? (
             <p className="shell-note">
-              指示は実行環境に送られます。公開 URL は上の公開欄です。
+              指示は実行環境に送られます。公開は上の欄です。
             </p>
           ) : (
             <p className="shell-note">
@@ -172,7 +165,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
           {failNote ? <p className="text-red text-[13px]">{failNote}</p> : null}
           {view.length === 0 ? (
             <p className="text-ink-2 text-[14px]">
-              最初の指示を書いてください。偽の成功は出しません。
+              最初の指示を書いてください。
             </p>
           ) : null}
           {view.map((item) => {
@@ -280,9 +273,7 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
             }}
             pending={false}
           />
-          <p className="shell-note">
-            Convex 未設定のため会話は送れません。偽の返答は出しません。
-          </p>
+          <p className="shell-note">Convex 未設定のため会話は送れません。</p>
         </div>
       </div>
       <div className="border-line border-t px-5 py-3">

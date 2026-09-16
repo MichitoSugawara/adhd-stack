@@ -1,10 +1,22 @@
+"use client";
+
+import LoadingState from "@/components/primitives/LoadingState";
 import { publicHttpUrl } from "@/lib/public-url";
+import type { PagesDeployStatus } from "@/lib/publish-copy";
 import {
   CONVEX_FUNCTION_PUSH_NOTE,
   hasFunctionPushOutcome,
 } from "@/lib/publish-copy";
 
-const UrlRow = ({ href, label }: { href: string | null; label: string }) => (
+const UrlRow = ({
+  href,
+  label,
+  waiting,
+}: {
+  href: string | null;
+  label: string;
+  waiting?: boolean;
+}) => (
   <p className="text-[13px] leading-6">
     <span className="text-ink-3">{label}</span>
     {href ? (
@@ -19,8 +31,31 @@ const UrlRow = ({ href, label }: { href: string | null; label: string }) => (
     ) : (
       <span className="text-ink-2 ml-2">まだありません</span>
     )}
+    {waiting && href ? (
+      <span className="text-ink-3 ml-2">完了はまだ見ていません</span>
+    ) : null}
   </p>
 );
+
+const statusLabel = (
+  pending: boolean,
+  waiting: boolean,
+  status?: PagesDeployStatus | null
+): string => {
+  if (pending) {
+    return "作業中";
+  }
+  if (status === "failure") {
+    return "失敗";
+  }
+  if (status === "success") {
+    return "Pages 完了";
+  }
+  if (waiting) {
+    return "ビルド中";
+  }
+  return "公開";
+};
 
 export const PublishPanel = ({
   convexUrl,
@@ -28,31 +63,41 @@ export const PublishPanel = ({
   hint,
   notes,
   onPublish,
+  pagesDeployStatus,
   pagesUrl,
   pending,
+  waiting,
 }: {
   convexUrl?: string | null;
   error?: string | null;
   hint?: string | null;
   notes?: readonly string[];
   onPublish: () => void;
+  pagesDeployStatus?: PagesDeployStatus | null;
   pagesUrl?: string | null;
   pending: boolean;
+  waiting?: boolean;
 }) => {
   const pages = publicHttpUrl(pagesUrl);
   const convex = publicHttpUrl(convexUrl);
   const shownNotes = notes ?? [];
+  const inFlight = waiting ?? pending;
   const showFunctionGap =
     convex !== null && !hasFunctionPushOutcome(shownNotes);
+  const waitLabel = pending ? "公開しています" : "Pages をビルドしています";
 
   return (
-    <section className="rounded-card bg-surface shadow-card max-w-2xl p-4">
+    <section className="rounded-card bg-surface shadow-card max-w-2xl p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-ink-3 text-[12px]">公開</p>
-          <p className="text-ink-2 mt-1 text-[13px] leading-6">
-            開いているアプリを、つながっている Cloudflare Pages と Convex
-            に出します。偽の URL は出しません。
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-ink-3 text-[12px]">公開</p>
+            <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px] font-medium">
+              {statusLabel(pending, inFlight, pagesDeployStatus)}
+            </span>
+          </div>
+          <p className="text-ink-2 mt-2 text-[13px] leading-6">
+            開いているアプリを、つながっている Pages と Convex に出します。
           </p>
         </div>
         <button
@@ -64,8 +109,16 @@ export const PublishPanel = ({
           {pending ? "公開しています…" : "公開する"}
         </button>
       </div>
-      <div className="mt-3 flex flex-col gap-1">
-        <UrlRow href={pages} label="Pages" />
+      {inFlight ? (
+        <div className="mt-4">
+          <LoadingState label={waitLabel} variant="Drive" />
+          <p className="text-ink-2 mt-2 text-[13px] leading-6">
+            関数は Pages ビルドのあとです。終わったことにしません。
+          </p>
+        </div>
+      ) : null}
+      <div className="mt-4 flex flex-col gap-1">
+        <UrlRow href={pages} label="Pages" waiting={inFlight} />
         <UrlRow href={convex} label="Convex" />
       </div>
       {hint ? <p className="text-ink-2 mt-3 text-[13px]">{hint}</p> : null}

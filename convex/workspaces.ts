@@ -16,10 +16,12 @@ const toPublic = (workspace: Doc<"workspaces">) => ({
   githubRepoUrl: workspace.githubRepoUrl,
   name: workspace.name,
   originRepoUrl: workspace.originRepoUrl,
+  pagesDeployStatus: workspace.pagesDeployStatus,
   provisionError: workspace.provisionError,
   provisionStatus: workspace.provisionStatus,
   provisionSteps: workspace.provisionSteps,
   publishError: workspace.publishError,
+  publishNotes: workspace.publishNotes,
   slug: workspace.slug ?? slugFromName(workspace.name),
 });
 

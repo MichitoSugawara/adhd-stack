@@ -52,6 +52,8 @@ const {
   CONVEX_FUNCTION_PUSH_NOTE,
   hasFunctionPushOutcome,
   noteForFunctionPush,
+  PAGES_DEPLOY_STARTED_NOTE,
+  summarizePublish,
 } = await import(pathToFileURL(path.join(dir, "publishResult.ts")).href);
 const webCopy = await import("../lib/publish-copy.ts");
 
@@ -108,11 +110,29 @@ assert.equal(
 assert.equal(webCopy.CONVEX_FUNCTION_PUSH_NOTE, CONVEX_FUNCTION_PUSH_NOTE);
 assert.match(CONVEX_FUNCTION_PUSH_NOTE, /Pages ビルドの convex deploy/);
 assert.doesNotMatch(CONVEX_FUNCTION_PUSH_NOTE, /バンドルできないため未実施/);
-assert.match(
-  noteForFunctionPush("configured"),
-  /デプロイキーを Cloudflare Pages/
+assert.match(noteForFunctionPush("configured"), /デプロイキーを Pages/);
+assert.match(noteForFunctionPush("configured"), /完了はまだ見ていません/);
+assert.match(PAGES_DEPLOY_STARTED_NOTE, /完了はまだ見ていません/);
+assert.doesNotMatch(
+  summarizePublish({
+    cloudflarePagesUrl: "https://example.pages.dev",
+    convexUrl: "https://happy-animal-123.convex.cloud",
+    error: null,
+    notes: [PAGES_DEPLOY_STARTED_NOTE],
+    pagesDeployStatus: "started",
+  }),
+  /公開しました/
 );
-assert.match(noteForFunctionPush("configured"), /完了を待っていません/);
+assert.match(
+  summarizePublish({
+    cloudflarePagesUrl: "https://example.pages.dev",
+    convexUrl: null,
+    error: null,
+    notes: [PAGES_DEPLOY_STARTED_NOTE],
+    pagesDeployStatus: "started",
+  }),
+  /公開を始めました/
+);
 assert.match(noteForFunctionPush("key_only"), /関数は未実施/);
 assert.match(noteForFunctionPush("failed"), /関数の自動プッシュは未実施/);
 assert.equal(hasFunctionPushOutcome([noteForFunctionPush("configured")]), true);
@@ -172,6 +192,7 @@ assert.ok(
 );
 assert.doesNotMatch(publishActions, /CONVEX_FUNCTION_PUSH_NOTE/);
 assert.match(publishActions, /PAGES_DEPLOY_STARTED_NOTE/);
+assert.match(publishActions, /refreshPagesDeploy/);
 
 const pages = await readFile(
   path.join(convexLib, "cloudflarePages.ts"),
@@ -179,6 +200,7 @@ const pages = await readFile(
 );
 assert.match(pages, /configurePagesForConvexDeploy/);
 assert.match(pages, /CONVEX_PAGES_BUILD_COMMAND/);
+assert.match(pages, /getPagesDeployment/);
 
 const ocConvex = await readFile(
   path.join(convexLib, "convexFromOpenConnector.ts"),

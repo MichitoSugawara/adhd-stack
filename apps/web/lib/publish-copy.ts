@@ -1,8 +1,12 @@
-export const CONVEX_FUNCTION_PUSH_NOTE =
-  "関数はホストからバンドルしません。公開時にデプロイキーを Cloudflare Pages 本番へ載せ、Pages ビルドの convex deploy で送ります。";
+export type PagesDeployStatus = "failure" | "started" | "success";
 
-export const OFFLINE_PUBLISH_NOTE =
-  "Convex 未設定のため公開できません。偽の URL は出しません。";
+export const CONVEX_FUNCTION_PUSH_NOTE =
+  "関数は Pages ビルドの convex deploy で載ります。この画面から送りません。";
+
+export const PAGES_DEPLOY_STARTED_NOTE =
+  "Pages のビルドを始めました。完了はまだ見ていません。関数はそのあとです。";
+
+export const OFFLINE_PUBLISH_NOTE = "Convex 未設定のため公開できません。";
 
 export const hasFunctionPushOutcome = (notes: readonly string[]): boolean =>
   notes.some((note) =>
@@ -10,3 +14,23 @@ export const hasFunctionPushOutcome = (notes: readonly string[]): boolean =>
       note
     )
   );
+
+export const hasPagesDeployStarted = (notes: readonly string[]): boolean =>
+  notes.some((note) => /ビルドを始めました|完了はまだ見ていません/u.test(note));
+
+export const isPagesBuildPending = (
+  pending: boolean,
+  status?: PagesDeployStatus | null,
+  notes: readonly string[] = []
+): boolean => {
+  if (pending) {
+    return true;
+  }
+  if (status === "started") {
+    return true;
+  }
+  if (status === "success" || status === "failure") {
+    return false;
+  }
+  return hasPagesDeployStarted(notes);
+};

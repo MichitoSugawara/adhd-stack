@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import {
@@ -10,19 +10,29 @@ import {
 } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { rememberPath } from "@/lib/last-workspace";
 import { clearPendingOc } from "@/lib/pending-oc";
 import { enterShell } from "@/lib/shell-state";
 
 const SessionEffectsLive = () => {
   const params = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
-  const { confirmOc, refresh, signInWithTicket } = useConnectionsPort();
+  const { board, confirmOc, refresh, signInWithTicket } = useConnectionsPort();
   const handledTicket = useRef<string | null>(null);
   const ticket = params.get("ticket");
   const connected = params.get("connected");
   const oauthError = params.get("oauth_error");
   const oc = params.get("oc");
   const ocName = params.get("name");
+
+  useEffect(() => {
+    if (!board || board.allConnected || !pathname.startsWith("/p/")) {
+      return;
+    }
+    rememberPath(pathname);
+    router.replace("/connect");
+  }, [board, pathname, router]);
 
   useEffect(() => {
     if (!ticket || handledTicket.current === ticket) {

@@ -79,6 +79,8 @@ export default defineConfig({
         "apps/web/lib/coding-port.ts",
         "apps/web/lib/connect-error.ts",
         "apps/web/lib/connections-port.ts",
+        "apps/web/lib/last-workspace.ts",
+        "apps/web/lib/publish-flow.ts",
         "apps/web/lib/shell-state.ts",
         "apps/web/components/shell/session-effects.tsx",
       ],
