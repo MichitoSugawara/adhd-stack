@@ -217,7 +217,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
   );
 };
 
-const EnvsOffline = ({ title }: { title: string }) => {
+const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
   return (
@@ -235,6 +235,7 @@ const EnvsOffline = ({ title }: { title: string }) => {
         }}
         pages={null}
         production={{ label: ENV_STATUS.none, tone: "idle" }}
+        publishHref={`/p/${slug}/publish`}
         started={false}
       />
       {previewOpen ? (
@@ -269,7 +270,11 @@ export const EnvsScreen = ({ appId }: { appId: string }) => {
           <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
             環境
           </p>
-          {live ? <EnvsLive slug={appId} /> : <EnvsOffline title={title} />}
+          {live ? (
+            <EnvsLive slug={appId} />
+          ) : (
+            <EnvsOffline slug={appId} title={title} />
+          )}
           <Link
             className="rounded-control bg-field text-ink h-10 w-fit px-4 text-[13px] leading-10 font-medium"
             href={`/p/${appId}`}
