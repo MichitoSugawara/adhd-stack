@@ -74,7 +74,7 @@ export const EditorEnvRail = ({
   const production = productionChip(pagesUrl, waiting);
 
   return (
-    <aside className="border-line flex w-full shrink-0 flex-col gap-4 overflow-auto border-b p-4 lg:w-56 lg:border-r lg:border-b-0">
+    <aside className="border-line flex w-full shrink-0 flex-row flex-wrap items-start gap-x-8 gap-y-2 border-b px-5 py-3">
       <div>
         <p className="text-ink-3 text-[11px] tracking-[0.08em] uppercase">
           アプリ
