@@ -12,9 +12,10 @@ await writeFile(
 );
 await writeFile(
   path.join(dir, "codexCloudMap.ts"),
-  (
-    await readFile(path.join(convexLib, "codexCloudMap.ts"), "utf8")
-  ).replaceAll('from "./httpJson"', 'from "./httpJson.ts"')
+  (await readFile(path.join(convexLib, "codexCloudMap.ts"), "utf8")).replaceAll(
+    'from "./httpJson"',
+    'from "./httpJson.ts"'
+  )
 );
 
 const { codexTaskSnapshotFromPayload, isCodexTaskDone } = await import(

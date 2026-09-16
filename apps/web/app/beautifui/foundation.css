@@ -138,6 +138,7 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-tint: var(--accent-tint);
+  --color-on-accent: var(--on-accent, #ffffff);
   --color-green: var(--green);
   --color-green-tint: var(--green-tint);
   --color-orange: var(--orange);
@@ -154,7 +155,8 @@
   --shadow-overlay: var(--shadow-overlay);
 
   /* type */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-noto-sans-jp), ui-sans-serif,
+    system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
 
   /* radii — chips 6, controls 8, cards 10, windows 14, pills 999 */

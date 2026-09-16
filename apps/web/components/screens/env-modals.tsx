@@ -19,7 +19,7 @@ const Overlay = ({
   children: ReactNode;
   title: string;
 }) => (
-  <div className="bg-page/70 fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
+  <div className="bg-ink/30 fixed inset-0 z-40 flex items-end justify-center p-4 backdrop-blur-[2px] sm:items-center">
     <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
       <h2 className="text-[18px] font-semibold">{title}</h2>
       {children}

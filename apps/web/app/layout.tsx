@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   initialScale: 1,
-  themeColor: "#121712",
+  themeColor: "#f6f7f9",
   viewportFit: "cover",
   width: "device-width",
 };
@@ -25,11 +25,7 @@ interface RootLayoutProperties {
 
 export default function RootLayout({ children }: RootLayoutProperties) {
   return (
-    <html
-      className={`${fontVariables} dark`}
-      lang="ja"
-      suppressHydrationWarning
-    >
+    <html className={fontVariables} lang="ja" suppressHydrationWarning>
       <body className="bg-page text-ink min-h-dvh font-sans antialiased">
         <ConvexClientProvider>
           <Suspense fallback={null}>

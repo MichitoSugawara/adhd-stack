@@ -289,7 +289,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
                 if (item.type === "user") {
                   return (
                     <div
-                      className="rounded-card bg-inset ml-auto max-w-[80%] px-3 py-2 text-[14px]"
+                      className="rounded-card bg-accent-tint ml-auto max-w-[80%] px-3.5 py-2.5 text-[14px]"
                       key={item.id}
                     >
                       {item.body}

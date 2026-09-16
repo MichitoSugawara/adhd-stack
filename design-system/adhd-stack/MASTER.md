@@ -19,24 +19,24 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#1E293B` | `--color-primary` |
+| Primary | `#1B2330` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#334155` | `--color-secondary` |
+| Secondary | `#4E5A6C` | `--color-secondary` |
 | On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#22C55E` | `--color-accent` |
-| On Accent/CTA | `#0F172A` | `--color-on-accent` |
-| Background | `#0F172A` | `--color-background` |
-| Foreground | `#F8FAFC` | `--color-foreground` |
-| Card | `#1B2336` | `--color-card` |
-| Card Foreground | `#F8FAFC` | `--color-card-foreground` |
-| Muted | `#272F42` | `--color-muted` |
-| Muted Foreground | `#94A3B8` | `--color-muted-foreground` |
-| Border | `#475569` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| On Destructive | `#000000` | `--color-on-destructive` |
-| Ring | `#FFFFFF` | `--color-ring` |
+| Accent/CTA | `#4F46E5` | `--color-accent` |
+| On Accent/CTA | `#FFFFFF` | `--color-on-accent` |
+| Background | `#F6F7F9` | `--color-background` |
+| Foreground | `#1B2330` | `--color-foreground` |
+| Card | `#FFFFFF` | `--color-card` |
+| Card Foreground | `#1B2330` | `--color-card-foreground` |
+| Muted | `#F1F3F6` | `--color-muted` |
+| Muted Foreground | `#6E7A8D` | `--color-muted-foreground` |
+| Border | `#E4E8EE` | `--color-border` |
+| Destructive | `#DC2626` | `--color-destructive` |
+| On Destructive | `#FFFFFF` | `--color-on-destructive` |
+| Ring | `#4F46E5` | `--color-ring` |
 
-**Color Notes:** Code dark + run green
+**Color Notes:** Light clean neutral + indigo accent (replaced Dark Green+ on 2026-09-16). Authoritative values live in `apps/web/app/beautifui/tokens.css`.
 
 ### Typography
 
@@ -167,13 +167,13 @@
 
 ## Style Guidelines
 
-**Style:** Dark Mode (OLED)
+**Style:** Clean Light
 
-**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
+**Keywords:** Light theme, neutral grey canvas, white cards, crisp hairline borders, indigo accent, high readability, calm, low cognitive load
 
-**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
+**Best For:** Productivity tools, admin shells, chat-driven workflows where one clear path matters
 
-**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
+**Key Effects:** Hairline borders with soft layered shadows, accent reserved for primary actions and active state, visible focus
 
 ### Page Pattern
 
@@ -203,7 +203,7 @@ gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTri
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Light mode default
+- ❌ Dark theme (Dark Green+ was removed 2026-09-16)
 - ❌ Slow performance
 
 ### Additional Forbidden Patterns

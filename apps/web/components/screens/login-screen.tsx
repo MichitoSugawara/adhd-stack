@@ -6,6 +6,13 @@ import { BrandMark } from "@/components/shell/brand-mark";
 import { SERVICES } from "@/lib/services";
 import { useShell } from "@/lib/shell-state";
 
+const STEPS = [
+  { key: "connect", label: "4つのサービスをつなぐ" },
+  { key: "name", label: "名前を付けて作る" },
+  { key: "chat", label: "チャットで進める" },
+  { key: "publish", label: "自分の環境に出す" },
+] as const;
+
 export const LoginScreen = () => {
   const router = useRouter();
   const shell = useShell();
@@ -16,23 +23,41 @@ export const LoginScreen = () => {
   };
 
   return (
-    <main className="bg-page text-ink flex min-h-dvh items-center justify-center px-6 py-10">
-      <section className="grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_380px]">
-        <div className="flex flex-col justify-center gap-6">
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            ADHD Stack
-          </p>
+    <main className="bg-page text-ink flex min-h-dvh items-center justify-center px-6 py-12">
+      <section className="grid w-full max-w-5xl items-center gap-12 lg:grid-cols-[1.15fr_380px]">
+        <div className="flex flex-col justify-center gap-7">
+          <div className="flex items-center gap-2.5">
+            <span className="rounded-control bg-accent text-on-accent flex size-7 items-center justify-center text-[13px] font-semibold">
+              A
+            </span>
+            <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+              ADHD Stack
+            </p>
+          </div>
           <div>
-            <h1 className="text-[40px] leading-[1.1] font-semibold tracking-tight">
+            <h1 className="text-[44px] leading-[1.1] font-semibold tracking-tight">
               何も考えずに、
               <br />
               始める。
             </h1>
-            <p className="text-ink-2 mt-4 max-w-md text-[15px] leading-6">
+            <p className="text-ink-2 mt-5 max-w-md text-[15px] leading-7">
               ChatGPT、GitHub、Cloudflare、Convex
               をつなぎ、チャットで作って、自分の環境に出す。IDE は開かない。
             </p>
           </div>
+          <ol className="flex max-w-md flex-col gap-2">
+            {STEPS.map((step, index) => (
+              <li
+                className="rounded-card bg-surface shadow-card flex items-center gap-3 px-3.5 py-2.5"
+                key={step.key}
+              >
+                <span className="bg-accent-tint text-accent-ink flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums">
+                  {index + 1}
+                </span>
+                <span className="text-[13.5px] font-medium">{step.label}</span>
+              </li>
+            ))}
+          </ol>
           <div className="flex items-center gap-3" aria-label="つなぐサービス">
             {SERVICES.map((service) => (
               <BrandMark

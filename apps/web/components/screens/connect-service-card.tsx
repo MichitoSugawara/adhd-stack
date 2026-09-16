@@ -62,14 +62,26 @@ const ConnectCardAction = ({
       </button>
     );
   }
+  if (!configured) {
+    return (
+      <button
+        className="rounded-control bg-field text-ink-3 mt-4 h-9 w-full text-[13px] font-medium"
+        disabled
+        onClick={onConnect}
+        type="button"
+      >
+        接続アプリ未設定
+      </button>
+    );
+  }
   return (
     <button
       className="btn-accent rounded-control mt-4 h-9 w-full text-[13px] font-medium disabled:opacity-40"
-      disabled={ctaDisabled || !configured}
+      disabled={ctaDisabled}
       onClick={onConnect}
       type="button"
     >
-      {configured ? ctaLabel : "接続アプリ未設定"}
+      {ctaLabel}
     </button>
   );
 };
