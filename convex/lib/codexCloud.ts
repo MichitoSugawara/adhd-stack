@@ -1,3 +1,5 @@
+import type { CodexTaskSnapshot } from "./codexCloudMap";
+import { codexTaskSnapshotFromPayload } from "./codexCloudMap";
 import {
   asList,
   asNumber,
@@ -9,6 +11,9 @@ import {
 import { busyHttpMessage, withHttpRetries } from "./httpRetry";
 import { chatgptAccountIdFromToken, isUsableCodexAccountId } from "./jwt";
 
+export type { CodexTaskSnapshot } from "./codexCloudMap";
+export { isCodexTaskDone } from "./codexCloudMap";
+
 export const CODEX_CLOUD_BASE = "https://chatgpt.com/backend-api";
 
 export interface CodexCloudAuth {
@@ -19,17 +24,6 @@ export interface CodexCloudAuth {
 export interface CodexEnvironment {
   id: string;
   label?: string;
-}
-
-export interface CodexTaskSnapshot {
-  commands: string[];
-  diff?: string;
-  error?: string;
-  files: string[];
-  status?: string;
-  texts: string[];
-  thinking: string[];
-  work?: string;
 }
 
 export const DEFAULT_CODEX_MACHINE_ID = "wham-public/wham-universal";
@@ -440,58 +434,6 @@ export const createCodexTask = async (
   return id;
 };
 
-const textFromContent = (value: unknown): string[] => {
-  if (typeof value === "string" && value.trim().length > 0) {
-    return [value];
-  }
-  return asList(value).flatMap((part) => {
-    if (typeof part === "string" && part.trim().length > 0) {
-      return [part];
-    }
-    const row = asRecord(part);
-    const text = asString(row.text) ?? asString(row.content);
-    return text ? [text] : [];
-  });
-};
-
-const collectFromItems = (
-  items: unknown[]
-): Pick<CodexTaskSnapshot, "commands" | "diff" | "files" | "texts"> => {
-  const commands: string[] = [];
-  const files: string[] = [];
-  const texts: string[] = [];
-  let diff: string | undefined;
-  for (const item of items) {
-    const row = asRecord(item);
-    const kind = asString(row.type) ?? asString(row.kind) ?? "";
-    const command =
-      asString(row.command) ??
-      asString(row.cmd) ??
-      asString(asRecord(row.function).name);
-    if (command) {
-      commands.push(command);
-    }
-    const itemDiff =
-      asString(row.diff) ?? asString(asRecord(row.output_diff).diff);
-    if (itemDiff && (kind === "output_diff" || kind === "pr" || !diff)) {
-      diff = itemDiff;
-    }
-    const itemFiles = asList(row.files).flatMap((file) => {
-      if (typeof file === "string") {
-        return [file];
-      }
-      const path =
-        asString(asRecord(file).path) ?? asString(asRecord(file).filename);
-      return path ? [path] : [];
-    });
-    files.push(...itemFiles);
-    if (kind === "message" || kind === "reasoning" || kind === "thinking") {
-      texts.push(...textFromContent(row.content));
-    }
-  }
-  return { commands, diff, files, texts };
-};
-
 export const getCodexTaskSnapshot = async (
   auth: CodexCloudAuth,
   taskId: string
@@ -502,102 +444,7 @@ export const getCodexTaskSnapshot = async (
       `Codex Cloud の進捗を取れませんでした: HTTP ${response.status}`
     );
   }
-  const assistant = asRecord(response.payload.current_assistant_turn);
-  const diffTurn = asRecord(response.payload.current_diff_task_turn);
-  const userTurn = asRecord(response.payload.current_user_turn);
-  const turns = [assistant, diffTurn, userTurn].filter(
-    (turn) => Object.keys(turn).length > 0
-  );
-  const commands: string[] = [];
-  const files: string[] = [];
-  const texts: string[] = [];
-  const thinking: string[] = [];
-  let diff: string | undefined;
-  let work: string | undefined;
-  for (const turn of turns) {
-    const status = asString(turn.turn_status);
-    if (status) {
-      work = status;
-    }
-    const collected = collectFromItems([
-      ...asList(turn.output_items),
-      ...asList(turn.input_items),
-    ]);
-    const {
-      commands: nextCommands,
-      diff: nextDiff,
-      files: nextFiles,
-      texts: nextTexts,
-    } = collected;
-    commands.push(...nextCommands);
-    files.push(...nextFiles);
-    texts.push(...nextTexts);
-    if (nextDiff) {
-      diff = nextDiff;
-    }
-    const { worklog } = turn;
-    const log = asRecord(worklog);
-    for (const message of asList(log.messages)) {
-      const row = asRecord(message);
-      const parts = textFromContent(asRecord(row.content).parts);
-      const author = asString(asRecord(row.author).role) ?? "";
-      if (author === "assistant" || author === "system") {
-        thinking.push(...parts);
-      } else {
-        thinking.push(...parts);
-      }
-    }
-    const error = asRecord(turn.error);
-    if (asString(error.message)) {
-      return {
-        commands: [...new Set(commands)],
-        diff,
-        error: asString(error.message),
-        files: [...new Set(files)],
-        status,
-        texts,
-        thinking,
-        work,
-      };
-    }
-  }
-  const display = asRecord(
-    assistant.latest_turn_status_display ??
-      response.payload.latest_turn_status_display
-  );
-  const stats = asRecord(display.diff_stats);
-  const additions = asNumber(stats.additions);
-  const deletions = asNumber(stats.deletions);
-  if (!work && (additions !== undefined || deletions !== undefined)) {
-    work = `+${additions ?? 0} / -${deletions ?? 0}`;
-  }
-  return {
-    commands: [...new Set(commands)],
-    diff,
-    files: [...new Set(files)],
-    status: asString(assistant.turn_status) ?? asString(diffTurn.turn_status),
-    texts: [...new Set(texts)],
-    thinking,
-    work,
-  };
-};
-
-export const isCodexTaskDone = (snapshot: CodexTaskSnapshot): boolean => {
-  const status = snapshot.status?.toLowerCase() ?? "";
-  if (snapshot.error) {
-    return true;
-  }
-  if (status.length === 0) {
-    return Boolean(snapshot.diff || snapshot.texts.length > 0);
-  }
-  return [
-    "completed",
-    "complete",
-    "success",
-    "failed",
-    "error",
-    "cancelled",
-  ].some((value) => status.includes(value));
+  return codexTaskSnapshotFromPayload(response.payload);
 };
 
 export const summarizeDiff = (

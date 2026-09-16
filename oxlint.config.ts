@@ -50,6 +50,7 @@ export default defineConfig({
         "convex/lib/cloudflareAccount.ts",
         "convex/lib/cloudflarePages.ts",
         "convex/lib/codexCloud.ts",
+        "convex/lib/codexCloudMap.ts",
         "convex/lib/codexDevice.ts",
         "convex/lib/convexFromOpenConnector.ts",
         "convex/lib/convexFunctionPush.ts",
