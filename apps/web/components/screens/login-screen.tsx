@@ -30,7 +30,7 @@ export const LoginScreen = () => {
             </h1>
             <p className="text-ink-2 mt-4 max-w-md text-[15px] leading-6">
               ChatGPT、GitHub、Cloudflare、Convex
-              をつなぎ、チャットで作って、自分の環境に公開する。IDE は開かない。
+              をつなぎ、チャットで作って、自分の環境に出す。IDE は開かない。
             </p>
           </div>
           <div className="flex items-center gap-3" aria-label="つなぐサービス">

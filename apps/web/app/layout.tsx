@@ -8,7 +8,7 @@ import { fontVariables } from "../lib/fonts";
 import { ConvexClientProvider } from "./convex-client-provider";
 
 export const metadata: Metadata = {
-  description: "何も考えずに始められる開発と公開",
+  description: "何も考えずに始められる開発と反映",
   title: "ADHD Stack",
 };
 

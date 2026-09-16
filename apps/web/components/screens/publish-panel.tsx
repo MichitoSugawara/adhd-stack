@@ -85,7 +85,7 @@ export const PublishPanel = ({
   const inFlight = waiting ?? pending;
   const showFunctionGap =
     convex !== null && !hasFunctionPushOutcome(shownNotes);
-  const waitLabel = pending ? "公開しています" : "Pages をビルドしています";
+  const waitLabel = pending ? "反映しています" : "ページを組み立てています";
   const phase = publishPhase(pending, inFlight, pagesDeployStatus);
   const steps = publishStepRows(phase);
   const infoNotes = shownNotes.filter((note) => isPublishInfoNote(note));
@@ -100,7 +100,7 @@ export const PublishPanel = ({
             <StatusChip tone={chipTone(phase)}>{phaseChip(phase)}</StatusChip>
           </div>
           <p className="text-ink-2 mt-2 text-[13px] leading-6">
-            開いているアプリを、つながっている Pages と Convex に出します。
+            開いているアプリを、つながっている本番のページとデータに出します。
           </p>
         </div>
         {phase === "done" ? null : (
@@ -110,7 +110,7 @@ export const PublishPanel = ({
             onClick={onPublish}
             type="button"
           >
-            {pending ? "公開しています…" : "公開する"}
+            {pending ? "反映しています…" : "本番へ出す"}
           </button>
         )}
       </div>
@@ -156,14 +156,14 @@ export const PublishPanel = ({
             rel="noreferrer"
             target="_blank"
           >
-            公開ページを開く
+            本番を開く
           </a>
           {editorHref ? (
             <Link
               className="rounded-control bg-field text-ink inline-flex h-9 items-center px-3 text-[13px] font-medium"
               href={editorHref}
             >
-              編集に戻る
+              相談に戻る
             </Link>
           ) : null}
         </div>

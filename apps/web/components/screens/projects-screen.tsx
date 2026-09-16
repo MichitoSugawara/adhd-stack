@@ -50,7 +50,7 @@ const ProjectsReadyNote = () => {
   if (port.board.allConnected) {
     return (
       <p className="shell-note max-w-3xl">
-        4つそろっています。名前を付けると、リポジトリと実行環境を作ります。
+        4つそろっています。名前を付けると、保存先と実行環境を作ります。
       </p>
     );
   }
@@ -76,7 +76,7 @@ const CreateDialog = ({
     <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
       <h2 className="text-[18px] font-semibold">新しいアプリ</h2>
       <p className="text-ink-2 mt-2 text-[13px]">
-        入力した名前が、GitHub リポジトリ名になります。固定名はありません。
+        入力した名前が、保存先の名前になります。固定名はありません。
       </p>
       <label className="mt-4 block">
         <span className="text-ink-3 text-[12px]">名前</span>
@@ -204,7 +204,7 @@ const ProjectsLive = () => {
             アプリ
           </p>
           <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            プロジェクト
+            一覧
           </h1>
           <p className="text-ink-2 mt-2 text-[14px]">
             名前を付けて作ります。固定名はありません。
@@ -270,7 +270,7 @@ const ProjectsSkeleton = () => {
             アプリ
           </p>
           <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            プロジェクト
+            一覧
           </h1>
           <p className="text-ink-2 mt-2 text-[14px]">
             名前を付けて作ります。固定名はありません。
@@ -288,8 +288,7 @@ const ProjectsSkeleton = () => {
         </button>
       </div>
       <p className="shell-note max-w-3xl">
-        Convex
-        未設定です。一覧はブラウザ内の骨格だけで、リポジトリは作りません。
+        Convex 未設定です。一覧はブラウザ内の見た目だけで、保存先は作りません。
       </p>
       {shell.state.apps.length === 0 ? (
         <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">

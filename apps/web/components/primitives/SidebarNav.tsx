@@ -8,8 +8,10 @@ import { IconChevronDownSmall } from "@central-icons-react/round-outlined-radius
 import { IconConnectors1 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconConnectors1";
 import { IconCrossSmall } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconCrossSmall";
 import { IconEditBig } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconEditBig";
-import { IconGlobe } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconGlobe";
+import { IconLayersTwo } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconLayersTwo";
+import { IconListBullets } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconListBullets";
 import { IconMagnifyingGlass } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconMagnifyingGlass";
+import { IconPlusMedium } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconPlusMedium";
 import { IconPopsicle2 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconPopsicle2";
 import { IconSettingsGear1 } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconSettingsGear1";
 import { IconSidebarLeftArrow } from "@central-icons-react/round-outlined-radius-2-stroke-2/IconSidebarLeftArrow";
@@ -25,9 +27,11 @@ import GlideMenu from "@/components/primitives/GlideMenu";
 const WORKSPACE = { key: "adhd", name: "ADHD Stack", monogram: "A" };
 
 const NAV_ITEMS = [
+  { key: "start", label: "最初から", icon: <IconPlusMedium size={16} /> },
   { key: "connect", label: "接続", icon: <IconConnectors1 size={16} /> },
+  { key: "list", label: "一覧", icon: <IconListBullets size={16} /> },
   { key: "editor", label: "エディタ", icon: <IconEditBig size={16} /> },
-  { key: "publish", label: "公開", icon: <IconGlobe size={16} /> },
+  { key: "env", label: "環境", icon: <IconLayersTwo size={16} /> },
 ];
 
 export type SidebarSetupItem = {
@@ -215,7 +219,6 @@ export default function SidebarNav({
   onFooterClick,
   recents = DEFAULT_RECENTS,
   recentsLabel = "アプリ",
-  newChatLabel = "新しいアプリ",
   setupItems = [],
   connectCount,
   searchPlaceholder = "アプリを探す",
@@ -350,15 +353,6 @@ export default function SidebarNav({
         </div>
 
         <GlideGroup>
-          <RailButton
-            icon={<IconEditBig size={18} />}
-            label={newChatLabel}
-            onClick={() => {
-              if (activeTitle === undefined) setDemoActiveTitle(null);
-              selectNav("chats");
-              onNewChat?.();
-            }}
-          />
           {NAV_ITEMS.map((item) => (
             <RailButton
               key={item.key}
@@ -366,7 +360,15 @@ export default function SidebarNav({
               label={item.label}
               active={currentNav === item.key}
               count={item.key === "connect" ? connectCount : undefined}
-              onClick={() => selectNav(item.key)}
+              onClick={() => {
+                if (item.key === "start" && activeTitle === undefined) {
+                  setDemoActiveTitle(null);
+                }
+                if (item.key === "start" && !onNavigate) {
+                  onNewChat?.();
+                }
+                selectNav(item.key);
+              }}
             />
           ))}
         </GlideGroup>
@@ -470,7 +472,7 @@ export default function SidebarNav({
                   type="button"
                   title={item.label}
                   onClick={() => {
-                    selectNav("chats");
+                    selectNav("editor");
                     if (activeTitle === undefined) setDemoActiveTitle(item.label);
                     onPick?.(item.id, item.label, item.prompt);
                   }}

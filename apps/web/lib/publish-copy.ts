@@ -6,7 +6,7 @@ export const CONVEX_FUNCTION_PUSH_NOTE =
 export const PAGES_DEPLOY_STARTED_NOTE =
   "Pages のビルドを始めました。完了はまだ見ていません。関数はそのあとです。";
 
-export const OFFLINE_PUBLISH_NOTE = "Convex 未設定のため公開できません。";
+export const OFFLINE_PUBLISH_NOTE = "Convex 未設定のため本番へ出せません。";
 
 export const hasFunctionPushOutcome = (notes: readonly string[]): boolean =>
   notes.some((note) =>

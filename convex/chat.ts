@@ -68,7 +68,7 @@ export const send = authedMutation({
     const environmentId =
       workspace.codingEnvironmentId ?? workspace.codexEnvironmentId;
     if (!(workspace.githubRepoUrl && environmentId)) {
-      throw new Error("リポジトリと実行環境の準備が終わるまで送れません");
+      throw new Error("保存先と実行環境の準備が終わるまで送れません");
     }
     const createdAt = Date.now();
     await ctx.db.insert("messages", {

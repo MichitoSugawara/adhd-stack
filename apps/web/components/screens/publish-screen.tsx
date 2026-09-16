@@ -41,7 +41,7 @@ const hostingHint = (
   }
   const parts: string[] = [];
   if (!hasRepo) {
-    parts.push("GitHub リポジトリの準備が終わるまで公開できません。");
+    parts.push("保存先の準備が終わるまで本番へ出せません。");
   }
   if (missing.length > 0) {
     parts.push(`${missing.join(" と ")} がつながっていません。`);
@@ -84,10 +84,10 @@ const PublishLive = ({ slug }: { slug: string }) => {
     <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
       <div>
         <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          公開
+          本番
         </p>
         <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          公開の3ステップ
+          本番へ反映
         </h1>
         <p className="text-ink-2 mt-2 text-[14px]">
           いまのあとと、そろったあとを並べます。
@@ -117,10 +117,10 @@ const PublishOffline = ({ appId }: { appId: string }) => {
     <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
       <div>
         <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          公開
+          本番
         </p>
         <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          公開の3ステップ
+          本番へ反映
         </h1>
         <p className="text-ink-2 mt-2 text-[14px]">{OFFLINE_PUBLISH_NOTE}</p>
       </div>
@@ -137,7 +137,7 @@ const PublishOffline = ({ appId }: { appId: string }) => {
         className="text-ink-2 text-[13px] underline underline-offset-2"
         href={`/p/${appId}`}
       >
-        編集に戻る
+        相談に戻る
       </Link>
     </main>
   );

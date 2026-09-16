@@ -121,26 +121,26 @@ export const publishStepRows = (phase: PublishPhase): PublishStepRow[] => {
 
 export const phaseChip = (phase: PublishPhase): string => {
   if (phase === "working") {
-    return "まだ公開されていません";
+    return "作業中";
   }
   if (phase === "done") {
-    return "公開済み";
+    return "反映済み";
   }
   if (phase === "failed") {
-    return "失敗";
+    return "反映失敗";
   }
-  return "未公開";
+  return "待機中";
 };
 
 export const phaseTitle = (phase: PublishPhase): string => {
   if (phase === "working") {
-    return "公開しています";
+    return "反映しています";
   }
   if (phase === "done") {
-    return "公開できました";
+    return "反映できました";
   }
   if (phase === "failed") {
-    return "公開に失敗しました";
+    return "反映に失敗しました";
   }
-  return "公開の3ステップ";
+  return "本番へ反映";
 };

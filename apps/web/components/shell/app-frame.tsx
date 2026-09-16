@@ -24,17 +24,23 @@ const navFromPath = (pathname: string): string => {
   if (pathname.startsWith("/connect")) {
     return "connect";
   }
-  if (pathname.includes("/publish")) {
-    return "publish";
+  if (pathname.startsWith("/projects")) {
+    return "list";
   }
-  return "editor";
+  if (pathname.includes("/envs") || pathname.includes("/publish")) {
+    return "env";
+  }
+  if (pathname.startsWith("/p/")) {
+    return "editor";
+  }
+  return "list";
 };
 
 const editorPath = (slug?: string): string =>
   slug ? `/p/${slug}` : "/projects";
 
-const publishPath = (slug?: string): string =>
-  slug ? `/p/${slug}/publish` : "/projects";
+const envPath = (slug?: string): string =>
+  slug ? `/p/${slug}/envs` : "/projects";
 
 const FrameSidebar = ({
   connectCount,
@@ -77,12 +83,20 @@ const FrameSidebar = ({
             router.push("/connect");
           }}
           onNavigate={(key) => {
+            if (key === "start") {
+              router.push("/projects?new=1");
+              return;
+            }
             if (key === "connect") {
               router.push("/connect");
               return;
             }
-            if (key === "publish") {
-              router.push(publishPath(lastWorkspace?.slug));
+            if (key === "list") {
+              router.push("/projects");
+              return;
+            }
+            if (key === "env") {
+              router.push(envPath(lastWorkspace?.slug));
               return;
             }
             router.push(editorPath(lastWorkspace?.slug));

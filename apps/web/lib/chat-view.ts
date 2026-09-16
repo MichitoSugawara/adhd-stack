@@ -148,3 +148,32 @@ export const toChatView = (
   flushTools();
   return items;
 };
+
+export interface ChangeSummary {
+  add: number;
+  del: number;
+  files: string[];
+}
+
+export const changeSummaryFromView = (
+  view: readonly ChatViewItem[]
+): ChangeSummary => {
+  const seen = new Set<string>();
+  const files: string[] = [];
+  let add = 0;
+  let del = 0;
+  for (const item of view) {
+    if (item.type !== "tools") {
+      continue;
+    }
+    for (const diff of item.diffs) {
+      if (!seen.has(diff.file)) {
+        seen.add(diff.file);
+        files.push(diff.file);
+      }
+      add += diff.add;
+      del += diff.del;
+    }
+  }
+  return { add, del, files };
+};

@@ -6,13 +6,13 @@ export const SERVICES = [
     logo: "/brands/chatgpt.png",
   },
   {
-    body: "ソースの置き場です。",
+    body: "作ったアプリを保管します。",
     id: "github",
     label: "GitHub",
     logo: "/brands/github.ico",
   },
   {
-    body: "公開先の Pages です。",
+    body: "ページの公開先です。",
     id: "cloudflare",
     label: "Cloudflare",
     logo: "/brands/cloudflare.ico",

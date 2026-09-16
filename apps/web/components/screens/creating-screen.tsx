@@ -15,11 +15,11 @@ import { writeLastWorkspace } from "@/lib/last-workspace";
 import { useShell } from "@/lib/shell-state";
 
 const STEPS = [
-  { key: "repo", label: "GitHub リポジトリ", meta: "名前付き" },
-  { key: "template", label: "tahcode 由来テンプレート", meta: "足場" },
-  { key: "backend", label: "実行環境", meta: "CodingBackend" },
-  { key: "pages", label: "Cloudflare Pages", meta: "公開先" },
-  { key: "convex", label: "Convex", meta: "データ" },
+  { key: "repo", label: "保存先", meta: "名前付き" },
+  { key: "template", label: "足場", meta: "テンプレート" },
+  { key: "backend", label: "実行環境", meta: "準備" },
+  { key: "pages", label: "公開先", meta: "ページ" },
+  { key: "convex", label: "データ", meta: "関数" },
 ] as const;
 
 type StepKey = (typeof STEPS)[number]["key"];
@@ -156,7 +156,7 @@ const CreatingLive = ({ slug }: { slug: string }) => {
           {workspace.name} をつくっています
         </h1>
         <p className="text-ink-2 mt-2 text-[14px]">
-          GitHub リポジトリ、tahcode 由来の足場、実行環境の進捗です。
+          保存先、足場、実行環境の進捗です。
           {workspace.codingBackend === "cursor_cloud"
             ? " 実行系は Cursor Cloud Agent です。"
             : " 実行系は Codex Cloud です。"}
@@ -248,7 +248,7 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
           {app?.name ?? appId} をつくっています
         </h1>
         <p className="text-ink-2 mt-2 text-[14px]">
-          Convex 未設定です。進捗の見た目だけで、リポジトリも環境も作りません。
+          Convex 未設定です。進捗の見た目だけで、保存先も環境も作りません。
         </p>
       </div>
       <LoadingState label="用意しています" variant="Drive" />
