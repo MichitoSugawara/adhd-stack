@@ -12,6 +12,7 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import {
   boardChip,
   ctaLabelFor,
+  nextDisconnected,
   nextHint,
   nextLabel,
 } from "@/lib/connect-copy";
@@ -44,6 +45,39 @@ interface PendingOc {
 
 const [chatgptService] = SERVICES;
 const otherServices = SERVICES.filter((service) => service.id !== "chatgpt");
+
+const ConnectNextStep = ({
+  busy,
+  onConnect,
+  service,
+}: {
+  busy: boolean;
+  onConnect: (id: ServiceId) => void;
+  service: (typeof SERVICES)[number] | null;
+}) => {
+  if (!service) {
+    return null;
+  }
+  return (
+    <section className="rounded-card bg-surface shadow-card mt-6 max-w-4xl p-5">
+      <p className="text-ink-3 text-[12px]">次のステップ</p>
+      <h2 className="mt-1 text-[20px] font-semibold">
+        {service.label} をつなぐ
+      </h2>
+      <p className="text-ink-2 mt-2 text-[13px] leading-6">{service.body}</p>
+      <button
+        className="btn-accent rounded-control mt-4 h-10 px-4 text-[13px] font-medium disabled:opacity-40"
+        disabled={busy}
+        onClick={() => {
+          onConnect(service.id);
+        }}
+        type="button"
+      >
+        つなぐ
+      </button>
+    </section>
+  );
+};
 
 const ConnectProgress = ({ count }: { count: number }) => (
   <div className="mt-6 max-w-4xl">
@@ -328,6 +362,15 @@ const ConnectBoard = () => {
       </div>
       {banner ? <p className="shell-note mt-4 max-w-4xl">{banner}</p> : null}
       <ConnectProgress count={connectedCount} />
+      {allConnected ? null : (
+        <ConnectNextStep
+          busy={busy !== null || board === undefined}
+          onConnect={(id) => {
+            void startConnect(id);
+          }}
+          service={nextDisconnected(board?.connections)}
+        />
+      )}
       <div className="mt-6 flex max-w-4xl flex-col gap-3">
         {chatgptService ? cardFor(chatgptService, true, chatgptExtra) : null}
         <div className="grid gap-3 md:grid-cols-3">

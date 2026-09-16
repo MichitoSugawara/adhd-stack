@@ -4,26 +4,46 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
+import { StatusChip } from "@/components/screens/status-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { useCreateNamedApp, useWorkspaceList } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { listAppStatus } from "@/lib/env-labels";
+import { hostOf, publicHttpUrl } from "@/lib/public-url";
+import { publishedThisWeek, relativeFrom } from "@/lib/relative-time";
 import { useShell } from "@/lib/shell-state";
 
-const statusLabel = (status: string): string => {
-  if (status === "ready") {
-    return "準備完了";
-  }
-  if (status === "error") {
-    return "失敗";
-  }
-  if (status === "provisioning") {
-    return "作成中";
-  }
-  return "待ち";
-};
+const ProjectsStats = ({
+  published,
+  stagingWait,
+}: {
+  published: number;
+  stagingWait: number;
+}) => (
+  <div className="mt-4 grid max-w-3xl gap-3 sm:grid-cols-2">
+    <article className="rounded-card bg-surface shadow-card p-4">
+      <p className="text-ink-3 text-[12px]">検証待ち</p>
+      <p className="mt-1 text-[28px] font-semibold tabular-nums">
+        {String(stagingWait)}
+      </p>
+      <p className="text-ink-3 mt-1 text-[12px]">
+        検証用のページはまだないので、ここは 0 です。
+      </p>
+    </article>
+    <article className="rounded-card bg-surface shadow-card p-4">
+      <p className="text-ink-3 text-[12px]">今週の本番反映</p>
+      <p className="mt-1 text-[28px] font-semibold tabular-nums">
+        {String(published)}
+      </p>
+      <p className="text-ink-3 mt-1 text-[12px]">
+        本番 URL があり、この 7 日に更新された数です。
+      </p>
+    </article>
+  </div>
+);
 
 const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
   const port = useConnectionsPort();
@@ -37,7 +57,7 @@ const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
       onClick={onOpen}
       type="button"
     >
-      新しいアプリ
+      ＋新しいアプリ
     </button>
   );
 };
@@ -155,9 +175,11 @@ const ProjectsLive = () => {
     }
   };
 
+  const now = Date.now();
   let listBody: ReactNode = (
     <p className="text-ink-2 text-[14px]">読み込んでいます…</p>
   );
+  let published = 0;
   if (apps !== undefined && apps.length === 0) {
     listBody = (
       <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
@@ -165,34 +187,68 @@ const ProjectsLive = () => {
       </div>
     );
   } else if (apps !== undefined) {
+    published = apps.filter((app) =>
+      publishedThisWeek(
+        app.updatedAt,
+        Boolean(publicHttpUrl(app.cloudflarePagesUrl)),
+        now
+      )
+    ).length;
     listBody = (
-      <ul className="divide-line rounded-card bg-surface shadow-card max-w-3xl divide-y overflow-hidden">
-        {apps.map((app) => (
-          <li key={app._id}>
-            <button
-              className="hover:bg-hover flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-              onClick={() => {
-                router.push(
-                  app.provisionStatus === "ready"
-                    ? `/p/${app.slug}`
-                    : `/p/${app.slug}/creating`
-                );
-              }}
-              type="button"
-            >
-              <span>
-                <span className="block text-[14px] font-medium">
-                  {app.name}
+      <div className="rounded-card bg-surface shadow-card max-w-4xl overflow-hidden">
+        <div className="text-ink-3 grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] gap-3 px-4 py-2 text-[12px]">
+          <span>アプリ</span>
+          <span>状態</span>
+          <span>本番</span>
+          <span>更新</span>
+          <span />
+        </div>
+        <ul className="divide-line divide-y">
+          {apps.map((app) => {
+            const pages = publicHttpUrl(app.cloudflarePagesUrl);
+            const status = listAppStatus(
+              pages,
+              app.pagesDeployStatus,
+              app.provisionStatus
+            );
+            return (
+              <li
+                className="grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3"
+                key={app._id}
+              >
+                <span>
+                  <span className="block text-[14px] font-medium">
+                    {app.name}
+                  </span>
+                  <span className="text-ink-3 block text-[12px]">
+                    {app.slug}
+                  </span>
                 </span>
-                <span className="text-ink-3 block text-[12px]">{app.slug}</span>
-              </span>
-              <span className="rounded-chip bg-field text-ink-3 px-2 py-1 text-[12px]">
-                {statusLabel(app.provisionStatus)}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+                <StatusChip tone={status.tone}>{status.label}</StatusChip>
+                <span className="text-ink-2 min-w-0 truncate text-[12px]">
+                  {pages ? hostOf(pages) : "まだ"}
+                </span>
+                <span className="text-ink-3 text-[12px]">
+                  {relativeFrom(app.updatedAt, now)}
+                </span>
+                <button
+                  className="text-ink text-[13px] font-medium underline underline-offset-2"
+                  onClick={() => {
+                    router.push(
+                      app.provisionStatus === "ready"
+                        ? `/p/${app.slug}`
+                        : `/p/${app.slug}/creating`
+                    );
+                  }}
+                  type="button"
+                >
+                  開く
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     );
   }
 
@@ -216,6 +272,7 @@ const ProjectsLive = () => {
           }}
         />
       </div>
+      <ProjectsStats published={published} stagingWait={0} />
       <ProjectsReadyNote />
       {failNote ? (
         <p className="text-red max-w-3xl text-[13px]">{failNote}</p>
@@ -284,9 +341,10 @@ const ProjectsSkeleton = () => {
           }}
           type="button"
         >
-          新しいアプリ
+          ＋新しいアプリ
         </button>
       </div>
+      <ProjectsStats published={0} stagingWait={0} />
       <p className="shell-note max-w-3xl">
         Convex 未設定です。一覧はブラウザ内の見た目だけで、保存先は作りません。
       </p>

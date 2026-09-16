@@ -32,6 +32,46 @@ export const PREVIEW_FROM_UNAVAILABLE =
 
 export const PROMOTE_UNAVAILABLE = "検証から本番へ送る操作は、まだありません。";
 
+export const HISTORY_UNAVAILABLE =
+  "履歴はまだありません。前の版に戻すこともできません。";
+
+export const SEND_STAGING_UNAVAILABLE = "検証へ送る操作は、まだありません。";
+
+export const changeNoteFrom = (changes: {
+  add: number;
+  del: number;
+  files: readonly string[];
+}): string => {
+  if (changes.files.length === 0) {
+    return "まとまった変更はまだありません。";
+  }
+  const counts =
+    changes.add + changes.del > 0
+      ? ` · +${String(changes.add)} / -${String(changes.del)}`
+      : "";
+  return `${String(changes.files.length)} ファイル${counts}`;
+};
+
+export const listAppStatus = (
+  pagesUrl: string | null,
+  pagesDeployStatus: string | undefined,
+  provisionStatus: string
+): { label: string; tone: "fail" | "idle" | "ok" | "wait" } => {
+  if (pagesDeployStatus === "failure" || provisionStatus === "error") {
+    return { label: ENV_STATUS.failed, tone: "fail" };
+  }
+  if (pagesDeployStatus === "started" || provisionStatus === "provisioning") {
+    return { label: ENV_STATUS.working, tone: "wait" };
+  }
+  if (pagesUrl) {
+    return { label: ENV_STATUS.published, tone: "ok" };
+  }
+  if (provisionStatus === "ready") {
+    return { label: ENV_STATUS.unpublished, tone: "idle" };
+  }
+  return { label: ENV_STATUS.waiting, tone: "wait" };
+};
+
 export const previewBody = (previewUrl: string | null): string => {
   if (previewUrl) {
     return "いま開いているプレビューです。新しいプレビューはまだ切れません。";

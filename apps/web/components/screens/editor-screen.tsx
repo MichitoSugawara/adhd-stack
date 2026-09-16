@@ -8,6 +8,8 @@ import StreamingText from "@/components/primitives/StreamingText";
 import TaskRows from "@/components/primitives/TaskRows";
 import { EditorEnvRail } from "@/components/screens/editor-env-rail";
 import { EditorPreviewPane } from "@/components/screens/editor-preview-pane";
+import type { EditorSideTab } from "@/components/screens/editor-preview-pane";
+import { DisabledAction } from "@/components/screens/env-card";
 import { NewPreviewModal } from "@/components/screens/env-modals";
 import { UrlChip } from "@/components/screens/url-chip";
 import { AppFrame } from "@/components/shell/app-frame";
@@ -27,7 +29,7 @@ import {
 import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
 import { writeLastWorkspace } from "@/lib/last-workspace";
-import { publicHttpUrl } from "@/lib/public-url";
+import { previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { usePublishFlow, useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
@@ -46,17 +48,28 @@ const TASK_LABELS = {
 
 const emptyChanges = (): ChangeSummary => ({ add: 0, del: 0, files: [] });
 
+const SIDE_TABS: { id: EditorSideTab; label: string }[] = [
+  { id: "preview", label: "ブラウザ" },
+  { id: "source", label: "ソース" },
+  { id: "changes", label: "変更" },
+  { id: "history", label: "履歴" },
+];
+
 const EditorHeader = ({
   envsHref,
   name,
+  onTab,
   pagesUrl,
   previewHref,
+  tab,
   waiting,
 }: {
   envsHref: string;
   name: string;
+  onTab: (tab: EditorSideTab) => void;
   pagesUrl: string | null;
   previewHref: string | null;
+  tab: EditorSideTab;
   waiting: boolean;
 }) => (
   <header className="border-line flex flex-col gap-3 border-b px-5 py-3">
@@ -73,13 +86,9 @@ const EditorHeader = ({
             rel="noreferrer"
             target="_blank"
           >
-            プレビュー
+            開く
           </a>
-        ) : (
-          <span className="rounded-control bg-field text-ink-3 inline-flex h-8 items-center px-3 text-[13px]">
-            プレビュー
-          </span>
-        )}
+        ) : null}
         <Link
           className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
           href={envsHref}
@@ -87,6 +96,28 @@ const EditorHeader = ({
           環境
         </Link>
       </div>
+    </div>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap gap-1">
+        {SIDE_TABS.map((item) => (
+          <button
+            className={`rounded-control h-8 px-3 text-[12px] font-medium ${
+              tab === item.id ? "bg-field text-ink" : "text-ink-3"
+            }`}
+            key={item.id}
+            onClick={() => {
+              onTab(item.id);
+            }}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
+        <span className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[12px] font-medium">
+          相談
+        </span>
+      </div>
+      <DisabledAction>検証へ送る</DisabledAction>
     </div>
     {pagesUrl ? <UrlChip href={pagesUrl} waiting={waiting} /> : null}
     {waiting ? (
@@ -149,7 +180,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [pane, setPane] = useState<"preview" | "source">("preview");
+  const [pane, setPane] = useState<EditorSideTab>("preview");
 
   useEffect(() => {
     if (!workspace) {
@@ -181,7 +212,11 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const view = toChatView(messages ?? []);
   const changes = changeSummaryFromView(view);
   const pagesUrl = publicHttpUrl(workspace.cloudflarePagesUrl);
-  const previewUrl = publicHttpUrl(workspace.cloudflarePreviewUrl);
+  const previewUrls = previewUrlsFrom(
+    workspace.cloudflarePreviewUrl,
+    workspace.cloudflarePreviewUrls
+  );
+  const previewUrl = previewUrls[0] ?? null;
   const envsHref = `/p/${slug}/envs`;
 
   const send = async (text: string) => {
@@ -209,8 +244,10 @@ const EditorLive = ({ slug }: { slug: string }) => {
       <EditorHeader
         envsHref={envsHref}
         name={workspace.name}
+        onTab={setPane}
         pagesUrl={pagesUrl}
         previewHref={previewUrl}
+        tab={pane}
         waiting={publishFlow.waiting}
       />
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -222,7 +259,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
             setPreviewOpen(true);
           }}
           pagesUrl={pagesUrl}
-          previewUrl={previewUrl}
+          previewUrls={previewUrls}
           waiting={publishFlow.waiting}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -316,7 +353,6 @@ const EditorLive = ({ slug }: { slug: string }) => {
         </div>
         <EditorPreviewPane
           changes={changes}
-          onTab={setPane}
           pagesUrl={pagesUrl}
           previewUrl={previewUrl}
           tab={pane}
@@ -325,9 +361,11 @@ const EditorLive = ({ slug }: { slug: string }) => {
       </div>
       {previewOpen ? (
         <NewPreviewModal
+          existingPreviewUrl={previewUrl}
           onClose={() => {
             setPreviewOpen(false);
           }}
+          productionUrl={pagesUrl}
         />
       ) : null}
     </div>
@@ -343,8 +381,12 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
       <EditorHeader
         envsHref={envsHref}
         name={app?.name ?? appId}
+        onTab={() => {
+          // Offline header has no side pane.
+        }}
         pagesUrl={null}
         previewHref={null}
+        tab="preview"
         waiting={false}
       />
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -356,7 +398,7 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
             // Offline rail has no preview creation.
           }}
           pagesUrl={null}
-          previewUrl={null}
+          previewUrls={[]}
           waiting={false}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

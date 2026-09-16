@@ -50,6 +50,7 @@ export const workspacePublicValidator = v.object({
   _id: v.id("workspaces"),
   cloudflarePagesUrl: v.optional(v.string()),
   cloudflarePreviewUrl: v.optional(v.string()),
+  cloudflarePreviewUrls: v.optional(v.array(v.string())),
   codingBackend: v.optional(codingBackendValidator),
   codingEnvironmentId: v.optional(v.string()),
   convexUrl: v.optional(v.string()),
@@ -62,6 +63,7 @@ export const workspacePublicValidator = v.object({
   publishNotes: v.optional(v.array(v.string())),
   ready: v.boolean(),
   slug: v.string(),
+  updatedAt: v.number(),
 });
 
 export const publishResultValidator = v.object({

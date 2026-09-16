@@ -110,6 +110,7 @@ export default defineSchema({
     cloudflareAccountId: v.optional(v.string()),
     cloudflarePagesUrl: v.optional(v.string()),
     cloudflarePreviewUrl: v.optional(v.string()),
+    cloudflarePreviewUrls: v.optional(v.array(v.string())),
     cloudflareProjectName: v.optional(v.string()),
     codexEnvironmentId: v.optional(v.string()),
     codingBackend: v.optional(codingBackendValidator),

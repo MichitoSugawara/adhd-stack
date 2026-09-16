@@ -54,21 +54,32 @@ assert.match(session, /rememberPath/);
 assert.match(session, /router\.replace\("\/connect"\)/);
 
 assert.match(editor, /usePublishFlow/);
-assert.match(editor, /プレビュー/);
+assert.match(editor, /ブラウザ/);
 assert.match(editor, /環境/);
 assert.match(editor, /TaskRows/);
 assert.match(editor, /EditorEnvRail/);
 assert.match(editor, /cloudflarePreviewUrl/);
 assert.match(editor, /previewHref=\{previewUrl\}/);
+assert.match(editor, /ブラウザ/);
+assert.match(editor, /検証へ送る/);
 assert.doesNotMatch(editor, /偽の成功/);
-assert.match(editorRail, /previewUrl/);
+assert.match(editorRail, /previewUrls/);
 assert.match(editorPane, /ENV_LABEL.preview/);
-assert.match(envs, /cloudflarePreviewUrl/);
+assert.match(editorPane, /HISTORY_UNAVAILABLE/);
+assert.match(envs, /cloudflarePreviewUrls/);
+assert.match(envs, /検証へ送る/);
+assert.match(connect, /次のステップ/);
+assert.match(projects, /検証待ち/);
+assert.match(projects, /今週の本番反映/);
 
 assert.match(envs, /ENV_LABEL.preview/);
 assert.match(envs, /本番へ反映/);
 assert.match(envModals, /新しいプレビュー/);
+assert.match(envModals, /本番へ反映しますか/);
+assert.match(envModals, /どこから始めるか/);
 assert.match(validators, /cloudflarePreviewUrl/);
+assert.match(validators, /cloudflarePreviewUrls/);
+assert.match(validators, /updatedAt: v.number/);
 assert.match(validators, /ready: v.boolean/);
 assert.doesNotMatch(validators, /githubRepoUrl/);
 assert.doesNotMatch(validators, /githubRepoFullName/);
@@ -91,6 +102,9 @@ const scmSurfaces = [
   ["editor-env-rail", editorRail],
   ["editor-preview-pane", editorPane],
   ["envs", envs],
+  ["env-modals", envModals],
+  ["connect", connect],
+  ["connect-copy", connectCopy],
   ["publish", publish],
   ["publish-screen", publishScreen],
   ["services", services],

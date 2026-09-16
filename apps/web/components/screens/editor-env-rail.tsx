@@ -8,9 +8,12 @@ import {
   ENV_LABEL,
   ENV_STATUS,
   PREVIEW_UNAVAILABLE,
+  SEND_STAGING_UNAVAILABLE,
   STAGING_UNAVAILABLE,
+  changeNoteFrom,
   previewChip,
 } from "@/lib/env-labels";
+import { hostOf } from "@/lib/public-url";
 
 interface ProductionChip {
   status: string;
@@ -56,7 +59,7 @@ export const EditorEnvRail = ({
   name,
   onNewPreview,
   pagesUrl,
-  previewUrl,
+  previewUrls,
   waiting,
 }: {
   changes: ChangeSummary;
@@ -64,10 +67,10 @@ export const EditorEnvRail = ({
   name: string;
   onNewPreview: () => void;
   pagesUrl: string | null;
-  previewUrl?: string | null;
+  previewUrls: readonly string[];
   waiting: boolean;
 }) => {
-  const preview = previewChip(previewUrl ?? null);
+  const preview = previewChip(previewUrls[0] ?? null);
   const production = productionChip(pagesUrl, waiting);
 
   return (
@@ -107,19 +110,25 @@ export const EditorEnvRail = ({
         <p className="text-ink-3 mb-1 text-[11px] tracking-[0.08em] uppercase">
           プレビュー
         </p>
-        {previewUrl ? (
-          <a
-            className="text-ink-2 block text-[12px] leading-5 underline underline-offset-2"
-            href={previewUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            開いているプレビュー
-          </a>
-        ) : (
+        {previewUrls.length === 0 ? (
           <p className="text-ink-3 text-[12px] leading-5">
             {PREVIEW_UNAVAILABLE}
           </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {previewUrls.map((href) => (
+              <li key={href}>
+                <a
+                  className="text-ink-2 block text-[12px] leading-5 underline underline-offset-2"
+                  href={href}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {hostOf(href)}
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
         <button
           className="rounded-control bg-field text-ink mt-2 h-8 w-full px-3 text-[12px] font-medium"
@@ -133,20 +142,14 @@ export const EditorEnvRail = ({
         <p className="text-ink-3 mb-1 text-[11px] tracking-[0.08em] uppercase">
           変更
         </p>
-        {changes.files.length === 0 ? (
-          <p className="text-ink-3 text-[12px] leading-5">
-            まだまとまった変更はありません。
-          </p>
-        ) : (
-          <p className="text-ink-2 text-[12px] leading-5">
-            {String(changes.files.length)} ファイル
-            {changes.add + changes.del > 0
-              ? ` · +${String(changes.add)} / -${String(changes.del)}`
-              : ""}
-          </p>
-        )}
+        <p className="text-ink-2 text-[12px] leading-5">
+          {changeNoteFrom(changes)}
+        </p>
         <p className="text-ink-3 mt-2 text-[12px] leading-5">
           {STAGING_UNAVAILABLE}
+        </p>
+        <p className="text-ink-3 mt-2 text-[12px] leading-5">
+          {SEND_STAGING_UNAVAILABLE}
         </p>
       </div>
     </aside>

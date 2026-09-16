@@ -16,6 +16,7 @@ assert.deepEqual(
   ]),
   {
     previewUrl: "https://preview.pages.dev",
+    previewUrls: ["https://preview.pages.dev"],
     productionUrl: "https://app.pages.dev",
   }
 );
@@ -28,17 +29,20 @@ assert.deepEqual(
   ]),
   {
     previewUrl: "https://a.pages.dev",
+    previewUrls: ["https://a.pages.dev", "https://b.pages.dev"],
     productionUrl: "https://app.pages.dev",
   }
 );
 
 assert.deepEqual(pagesEnvironmentsFrom([{ environment: "preview" }]), {
   previewUrl: undefined,
+  previewUrls: [],
   productionUrl: undefined,
 });
 
 assert.deepEqual(pagesEnvironmentsFrom([]), {
   previewUrl: undefined,
+  previewUrls: [],
   productionUrl: undefined,
 });
 

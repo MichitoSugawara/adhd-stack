@@ -157,7 +157,7 @@ Phase 3 で、名前付き作成（一人複数アプリ可）に合わせる。
 
 主 UI は **プレビュー / 検証 / 本番** を並べる（根拠: Claude Design 1795b4d9）。ソース管理の言葉は出さない。
 
-Pages の `preview_deployment_setting` は切らない。既存の preview 配備があればその URL を読む。無ければ「まだ」。本番 URL と本番反映（既存の Pages デプロイ）は本物としてつなぐ。新しいプレビューの作成、検証への送付、版の戻しは、API が無いあいだ操作できない。公開 API に githubRepoUrl は出さない。
+Pages の `preview_deployment_setting` は切らない。既存の preview 配備は最大 8 件まで読む。無ければ「まだ」。本番 URL と本番反映（既存の Pages デプロイ）は本物としてつなぐ。新しいプレビューの作成、検証への送付、差を見る、版の戻しは、API が無いあいだ操作できない。公開 API に githubRepoUrl は出さない。画面の根拠は [Claude Design 1795b4d9](https://claude.ai/design/p/1795b4d9-3a03-4aaf-b446-df0d1796f63c)（環境一覧 / エディタ / 本番反映モーダル / プレビュー作成 / 接続 / 一覧）。
 
 既知のギャップ（隠さない）:
 

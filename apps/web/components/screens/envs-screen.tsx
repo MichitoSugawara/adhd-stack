@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 
 import { DisabledAction, EnvCard } from "@/components/screens/env-card";
 import { NewPreviewModal, PromoteModal } from "@/components/screens/env-modals";
+import { StatusChip } from "@/components/screens/status-chip";
+import { UrlChip } from "@/components/screens/url-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { useWorkspaceBySlug } from "@/lib/coding-port";
@@ -14,12 +16,12 @@ import {
   ENV_LABEL,
   ENV_STATUS,
   ROLLBACK_UNAVAILABLE,
+  SEND_STAGING_UNAVAILABLE,
   STAGING_UNAVAILABLE,
-  previewBody,
   previewChip,
 } from "@/lib/env-labels";
 import { writeLastWorkspace } from "@/lib/last-workspace";
-import { publicHttpUrl } from "@/lib/public-url";
+import { hostOf, previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
 import { useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
@@ -49,16 +51,42 @@ const productionBody = (pages: string | null, started: boolean): string => {
     return "本番の組み立てを待っています。完了はまだ見ていません。";
   }
   if (pages) {
-    return "いま開いている本番です。";
+    return "いま開いている本番です。履歴と前の版に戻す操作はまだありません。";
   }
   return "本番はまだ出ていません。";
 };
 
-const EnvCards = ({
+const PreviewItem = ({ href }: { href: string }) => {
+  const chip = previewChip(href);
+  return (
+    <article className="rounded-card bg-inset p-3">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[13px] font-medium">{hostOf(href)}</p>
+        <StatusChip tone={chip.tone}>{chip.status}</StatusChip>
+      </div>
+      <div className="mt-2">
+        <UrlChip href={href} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <a
+          className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[13px] font-medium"
+          href={href}
+          rel="noreferrer"
+          target="_blank"
+        >
+          開く
+        </a>
+        <DisabledAction>検証へ送る</DisabledAction>
+      </div>
+    </article>
+  );
+};
+
+const EnvColumns = ({
   onNewPreview,
   onPromote,
   pages,
-  preview,
+  previews,
   production,
   publishHref,
   started,
@@ -66,76 +94,88 @@ const EnvCards = ({
   onNewPreview: () => void;
   onPromote: () => void;
   pages: string | null;
-  preview: string | null;
+  previews: readonly string[];
   production: ProductionChip;
   publishHref?: string;
   started: boolean;
-}) => {
-  const previewStatus = previewChip(preview);
-  return (
-    <div className="mt-6 grid max-w-5xl gap-3 lg:grid-cols-3">
-      <EnvCard
-        actions={
-          <>
-            <button
-              className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-              onClick={onNewPreview}
-              type="button"
-            >
-              ＋新しいプレビュー
-            </button>
-            <DisabledAction>検証へ送る</DisabledAction>
-          </>
-        }
-        body={previewBody(preview)}
-        status={previewStatus.status}
-        title={ENV_LABEL.preview}
-        tone={previewStatus.tone}
-        url={preview}
-      />
-      <EnvCard
-        actions={
-          <>
-            <DisabledAction>差を見る</DisabledAction>
-            <button
-              className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-              onClick={onPromote}
-              type="button"
+}) => (
+  <div className="mt-6 grid max-w-5xl gap-3 lg:grid-cols-3">
+    <section className="rounded-card bg-surface shadow-card flex flex-col p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[16px] font-semibold">{ENV_LABEL.preview}</h2>
+          <p className="text-ink-3 mt-1 text-[12px]">
+            {previews.length > 0
+              ? `${String(previews.length)} 件あります。新しいプレビューはまだ切れません。`
+              : "いくつでも作れるようにします。いまはまだ切れません。"}
+          </p>
+        </div>
+        <StatusChip tone={previews.length > 0 ? "ok" : "idle"}>
+          {previews.length > 0 ? ENV_STATUS.published : ENV_STATUS.none}
+        </StatusChip>
+      </div>
+      <div className="mt-3 flex flex-col gap-2">
+        {previews.length === 0 ? (
+          <p className="text-ink-2 text-[13px] leading-6">
+            プレビュー用のページはまだ切っています。作ったようには見せません。
+          </p>
+        ) : (
+          previews.map((href) => <PreviewItem href={href} key={href} />)
+        )}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
+          onClick={onNewPreview}
+          type="button"
+        >
+          ＋新しいプレビュー
+        </button>
+      </div>
+      <p className="text-ink-3 mt-3 text-[12px]">{SEND_STAGING_UNAVAILABLE}</p>
+    </section>
+    <EnvCard
+      actions={
+        <>
+          <DisabledAction>差を見る</DisabledAction>
+          <button
+            className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
+            onClick={onPromote}
+            type="button"
+          >
+            本番へ反映
+          </button>
+        </>
+      }
+      body={STAGING_UNAVAILABLE}
+      status={ENV_STATUS.none}
+      title={ENV_LABEL.staging}
+      tone="idle"
+    />
+    <EnvCard
+      actions={
+        <>
+          {publishHref ? (
+            <Link
+              className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
+              href={publishHref}
             >
               本番へ反映
-            </button>
-          </>
-        }
-        body={STAGING_UNAVAILABLE}
-        status={ENV_STATUS.none}
-        title={ENV_LABEL.staging}
-        tone="idle"
-      />
-      <EnvCard
-        actions={
-          <>
-            {publishHref ? (
-              <Link
-                className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
-                href={publishHref}
-              >
-                本番へ反映
-              </Link>
-            ) : (
-              <DisabledAction>本番へ反映</DisabledAction>
-            )}
-            <DisabledAction>前の版に戻す</DisabledAction>
-          </>
-        }
-        body={productionBody(pages, started)}
-        status={production.label}
-        title={ENV_LABEL.production}
-        tone={production.tone}
-        url={pages}
-      />
-    </div>
-  );
-};
+            </Link>
+          ) : (
+            <DisabledAction>本番へ反映</DisabledAction>
+          )}
+          <DisabledAction>前の版に戻す</DisabledAction>
+        </>
+      }
+      body={productionBody(pages, started)}
+      status={production.label}
+      title={ENV_LABEL.production}
+      tone={production.tone}
+      url={pages}
+    />
+  </div>
+);
 
 const EnvsLive = ({ slug }: { slug: string }) => {
   const router = useRouter();
@@ -164,7 +204,10 @@ const EnvsLive = ({ slug }: { slug: string }) => {
     );
   }
   const pages = publicHttpUrl(workspace.cloudflarePagesUrl);
-  const preview = publicHttpUrl(workspace.cloudflarePreviewUrl);
+  const previews = previewUrlsFrom(
+    workspace.cloudflarePreviewUrl,
+    workspace.cloudflarePreviewUrls
+  );
   const convex = publicHttpUrl(workspace.convexUrl);
   const started = workspace.pagesDeployStatus === "started";
   const production = productionStatus(pages, started);
@@ -175,9 +218,9 @@ const EnvsLive = ({ slug }: { slug: string }) => {
         {workspace.name}
       </h1>
       <p className="text-ink-2 mt-2 max-w-2xl text-[14px]">
-        プレビュー、検証、本番を並べます。無いものはまだです。
+        プレビューで試して、検証で確かめて、本番に出します。無いものはまだです。
       </p>
-      <EnvCards
+      <EnvColumns
         onNewPreview={() => {
           setPreviewOpen(true);
         }}
@@ -185,7 +228,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
           setPromoteOpen(true);
         }}
         pages={pages}
-        preview={preview}
+        previews={previews}
         production={production}
         publishHref={`/p/${slug}/publish`}
         started={started}
@@ -208,9 +251,11 @@ const EnvsLive = ({ slug }: { slug: string }) => {
       </p>
       {previewOpen ? (
         <NewPreviewModal
+          existingPreviewUrl={previews[0] ?? null}
           onClose={() => {
             setPreviewOpen(false);
           }}
+          productionUrl={pages}
         />
       ) : null}
       {promoteOpen ? (
@@ -237,7 +282,7 @@ const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => {
       <p className="text-ink-2 mt-2 max-w-2xl text-[14px]">
         Convex 未設定です。環境の URL は出しません。
       </p>
-      <EnvCards
+      <EnvColumns
         onNewPreview={() => {
           setPreviewOpen(true);
         }}
@@ -245,7 +290,7 @@ const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => {
           setPromoteOpen(true);
         }}
         pages={null}
-        preview={null}
+        previews={[]}
         production={{ label: ENV_STATUS.none, tone: "idle" }}
         publishHref={`/p/${slug}/publish`}
         started={false}

@@ -543,6 +543,10 @@ export const mergeUserPair = async (
         keepWorkspace.cloudflarePreviewUrl,
         absorbWorkspace.cloudflarePreviewUrl
       ),
+      cloudflarePreviewUrls:
+        (keepWorkspace.cloudflarePreviewUrls?.length ?? 0) > 0
+          ? keepWorkspace.cloudflarePreviewUrls
+          : absorbWorkspace.cloudflarePreviewUrls,
       cloudflareProjectName: preferText(
         keepWorkspace.cloudflareProjectName,
         absorbWorkspace.cloudflareProjectName

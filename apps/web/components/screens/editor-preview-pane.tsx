@@ -2,9 +2,14 @@
 
 import { UrlChip } from "@/components/screens/url-chip";
 import type { ChangeSummary } from "@/lib/chat-view";
-import { ENV_LABEL, PREVIEW_UNAVAILABLE } from "@/lib/env-labels";
+import {
+  ENV_LABEL,
+  HISTORY_UNAVAILABLE,
+  PREVIEW_UNAVAILABLE,
+  changeNoteFrom,
+} from "@/lib/env-labels";
 
-type PreviewTab = "preview" | "source";
+export type EditorSideTab = "changes" | "history" | "preview" | "source";
 
 const ProductionPreview = ({
   pagesUrl,
@@ -42,95 +47,126 @@ const ProductionPreview = ({
   );
 };
 
+const PreviewBody = ({
+  pagesUrl,
+  previewUrl,
+  waiting,
+}: {
+  pagesUrl: string | null;
+  previewUrl?: string | null;
+  waiting: boolean;
+}) => (
+  <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3">
+    {previewUrl ? (
+      <>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-ink-2 text-[12px]">{ENV_LABEL.preview}</span>
+          <UrlChip href={previewUrl} />
+        </div>
+        <iframe
+          className="bg-inset rounded-card min-h-[280px] w-full flex-1"
+          src={previewUrl}
+          title={`${ENV_LABEL.preview}の表示`}
+        />
+      </>
+    ) : (
+      <p className="text-ink-3 text-[12px] leading-5">{PREVIEW_UNAVAILABLE}</p>
+    )}
+    <ProductionPreview
+      pagesUrl={pagesUrl}
+      previewUrl={previewUrl}
+      waiting={waiting}
+    />
+  </div>
+);
+
+const SourceBody = ({ changes }: { changes: ChangeSummary }) => (
+  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-3">
+    <p className="text-ink-3 text-[12px] leading-5">
+      ソースはファイル名と変更の数だけ出します。
+    </p>
+    {changes.files.length === 0 ? (
+      <p className="text-ink-3 text-[13px]">まだファイルの変更はありません。</p>
+    ) : (
+      <ul className="flex flex-col gap-1">
+        {changes.files.map((file) => (
+          <li
+            className="rounded-card bg-inset px-2.5 py-2 text-[12px]"
+            key={file}
+          >
+            {file}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
+
+const ChangesBody = ({ changes }: { changes: ChangeSummary }) => (
+  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-3">
+    <p className="text-ink-2 text-[13px] leading-6">
+      {changeNoteFrom(changes)}
+    </p>
+    {changes.files.length === 0 ? null : (
+      <ul className="flex flex-col gap-1">
+        {changes.files.map((file) => (
+          <li
+            className="rounded-card bg-inset px-2.5 py-2 text-[12px]"
+            key={file}
+          >
+            {file}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
+
 export const EditorPreviewPane = ({
   changes,
-  onTab,
   pagesUrl,
   previewUrl,
   tab,
   waiting,
 }: {
   changes: ChangeSummary;
-  onTab: (tab: PreviewTab) => void;
   pagesUrl: string | null;
   previewUrl?: string | null;
-  tab: PreviewTab;
+  tab: EditorSideTab;
   waiting: boolean;
-}) => (
-  <aside className="border-line hidden min-h-0 w-[380px] shrink-0 flex-col border-l xl:flex">
-    <div className="border-line flex gap-1 border-b p-2">
-      <button
-        className={`rounded-control h-8 px-3 text-[12px] font-medium ${
-          tab === "preview" ? "bg-field text-ink" : "text-ink-3"
-        }`}
-        onClick={() => {
-          onTab("preview");
-        }}
-        type="button"
-      >
-        プレビュー
-      </button>
-      <button
-        className={`rounded-control h-8 px-3 text-[12px] font-medium ${
-          tab === "source" ? "bg-field text-ink" : "text-ink-3"
-        }`}
-        onClick={() => {
-          onTab("source");
-        }}
-        type="button"
-      >
-        ソース
-      </button>
-    </div>
-    {tab === "preview" ? (
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-3">
-        {previewUrl ? (
-          <>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-ink-2 text-[12px]">
-                {ENV_LABEL.preview}
-              </span>
-              <UrlChip href={previewUrl} />
-            </div>
-            <iframe
-              className="bg-inset rounded-card min-h-[280px] w-full flex-1"
-              src={previewUrl}
-              title={`${ENV_LABEL.preview}の表示`}
-            />
-          </>
-        ) : (
-          <p className="text-ink-3 text-[12px] leading-5">
-            {PREVIEW_UNAVAILABLE}
+}) => {
+  if (tab === "source") {
+    return (
+      <aside className="border-line hidden min-h-0 w-[380px] shrink-0 flex-col border-l xl:flex">
+        <SourceBody changes={changes} />
+      </aside>
+    );
+  }
+  if (tab === "changes") {
+    return (
+      <aside className="border-line hidden min-h-0 w-[380px] shrink-0 flex-col border-l xl:flex">
+        <ChangesBody changes={changes} />
+      </aside>
+    );
+  }
+  if (tab === "history") {
+    return (
+      <aside className="border-line hidden min-h-0 w-[380px] shrink-0 flex-col border-l xl:flex">
+        <div className="p-3">
+          <p className="text-ink-3 text-[13px] leading-6">
+            {HISTORY_UNAVAILABLE}
           </p>
-        )}
-        <ProductionPreview
-          pagesUrl={pagesUrl}
-          previewUrl={previewUrl}
-          waiting={waiting}
-        />
-      </div>
-    ) : (
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-3">
-        <p className="text-ink-3 text-[12px] leading-5">
-          ソースはファイル名と変更の数だけ出します。
-        </p>
-        {changes.files.length === 0 ? (
-          <p className="text-ink-3 text-[13px]">
-            まだファイルの変更はありません。
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-1">
-            {changes.files.map((file) => (
-              <li
-                className="rounded-card bg-inset px-2.5 py-2 text-[12px]"
-                key={file}
-              >
-                {file}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    )}
-  </aside>
-);
+        </div>
+      </aside>
+    );
+  }
+  return (
+    <aside className="border-line hidden min-h-0 w-[380px] shrink-0 flex-col border-l xl:flex">
+      <PreviewBody
+        pagesUrl={pagesUrl}
+        previewUrl={previewUrl}
+        waiting={waiting}
+      />
+    </aside>
+  );
+};

@@ -39,13 +39,24 @@ const listedPagesUrls = async (
   token: string,
   accountId: string,
   projectName: string
-): Promise<{ previewUrl?: string; productionUrl?: string } | undefined> => {
+): Promise<
+  | {
+      previewUrl?: string;
+      previewUrls: string[];
+      productionUrl?: string;
+    }
+  | undefined
+> => {
   const listed = await listPagesEnvironments(token, accountId, projectName);
   if (!listed) {
     return undefined;
   }
+  const previewUrls = listed.previewUrls
+    .map((url) => asStoredHttpUrl(url))
+    .filter((url): url is string => url !== undefined);
   return {
-    previewUrl: asStoredHttpUrl(listed.previewUrl) ?? undefined,
+    previewUrl: previewUrls[0],
+    previewUrls,
     productionUrl: asStoredHttpUrl(listed.productionUrl) ?? undefined,
   };
 };
@@ -73,6 +84,7 @@ export const publishWorkspace = internalAction({
     const notes: string[] = [];
     let cloudflarePagesUrl = asStoredHttpUrl(workspace.cloudflarePagesUrl);
     let cloudflarePreviewUrl = asStoredHttpUrl(workspace.cloudflarePreviewUrl);
+    let cloudflarePreviewUrls = workspace.cloudflarePreviewUrls ?? [];
     let { cloudflareAccountId } = workspace;
     let { cloudflareProjectName } = workspace;
     let convexUrl = asStoredHttpUrl(workspace.convexUrl);
@@ -233,6 +245,7 @@ export const publishWorkspace = internalAction({
       if (listed) {
         cloudflarePagesUrl = listed.productionUrl ?? cloudflarePagesUrl;
         cloudflarePreviewUrl = listed.previewUrl;
+        cloudflarePreviewUrls = listed.previewUrls;
       }
     }
 
@@ -248,6 +261,7 @@ export const publishWorkspace = internalAction({
       cloudflareAccountId,
       cloudflarePagesUrl,
       cloudflarePreviewUrl,
+      cloudflarePreviewUrls,
       cloudflareProjectName,
       convexDeploymentName,
       convexProjectSlug,
@@ -319,6 +333,7 @@ export const refreshPagesDeploy = internalAction({
           cloudflarePagesUrl:
             listed.productionUrl ?? workspace.cloudflarePagesUrl,
           cloudflarePreviewUrl: listed.previewUrl ?? "",
+          cloudflarePreviewUrls: listed.previewUrls,
           provisionStatus: workspace.provisionStatus,
           workspaceId: args.workspaceId,
         });
@@ -350,6 +365,9 @@ export const refreshPagesDeploy = internalAction({
       cloudflarePreviewUrl: listed
         ? (listed.previewUrl ?? "")
         : workspace.cloudflarePreviewUrl,
+      cloudflarePreviewUrls: listed
+        ? listed.previewUrls
+        : workspace.cloudflarePreviewUrls,
       pagesDeployId: deployment.id ?? workspace.pagesDeployId,
       pagesDeployStatus,
       provisionStatus: workspace.provisionStatus,

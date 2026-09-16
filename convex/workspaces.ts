@@ -9,6 +9,7 @@ const toPublic = (workspace: Doc<"workspaces">) => ({
   _id: workspace._id,
   cloudflarePagesUrl: workspace.cloudflarePagesUrl,
   cloudflarePreviewUrl: workspace.cloudflarePreviewUrl,
+  cloudflarePreviewUrls: workspace.cloudflarePreviewUrls,
   codingBackend: workspace.codingBackend,
   codingEnvironmentId:
     workspace.codingEnvironmentId ?? workspace.codexEnvironmentId,
@@ -22,6 +23,7 @@ const toPublic = (workspace: Doc<"workspaces">) => ({
   publishNotes: workspace.publishNotes,
   ready: workspace.provisionStatus === "ready",
   slug: workspace.slug ?? slugFromName(workspace.name),
+  updatedAt: workspace.updatedAt,
 });
 
 export const listMine = authedQuery({
