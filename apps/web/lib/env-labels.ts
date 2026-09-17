@@ -87,3 +87,72 @@ export const previewChip = (
   }
   return { status: ENV_STATUS.none, tone: "idle" };
 };
+
+export const isProvisioningStatus = (status: string | undefined): boolean =>
+  status === "pending" || status === "provisioning";
+
+export const previewColumnState = (args: {
+  hasProduction: boolean;
+  previewCount: number;
+  provisioning: boolean;
+}): { body: string; label: string; tone: "idle" | "ok" | "wait" } => {
+  if (args.previewCount > 0) {
+    return {
+      body: "制作中のアプリを開いて、使い心地を確かめましょう。",
+      label: `${String(args.previewCount)} 件`,
+      tone: "ok",
+    };
+  }
+  if (args.provisioning) {
+    return {
+      body: "公開先を用意しています。準備が終わると、プレビューの URL がここに表示されます。",
+      label: "準備中",
+      tone: "wait",
+    };
+  }
+  if (args.hasProduction) {
+    return {
+      body: "プレビュー専用の URL はまだありません。本番の URL で表示を確認できます。",
+      label: "未作成",
+      tone: "idle",
+    };
+  }
+  return {
+    body: "制作中のアプリを試す場所です。プレビューの URL はまだありません。",
+    label: "未作成",
+    tone: "idle",
+  };
+};
+
+export const productionColumnState = (args: {
+  pages: string | null;
+  provisioning: boolean;
+  started: boolean;
+}): { body: string; label: string; tone: "idle" | "ok" | "wait" } => {
+  if (args.started) {
+    return {
+      body: "本番のビルドを実行中です。公開の完了を待っています。",
+      label: "ビルド中",
+      tone: "wait",
+    };
+  }
+  if (args.pages) {
+    return {
+      body: "みんなに届けるアプリの URL です。変更は、公開の操作をすると反映されます。",
+      label: "URL あり",
+      tone: "ok",
+    };
+  }
+  if (args.provisioning) {
+    return {
+      body: "本番の公開先を用意しています。完了すると URL がここに表示されます。",
+      label: "準備中",
+      tone: "wait",
+    };
+  }
+  return {
+    body: "できあがったアプリを公開する場所です。まだ公開されていません。",
+    label: "未公開",
+    tone: "idle",
+  };
+};

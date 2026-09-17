@@ -1,10 +1,15 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import type { ChangeSummary } from "@/lib/chat-view";
-import { hostOf } from "@/lib/public-url";
+import {
+  KITESURF_CAPTURING_MESSAGE,
+  useKitesurfPreview,
+} from "@/lib/kitesurf-preview";
 
 export type EditorSideTab = "changes" | "preview";
 
@@ -51,11 +56,145 @@ const BrowserIcon = ({
   </svg>
 );
 
-// Kitesurf's chat + browser composition, with only real environment URLs.
+const PreviewEmpty = ({
+  provisioning,
+  waiting,
+}: {
+  provisioning: boolean;
+  waiting: boolean;
+}) => {
+  let title = "アイデアが、形になる場所。";
+  let body =
+    "チャットで作りたいものを伝えましょう。公開先の URL が用意されると、Kitesurf で動きを確認できます。";
+  if (provisioning) {
+    title = "環境を準備しています";
+    body =
+      "公開先の URL ができると、ここで Kitesurf の表示が開きます。環境画面から進捗を確認できます。";
+  } else if (waiting) {
+    title = "公開の準備をしています";
+    body =
+      "本番のビルドが完了すると、ここで確認できます。環境画面から進捗を確認できます。";
+  }
+  return (
+    <div className="studio-preview-empty">
+      <div className="studio-blueprint" aria-hidden="true">
+        <div className="studio-blueprint-bar">
+          <i />
+          <i />
+          <i />
+        </div>
+        <div className="studio-blueprint-body">
+          <div />
+          <div />
+          <div />
+        </div>
+        <span>YOUR NEXT IDEA</span>
+      </div>
+      <span className="ui-eyebrow">A LITTLE IDEA, A REAL APP.</span>
+      <h2>{title}</h2>
+      <p>{body}</p>
+    </div>
+  );
+};
+
+const PreviewStatus = ({
+  busy,
+  imageUrl,
+  message,
+  status,
+}: {
+  busy: boolean;
+  imageUrl: string | null;
+  message: string | null;
+  status: "error" | "needs_setup" | "pending" | "ready" | null;
+}) => {
+  if (imageUrl) {
+    return (
+      <Image
+        alt="プレビューの表示"
+        className="studio-browser-shot"
+        height={800}
+        src={imageUrl}
+        unoptimized
+        width={1280}
+      />
+    );
+  }
+  if (busy || status === "pending") {
+    return (
+      <div className="studio-preview-empty">
+        <p className="ui-eyebrow">KITESURF</p>
+        <h2>{KITESURF_CAPTURING_MESSAGE}</h2>
+        <p>Cloudflare Browser Run でページを描画しています。</p>
+      </div>
+    );
+  }
+  if (status === "needs_setup") {
+    return (
+      <div className="studio-preview-empty">
+        <p className="ui-eyebrow">KITESURF</p>
+        <h2>ブラウザプレビューを開けません</h2>
+        <p>
+          {message ??
+            "Cloudflare Browser Run（Kitesurf）の権限がありません。つなぎ直してください。"}
+        </p>
+        <Link className="ui-button-primary mt-6" href="/connect">
+          Cloudflare を接続する
+        </Link>
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <div className="studio-preview-empty">
+        <p className="ui-eyebrow">KITESURF</p>
+        <h2>表示を取得できませんでした</h2>
+        <p>
+          {message ??
+            "Kitesurf でページを描画できませんでした。新しいタブで URL を開いて確認できます。"}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="studio-preview-empty">
+      <p className="ui-eyebrow">KITESURF</p>
+      <h2>表示の準備をしています</h2>
+      <p>再読み込みで、Kitesurf の取得をもう一度試せます。</p>
+    </div>
+  );
+};
+
+const KitesurfCanvas = ({
+  revision,
+  slug,
+  url,
+  width,
+}: {
+  revision: number;
+  slug: string;
+  url: string;
+  width: "desktop" | "mobile";
+}) => {
+  const preview = useKitesurfPreview(slug, url, width, revision);
+  return (
+    <PreviewStatus
+      busy={preview.busy}
+      imageUrl={preview.imageUrl}
+      message={preview.message}
+      status={preview.status}
+    />
+  );
+};
+
+// Visual preview via Cloudflare Browser Run + Kitesurf (browser=kitesurf).
+// https://developers.cloudflare.com/browser-run/kitesurf/
 export const EditorPreviewPane = ({
   changes,
   pagesUrl,
   previewUrl,
+  provisioning = false,
+  slug,
   tab,
   onTab,
   waiting,
@@ -63,6 +202,8 @@ export const EditorPreviewPane = ({
   changes: ChangeSummary;
   pagesUrl: string | null;
   previewUrl?: string | null;
+  provisioning?: boolean;
+  slug?: string;
   tab: EditorSideTab;
   onTab: (tab: EditorSideTab) => void;
   waiting: boolean;
@@ -101,7 +242,9 @@ export const EditorPreviewPane = ({
             </button>
           ) : null}
         </div>
-        <span className="studio-pane-meta">{environmentLabel}</span>
+        <span className="studio-pane-meta">
+          {url ? "KITESURF" : environmentLabel}
+        </span>
       </div>
       {tab === "changes" ? (
         <div className="studio-changes">
@@ -143,12 +286,14 @@ export const EditorPreviewPane = ({
                 <BrowserIcon kind="reload" />
               </button>
             ) : null}
-            <div className="studio-address">
+            <label className="studio-address">
               <WorkspaceIcon name="globe" size={13} />
-              <span>
-                {url ? hostOf(url) : "プレビューはここに表示されます"}
-              </span>
-            </div>
+              <input
+                aria-label="プレビューの URL"
+                readOnly
+                value={url ?? "プレビューはここに表示されます"}
+              />
+            </label>
             <div
               className="studio-width-control"
               aria-label="プレビューの画面サイズ"
@@ -190,40 +335,15 @@ export const EditorPreviewPane = ({
           <div
             className={`studio-browser-canvas${width === "mobile" ? " is-mobile" : ""}`}
           >
-            {url ? (
-              <iframe
-                className="studio-browser-frame"
-                key={`${url}-${revision}`}
-                src={url}
-                title={previewUrl ? "プレビューの表示" : "本番の表示"}
+            {url && slug ? (
+              <KitesurfCanvas
+                revision={revision}
+                slug={slug}
+                url={url}
+                width={width}
               />
             ) : (
-              <div className="studio-preview-empty">
-                <div className="studio-blueprint" aria-hidden="true">
-                  <div className="studio-blueprint-bar">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <div className="studio-blueprint-body">
-                    <div />
-                    <div />
-                    <div />
-                  </div>
-                  <span>YOUR NEXT IDEA</span>
-                </div>
-                <span className="ui-eyebrow">A LITTLE IDEA, A REAL APP.</span>
-                <h2>
-                  {waiting
-                    ? "公開の準備をしています"
-                    : "アイデアが、形になる場所。"}
-                </h2>
-                <p>
-                  {waiting
-                    ? "本番のビルドが完了すると、ここで確認できます。環境画面から進捗を確認できます。"
-                    : "チャットで作りたいものを伝えましょう。プレビューの URL が用意されると、ここで動きを確認できます。"}
-                </p>
-              </div>
+              <PreviewEmpty provisioning={provisioning} waiting={waiting} />
             )}
           </div>
         </>

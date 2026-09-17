@@ -10,6 +10,11 @@ import { ShellGate } from "@/components/shell/shell-gate";
 import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { useWorkspaceBySlug } from "@/lib/coding-port";
 import { hasConvexUrl } from "@/lib/env";
+import {
+  isProvisioningStatus,
+  previewColumnState,
+  productionColumnState,
+} from "@/lib/env-labels";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { hostOf, previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
@@ -18,66 +23,36 @@ import { useShell } from "@/lib/shell-state";
 
 import "./studio.css";
 
-interface ProductionState {
-  body: string;
-  label: string;
-  tone: "idle" | "ok" | "wait";
-}
-
-const productionState = (
-  pages: string | null,
-  started: boolean
-): ProductionState => {
-  if (started) {
-    return {
-      body: "本番のビルドを実行中です。公開の完了を待っています。",
-      label: "ビルド中",
-      tone: "wait",
-    };
-  }
-  if (pages) {
-    return {
-      body: "みんなに届けるアプリの URL です。変更は、公開の操作をすると反映されます。",
-      label: "URL あり",
-      tone: "ok",
-    };
-  }
-  return {
-    body: "できあがったアプリを公開する場所です。まだ公開されていません。",
-    label: "未公開",
-    tone: "idle",
-  };
-};
-
 const EnvColumns = ({
   slug,
   pages,
   previews,
+  provisioning = false,
   started,
   offline = false,
 }: {
   slug: string;
   pages: string | null;
   previews: readonly string[];
+  provisioning?: boolean;
   started: boolean;
   offline?: boolean;
 }) => {
-  const production = productionState(pages, started);
+  const preview = previewColumnState({
+    hasProduction: Boolean(pages),
+    previewCount: previews.length,
+    provisioning,
+  });
+  const production = productionColumnState({ pages, provisioning, started });
   return (
     <div className="studio-env-grid">
       <section className="studio-env-card">
         <span className="studio-env-number">01 / TRY IT</span>
         <div className="studio-env-card-header">
           <h2>プレビュー</h2>
-          <StatusChip tone={previews.length ? "ok" : "idle"}>
-            {previews.length ? `${previews.length} 件` : "未作成"}
-          </StatusChip>
+          <StatusChip tone={preview.tone}>{preview.label}</StatusChip>
         </div>
-        <p>
-          {previews.length
-            ? "制作中のアプリを開いて、使い心地を確かめましょう。"
-            : "制作中のアプリを試す場所です。プレビューの URL はまだありません。"}
-        </p>
+        <p>{preview.body}</p>
         <div className="studio-env-preview-list">
           {previews.map((url) => (
             <a
@@ -139,7 +114,10 @@ const EnvColumns = ({
 
 const EnvsLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
-  useSyncPagesEnvironments(slug, workspace?.ready === true);
+  useSyncPagesEnvironments(
+    slug,
+    workspace?.ready === true || Boolean(workspace?.cloudflarePagesUrl)
+  );
   useEffect(() => {
     if (workspace) {
       writeLastWorkspace({
@@ -169,6 +147,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
   );
   const convex = publicHttpUrl(workspace.convexUrl);
   const started = workspace.pagesDeployStatus === "started";
+  const provisioning = isProvisioningStatus(workspace.provisionStatus);
   return (
     <>
       <div className="studio-page-heading">
@@ -184,6 +163,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
       <EnvColumns
         pages={pages}
         previews={previews}
+        provisioning={provisioning}
         slug={slug}
         started={started}
       />

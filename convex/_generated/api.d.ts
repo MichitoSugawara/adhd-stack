@@ -10,6 +10,7 @@
 
 import type * as accountMerge from "../accountMerge.js";
 import type * as auth from "../auth.js";
+import type * as browserRunActions from "../browserRunActions.js";
 import type * as chat from "../chat.js";
 import type * as chatActions from "../chatActions.js";
 import type * as codingBackends from "../codingBackends.js";
@@ -22,6 +23,7 @@ import type * as oauthStore from "../oauthStore.js";
 import type * as publishActions from "../publishActions.js";
 import type * as workspaceActions from "../workspaceActions.js";
 import type * as workspaceInternal from "../workspaceInternal.js";
+import type * as workspacePreview from "../workspacePreview.js";
 import type * as workspaceProvision from "../workspaceProvision.js";
 import type * as workspacePublish from "../workspacePublish.js";
 import type * as workspaces from "../workspaces.js";
@@ -30,6 +32,7 @@ import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server
 declare const fullApi: ApiFromModules<{
   accountMerge: typeof accountMerge;
   auth: typeof auth;
+  browserRunActions: typeof browserRunActions;
   chat: typeof chat;
   chatActions: typeof chatActions;
   codingBackends: typeof codingBackends;
@@ -42,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   publishActions: typeof publishActions;
   workspaceActions: typeof workspaceActions;
   workspaceInternal: typeof workspaceInternal;
+  workspacePreview: typeof workspacePreview;
   workspaceProvision: typeof workspaceProvision;
   workspacePublish: typeof workspacePublish;
   workspaces: typeof workspaces;

@@ -93,12 +93,13 @@ const Frame = ({
     mobileDialog.current?.close();
     router.push(href);
   };
+  const workspaceSlug = activeSlug ?? lastWorkspace?.slug;
   const go = (key: string) => {
     const routes = new Map<string, string>(
       Object.entries({
         connect: "/connect",
-        editor: lastWorkspace ? `/p/${lastWorkspace.slug}` : "/projects",
-        env: lastWorkspace ? `/p/${lastWorkspace.slug}/envs` : "/projects",
+        editor: workspaceSlug ? `/p/${workspaceSlug}` : "/projects",
+        env: workspaceSlug ? `/p/${workspaceSlug}/envs` : "/projects",
         list: "/projects",
         start: "/new",
       })
@@ -118,6 +119,7 @@ const Frame = ({
   const sidebarProps = {
     activeNav,
     activeSlug,
+    canOpenEnv: Boolean(workspaceSlug),
     connectCount: `${connected}/4`,
     onNavigate: go,
     onPick: pick,
@@ -212,6 +214,7 @@ const Frame = ({
             recents={recents}
             onNavigate={navigate}
             creatingIds={creatingIds}
+            envHref={workspaceSlug ? `/p/${workspaceSlug}/envs` : null}
           />
         </div>
       )}

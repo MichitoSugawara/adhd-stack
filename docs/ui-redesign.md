@@ -13,7 +13,7 @@
 | [Beautiful UI](https://www.beautifului.dev/) | AI 向け composer、本文、作業状態の部品 | 既存 `PromptBar` / `StreamingText` / `TaskRows` を再利用。実データを渡し、デモ動作を無効化 |
 | [Circle app-sidebar](https://github.com/ln-dev7/circle/blob/b0ba7ddcc3d0f4c16092236ca6a01b56c0614810/components/layout/sidebar/app-sidebar.tsx) / [nav-workspace](https://github.com/ln-dev7/circle/blob/b0ba7ddcc3d0f4c16092236ca6a01b56c0614810/components/layout/sidebar/nav-workspace.tsx) | 見える階層ナビゲーション、固定 footer、モバイル展開 | 作成・一覧・接続を常設し、最近のアプリを下段にまとめる |
 | [Circle command palette](https://github.com/ln-dev7/circle/blob/b0ba7ddcc3d0f4c16092236ca6a01b56c0614810/components/layout/command-palette.tsx) / [projects-list](https://github.com/ln-dev7/circle/blob/b0ba7ddcc3d0f4c16092236ca6a01b56c0614810/components/common/projects/projects-list.tsx) | 検索からの移動、キー表示、一覧の情報階層 | `⌘K` / `Ctrl+K` とアプリ検索、状態と次の操作が読める一覧 |
-| [Kitesurf](https://kitesurf.cloudflare.app/) | URL 入力と結果操作、ブラウザで結果を確かめる構成 | URL を持つプレビュー、再読み込み、表示幅、新しいタブで開く操作。実行基盤の導入ではない |
+| [Kitesurf](https://kitesurf.cloudflare.app/) / [Browser Run](https://developers.cloudflare.com/browser-run/kitesurf/) | URL バーと結果操作、エージェント向けブラウザ | エディタのブラウザは Cloudflare Browser Run の Quick Action（`browser=kitesurf`）で描画する。接続や権限が無いときは再接続を出し、iframe だけの成功表示はしない |
 | [OpenTUI keymap](https://github.com/anomalyco/opentui/blob/871119e9e4f317bfd422f6753d557722855f27ac/packages/keymap/README.md) / [HTML demo](https://github.com/anomalyco/opentui/blob/871119e9e4f317bfd422f6753d557722855f27ac/packages/web/src/pages/demos/keymap-html/index.astro) | フォーカス単位のキー処理、状態の明示 | dialog 内の操作、IME を妨げない入力、控えめな状態行。terminal runtime は追加しない |
 
 Circle は commit `b0ba7ddcc3d0f4c16092236ca6a01b56c0614810`、OpenTUI は `871119e9e4f317bfd422f6753d557722855f27ac` を参照。Beautiful UI / Kitesurf は 2026-09-17 の公開ページを確認した。

@@ -17,6 +17,7 @@ import { useCreateNamedApp } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import { writeLastWorkspace } from "@/lib/last-workspace";
 import { useShell } from "@/lib/shell-state";
 
 import "./workspace-home.css";
@@ -382,6 +383,11 @@ const NewLive = () => {
     setFailNote(null);
     try {
       const created = await createApp({ name: name.trim() });
+      writeLastWorkspace({
+        name: name.trim(),
+        path: `/p/${created.slug}/creating`,
+        slug: created.slug,
+      });
       saveAppIdeaDraft(created.slug, idea);
       const currentDraft = readNewAppDraft();
       if (
@@ -426,6 +432,11 @@ const NewOffline = () => {
           return;
         }
         const id = shell.createApp(name.trim());
+        writeLastWorkspace({
+          name: name.trim(),
+          path: `/p/${id}/creating`,
+          slug: id,
+        });
         saveAppIdeaDraft(id, idea);
         clearNewAppDraft();
         router.push(`/p/${id}/creating`);

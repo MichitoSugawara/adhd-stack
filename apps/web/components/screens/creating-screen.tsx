@@ -12,7 +12,9 @@ import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { useRetryProvision, useWorkspaceBySlug } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
+import { isProvisioningStatus } from "@/lib/env-labels";
 import { writeLastWorkspace } from "@/lib/last-workspace";
+import { hostOf, previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { useShell } from "@/lib/shell-state";
 
 import "./studio.css";
@@ -114,6 +116,24 @@ const CreatingLive = ({ slug }: { slug: string }) => {
 
   const complete = workspace.provisionStatus === "ready";
   const failed = workspace.provisionStatus === "error";
+  const provisioning = isProvisioningStatus(workspace.provisionStatus);
+  const pages = publicHttpUrl(workspace.cloudflarePagesUrl);
+  const previewCount = previewUrlsFrom(
+    workspace.cloudflarePreviewUrl,
+    workspace.cloudflarePreviewUrls
+  ).length;
+  let previewLabel = "未作成";
+  if (previewCount > 0) {
+    previewLabel = "あり";
+  } else if (provisioning) {
+    previewLabel = "準備中";
+  }
+  let productionLabel = "未公開";
+  if (pages) {
+    productionLabel = hostOf(pages);
+  } else if (provisioning) {
+    productionLabel = "準備中";
+  }
   let title = "アイデアのための、場所を用意しています。";
   if (complete) {
     title = "つくる準備が、できました。";
@@ -145,9 +165,14 @@ const CreatingLive = ({ slug }: { slug: string }) => {
               ? "エディタを開いて、最初のアイデアを伝えてください。"
               : "この画面を離れても、準備は続きます。"}
           </p>
-          <Link className="ui-button" href="/projects">
-            アプリ一覧に戻る
-          </Link>
+          <div className="studio-progress-links">
+            <Link className="ui-button" href="/projects">
+              アプリ一覧に戻る
+            </Link>
+            <Link className="ui-button" href={`/p/${slug}/envs`}>
+              環境を見る
+            </Link>
+          </div>
         </div>
         <section className="studio-progress-card" aria-label="作成の進捗">
           <h2>{workspace.name}</h2>
@@ -176,11 +201,24 @@ const CreatingLive = ({ slug }: { slug: string }) => {
           {failNote ? (
             <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
           ) : null}
-          {complete ? (
-            <Link className="ui-button-primary mt-6" href={`/p/${slug}`}>
-              エディタを開く
+          <div className="studio-progress-envs" aria-label="環境の状態">
+            <p className="ui-eyebrow">ENVIRONMENTS</p>
+            <ul>
+              <li>プレビュー {previewLabel}</li>
+              <li>検証 未提供</li>
+              <li>本番 {productionLabel}</li>
+            </ul>
+          </div>
+          <div className="studio-progress-actions">
+            <Link className="ui-button" href={`/p/${slug}/envs`}>
+              環境を見る
             </Link>
-          ) : null}
+            {complete ? (
+              <Link className="ui-button-primary" href={`/p/${slug}`}>
+                エディタを開く
+              </Link>
+            ) : null}
+          </div>
           {failed ? (
             <button
               className="ui-button-primary mt-6"
@@ -221,9 +259,14 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
             「{app?.name ?? appId}
             」の画面プレビューです。実行環境は未接続のため、アプリの保存先や公開先は作成されません。
           </p>
-          <Link className="ui-button" href="/connect">
-            接続を確認する
-          </Link>
+          <div className="studio-progress-links">
+            <Link className="ui-button" href="/connect">
+              接続を確認する
+            </Link>
+            <Link className="ui-button" href={`/p/${appId}/envs`}>
+              環境を見る
+            </Link>
+          </div>
         </div>
         <section
           className="studio-progress-card"
@@ -248,9 +291,14 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
             }))}
             variant="List"
           />
-          <Link className="ui-button-primary mt-6" href={`/p/${appId}`}>
-            編集画面を見る <WorkspaceIcon name="arrow" size={14} />
-          </Link>
+          <div className="studio-progress-actions">
+            <Link className="ui-button" href={`/p/${appId}/envs`}>
+              環境を見る
+            </Link>
+            <Link className="ui-button-primary" href={`/p/${appId}`}>
+              編集画面を見る <WorkspaceIcon name="arrow" size={14} />
+            </Link>
+          </div>
         </section>
       </div>
     </main>
