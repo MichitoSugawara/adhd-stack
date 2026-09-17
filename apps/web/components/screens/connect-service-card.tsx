@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 
-import { StatusChip } from "@/components/screens/status-chip";
 import { BrandMark } from "@/components/shell/brand-mark";
 import { cn } from "@/lib/cn";
 import type { BoardConnection } from "@/lib/connections-port";
@@ -15,76 +14,12 @@ interface ServiceMeta {
   logo: string;
 }
 
-const ConnectionChip = ({
-  connected,
-  waiting,
-}: {
-  connected: boolean;
-  waiting: boolean;
-}) => {
-  if (waiting) {
-    return <StatusChip tone="wait">入力を待っています</StatusChip>;
-  }
-  if (connected) {
-    return <StatusChip tone="ok">接続済み</StatusChip>;
-  }
-  return <StatusChip tone="idle">未接続</StatusChip>;
-};
-
-const ConnectCardAction = ({
-  configured,
-  connected,
-  ctaDisabled,
-  ctaLabel,
-  hide,
-  onConnect,
-  onDisconnect,
-}: {
-  configured: boolean;
-  connected: boolean;
-  ctaDisabled: boolean;
-  ctaLabel: string;
-  hide: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
-}) => {
-  if (hide) {
-    return null;
-  }
-  if (connected) {
-    return (
-      <button
-        className="rounded-control bg-field text-ink-2 mt-4 h-9 px-3 text-[13px] font-medium"
-        onClick={onDisconnect}
-        type="button"
-      >
-        切断
-      </button>
-    );
-  }
-  if (!configured) {
-    return (
-      <button
-        className="rounded-control bg-field text-ink-3 mt-4 h-9 w-full text-[13px] font-medium"
-        disabled
-        onClick={onConnect}
-        type="button"
-      >
-        接続アプリ未設定
-      </button>
-    );
-  }
-  return (
-    <button
-      className="btn-accent rounded-control mt-4 h-9 w-full text-[13px] font-medium disabled:opacity-40"
-      disabled={ctaDisabled}
-      onClick={onConnect}
-      type="button"
-    >
-      {ctaLabel}
-    </button>
-  );
-};
+const SERVICE_PURPOSE = {
+  chatgpt: "アイデアを、一緒にアプリにする。",
+  cloudflare: "できたアプリを、インターネットへ。",
+  convex: "アプリのデータを、安全に保存する。",
+  github: "作ったものと、これまでの変更を保存する。",
+} satisfies Record<ServiceId, string>;
 
 interface ConnectServiceCardProperties {
   configured: boolean;
@@ -100,6 +35,68 @@ interface ConnectServiceCardProperties {
   waiting?: boolean;
 }
 
+const connectionStatus = (connected: boolean, waiting: boolean): string => {
+  if (waiting) {
+    return "入力待ち";
+  }
+  return connected ? "接続済み" : "未接続";
+};
+
+const ConnectionAction = ({
+  configured,
+  connected,
+  ctaDisabled,
+  ctaLabel,
+  featured,
+  onConnect,
+  onDisconnect,
+  service,
+}: Pick<
+  ConnectServiceCardProperties,
+  | "configured"
+  | "ctaDisabled"
+  | "ctaLabel"
+  | "featured"
+  | "onConnect"
+  | "onDisconnect"
+  | "service"
+> & { connected: boolean }) => {
+  let label = configured ? ctaLabel : "設定待ち";
+  if (connected) {
+    label = "切断";
+  }
+  return (
+    <button
+      aria-label={`${service.label} ${connected ? "を切断" : "に接続"}`}
+      className={cn(
+        "ui-button connection-action",
+        !connected && configured && featured && "ui-button-primary"
+      )}
+      disabled={ctaDisabled || (!connected && !configured)}
+      onClick={connected ? onDisconnect : onConnect}
+      type="button"
+    >
+      {label}
+      {connected || !configured ? null : <span aria-hidden="true">↗</span>}
+    </button>
+  );
+};
+
+const ConnectionNotices = ({
+  connection,
+}: {
+  connection?: BoardConnection;
+}) => (
+  <>
+    {connection?.reconnectHint ? (
+      <p className="connection-card-note">{connection.reconnectHint}</p>
+    ) : null}
+    {connection?.planWarning ? (
+      <p className="connection-card-note">{connection.planWarning}</p>
+    ) : null}
+  </>
+);
+
 export const ConnectServiceCard = ({
   configured,
   connection,
@@ -114,42 +111,66 @@ export const ConnectServiceCard = ({
   waiting = false,
 }: ConnectServiceCardProperties) => {
   const connected = connection?.status === "connected";
-  const hideCta = extra !== undefined && waiting;
+  const hideCta = Boolean(extra) && waiting;
+  const status = connectionStatus(connected, waiting);
+
   return (
     <article
+      aria-labelledby={`connection-${service.id}`}
       className={cn(
-        "rounded-card bg-surface shadow-card",
-        featured ? "p-5" : "flex flex-col p-4"
+        "connection-card",
+        featured && !connected && "connection-card-featured",
+        connected && "connection-card-connected"
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <BrandMark alt="" src={service.logo} />
-        <ConnectionChip connected={connected} waiting={waiting} />
+      <div className="connection-provider-row">
+        <div className="connection-provider-icon">
+          <BrandMark alt="" src={service.logo} />
+        </div>
+        <div className="connection-provider-copy">
+          <div className="connection-provider-title">
+            <h2 id={`connection-${service.id}`}>{service.label}</h2>
+            {featured && !connected && !waiting ? (
+              <span className="connection-recommended">ここから始める</span>
+            ) : null}
+          </div>
+          <p>{SERVICE_PURPOSE[service.id]}</p>
+          {connected ? (
+            <p className="connection-identity">{connection.identity}</p>
+          ) : null}
+        </div>
+        <div className="connection-provider-action">
+          <span
+            className={cn(
+              "connection-status",
+              connected && "connection-status-connected",
+              waiting && "connection-status-waiting"
+            )}
+          >
+            <span aria-hidden="true" />
+            {status}
+          </span>
+          {hideCta ? null : (
+            <ConnectionAction
+              configured={configured}
+              connected={connected}
+              ctaDisabled={ctaDisabled}
+              ctaLabel={ctaLabel}
+              featured={featured}
+              onConnect={onConnect}
+              onDisconnect={onDisconnect}
+              service={service}
+            />
+          )}
+        </div>
       </div>
-      <h2 className="mt-3 text-[16px] font-semibold">{service.label}</h2>
-      <p className="text-ink-2 mt-1 text-[13px] leading-5">{service.body}</p>
-      {connected ? (
-        <p className="text-ink mt-3 text-[13px]">{connection.identity}</p>
-      ) : null}
-      {connection?.reconnectHint ? (
-        <p className="text-ink-2 mt-2 text-[12px]">
-          {connection.reconnectHint}
+      <ConnectionNotices connection={connection} />
+      {extra}
+      {error ? (
+        <p className="connection-error" role="alert">
+          {error}
         </p>
       ) : null}
-      {connection?.planWarning ? (
-        <p className="text-ink-2 mt-2 text-[12px]">{connection.planWarning}</p>
-      ) : null}
-      {extra}
-      <ConnectCardAction
-        configured={configured}
-        connected={connected}
-        ctaDisabled={ctaDisabled}
-        ctaLabel={ctaLabel}
-        hide={hideCta}
-        onConnect={onConnect}
-        onDisconnect={onDisconnect}
-      />
-      {error ? <p className="text-ink-2 mt-3 text-[12px]">{error}</p> : null}
     </article>
   );
 };

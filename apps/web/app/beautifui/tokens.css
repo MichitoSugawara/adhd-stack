@@ -1,31 +1,30 @@
-/* ADHD Stack シェルのテーマ（ライト・クリーン）。
+/* ADHD Stack シェルのテーマ（Paper Studio）。
  * registry の変数名は変えず、値だけここで上書きする。
- * 基調: 明るいニュートラルな面、はっきりした境界、落ち着いた indigo のアクセント。 */
+ * 基調: 暖かい紙色と白い作業面、明瞭な境界、テラコッタのアクセント。 */
 :root {
   color-scheme: light;
-  --page: #f6f7f9;
-  --canvas: #fbfcfd;
+  --page: #f7f7f5;
+  --canvas: #f2f3ef;
   --surface: #ffffff;
-  --inset: #f1f3f6;
-  --hover: #eceff4;
-  --hover-2: #e2e6ec;
-  --ink: #1b2330;
-  --ink-2: #4e5a6c;
-  --ink-3: #6e7a8d;
-  --line: #e4e8ee;
-  --line-strong: #cbd3dd;
-  --line-soft: #edf0f4;
-  --field: #edf0f4;
+  --inset: #f1f2ee;
+  --hover: #eeefea;
+  --hover-2: #e4e7df;
+  --ink: #262925;
+  --ink-2: #62685f;
+  --ink-3: #6e746b;
+  --line: #e3e6df;
+  --line-strong: #bdc4b9;
+  --line-soft: #eef0ea;
+  --field: #f1f2ee;
   --stripe: rgb(27 35 48 / 5%);
-  --stripe-bg: #f6f7f9;
-  --accent: #4f46e5;
-  --accent-ink: #4338ca;
-  --accent-tint: #ecedfb;
+  --stripe-bg: #f7f7f5;
+  --accent: #b84f35;
+  --accent-ink: #a54029;
+  --accent-tint: #fbefe9;
   --on-accent: #ffffff;
   --radius-card: 14px;
   --radius-window: 16px;
-  --shadow-card: 0 0 0 1px var(--line), 0 1px 2px rgb(27 35 48 / 4%),
-    0 8px 24px rgb(27 35 48 / 5%);
+  --shadow-card: 0 0 0 1px var(--line), 0 2px 4px rgb(38 41 37 / 2%);
   --green: #15803d;
   --green-tint: #e5f4eb;
   --orange: #b45309;
@@ -64,7 +63,7 @@ body {
 }
 
 .btn-accent:hover:not(:disabled) {
-  background: #453ed6;
+  background: #9f422b;
 }
 
 .btn-accent:active:not(:disabled) {

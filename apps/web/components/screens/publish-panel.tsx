@@ -5,6 +5,7 @@ import Link from "next/link";
 import LoadingState from "@/components/primitives/LoadingState";
 import { StatusChip } from "@/components/screens/status-chip";
 import { UrlChip } from "@/components/screens/url-chip";
+import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { publicHttpUrl } from "@/lib/public-url";
 import type { PagesDeployStatus } from "@/lib/publish-copy";
 import {
@@ -36,8 +37,8 @@ const chipTone = (phase: ReturnType<typeof publishPhase>) => {
 const StepMark = ({ state }: { state: PublishStepState }) => {
   if (state === "done") {
     return (
-      <span className="bg-green text-page flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]">
-        ✓
+      <span className="bg-green text-page flex size-5 shrink-0 items-center justify-center rounded-full">
+        <WorkspaceIcon name="check" size={12} />
       </span>
     );
   }
@@ -48,13 +49,36 @@ const StepMark = ({ state }: { state: PublishStepState }) => {
   }
   if (state === "fail") {
     return (
-      <span className="bg-red text-page flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]">
-        !
+      <span className="bg-red text-page flex size-5 shrink-0 items-center justify-center rounded-full">
+        <svg
+          aria-hidden="true"
+          fill="none"
+          height="12"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          width="12"
+        >
+          <path d="M12 5v8m0 5v1" />
+        </svg>
       </span>
     );
   }
   return <span className="border-line size-5 shrink-0 rounded-full border" />;
 };
+
+const PublishRecovery = ({
+  href = "/connect",
+  label = "接続を確認する",
+}: {
+  href?: string;
+  label?: string;
+}) => (
+  <Link className="ui-button-primary" href={href}>
+    {label}
+  </Link>
+);
 
 export const PublishPanel = ({
   convexUrl,
@@ -67,6 +91,9 @@ export const PublishPanel = ({
   pagesUrl,
   pending,
   waiting,
+  canPublish = true,
+  recoveryHref,
+  recoveryLabel,
 }: {
   convexUrl?: string | null;
   editorHref?: string;
@@ -78,6 +105,9 @@ export const PublishPanel = ({
   pagesUrl?: string | null;
   pending: boolean;
   waiting?: boolean;
+  canPublish?: boolean;
+  recoveryHref?: string;
+  recoveryLabel?: string;
 }) => {
   const pages = publicHttpUrl(pagesUrl);
   const convex = publicHttpUrl(convexUrl);
@@ -90,68 +120,68 @@ export const PublishPanel = ({
   const steps = publishStepRows(phase);
   const infoNotes = shownNotes.filter((note) => isPublishInfoNote(note));
   const otherNotes = shownNotes.filter((note) => !isPublishInfoNote(note));
+  let publishLabel = phase === "done" ? "本番を更新する" : "本番へ公開する";
+  if (inFlight) {
+    publishLabel = "公開の完了を待っています…";
+  }
 
   return (
-    <section className="rounded-card bg-surface shadow-card max-w-2xl p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[16px] font-semibold">{phaseTitle(phase)}</h2>
-            <StatusChip tone={chipTone(phase)}>{phaseChip(phase)}</StatusChip>
-          </div>
-          <p className="text-ink-2 mt-2 text-[13px] leading-6">
-            開いているアプリを、つながっている本番のページとデータに出します。
-          </p>
-        </div>
-        {phase === "done" ? null : (
-          <button
-            className="btn-accent rounded-control h-8 shrink-0 px-3 text-[13px] font-medium disabled:opacity-40"
-            disabled={pending}
-            onClick={onPublish}
-            type="button"
-          >
-            {pending ? "反映しています…" : "本番へ出す"}
-          </button>
-        )}
+    <section className="studio-publish-panel">
+      <div className="studio-publish-heading">
+        <h2>{phaseTitle(phase)}</h2>
+        <StatusChip tone={chipTone(phase)}>{phaseChip(phase)}</StatusChip>
       </div>
+      <p className="studio-publish-description">
+        アプリとデータを、接続している公開先に反映します。公開が完了すると、あなたの
+        URL から使えます。
+      </p>
       {inFlight ? (
         <div className="mt-4">
           <LoadingState label={waitLabel} variant="Drive" />
           <p className="text-ink-2 mt-2 text-[13px] leading-6">
-            関数は Pages ビルドのあとです。終わったことにしません。
+            アプリとデータの更新を待っています。完了すると状態が切り替わります。
           </p>
         </div>
       ) : null}
-      <div className="mt-5 flex flex-col gap-3">
+      <ol className="studio-publish-steps">
         {steps.map((step) => (
-          <div className="flex flex-col gap-2" key={step.key}>
-            <div className="flex items-center gap-2.5">
-              <StepMark state={step.state} />
-              <span className="min-w-0 flex-1 text-[13px] font-medium">
-                {step.label}
-              </span>
-              <span className="text-ink-3 text-[12px]">{step.detail}</span>
+          <li key={step.key}>
+            <StepMark state={step.state} />
+            <div>
+              <strong>{step.label}</strong>
+              <small>{step.detail}</small>
             </div>
-            {step.progress ? (
-              <div className="bg-inset ml-8 h-1 overflow-hidden rounded-full">
-                <div className="bg-accent h-1 w-2/3 animate-pulse rounded-full" />
-              </div>
-            ) : null}
-          </div>
+          </li>
         ))}
-      </div>
-      <div className="mt-5 flex flex-col gap-2">
+      </ol>
+      <div className="studio-publish-urls">
         {pages ? (
           <UrlChip href={pages} waiting={inFlight && phase !== "done"} />
         ) : (
-          <p className="text-ink-3 text-[13px]">Pages はまだありません</p>
+          <p className="text-ink-3 text-[12px]">
+            公開先の URL はまだありません
+          </p>
         )}
         {convex ? <UrlChip href={convex} /> : null}
       </div>
+      <div className="studio-publish-actions">
+        {canPublish ? (
+          <button
+            className="ui-button-primary"
+            disabled={pending || inFlight}
+            onClick={onPublish}
+            type="button"
+          >
+            {publishLabel}
+          </button>
+        ) : (
+          <PublishRecovery href={recoveryHref} label={recoveryLabel} />
+        )}
+      </div>
       {phase === "done" && pages ? (
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="studio-publish-actions">
           <a
-            className="btn-accent rounded-control inline-flex h-9 items-center px-3 text-[13px] font-medium"
+            className="ui-button"
             href={pages}
             rel="noreferrer"
             target="_blank"
@@ -159,11 +189,8 @@ export const PublishPanel = ({
             本番を開く
           </a>
           {editorHref ? (
-            <Link
-              className="rounded-control bg-field text-ink inline-flex h-9 items-center px-3 text-[13px] font-medium"
-              href={editorHref}
-            >
-              相談に戻る
+            <Link className="ui-button" href={editorHref}>
+              編集に戻る
             </Link>
           ) : null}
         </div>
@@ -182,7 +209,11 @@ export const PublishPanel = ({
           {note}
         </p>
       ))}
-      {error ? <p className="text-red mt-3 text-[13px]">{error}</p> : null}
+      {error ? (
+        <p className="studio-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 };

@@ -8,13 +8,14 @@ import { fontVariables } from "../lib/fonts";
 import { ConvexClientProvider } from "./convex-client-provider";
 
 export const metadata: Metadata = {
-  description: "何も考えずに始められる開発と反映",
+  description:
+    "アイデアを、あなたのアプリに。チャットでつくって、そのまま公開。",
   title: "ADHD Stack",
 };
 
 export const viewport: Viewport = {
   initialScale: 1,
-  themeColor: "#f6f7f9",
+  themeColor: "#f7f7f5",
   viewportFit: "cover",
   width: "device-width",
 };

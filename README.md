@@ -2,15 +2,15 @@
 
 何も考えずに始められる開発と公開。ホストは `adhd.gawarago.com`。
 
-開いたらヒーローの下に、つなぐものが4つ並ぶ。ChatGPT、GitHub、Cloudflare、Convex。全部つながったらエディタへ進む。チャットが本体で、IDE は開かない。
+ChatGPT、GitHub、Cloudflare、Convex をつなぎ、名前とアイデアからアプリを作ります。会話とプレビューを並べて確かめ、準備ができたら自分のアカウントへ公開します。サイドバーから一覧と接続に戻れ、`⌘K` / `Ctrl+K` で検索・移動できます。
 
 ## いまの状態
 
-v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です（Phase 0）。UI は [Beautiful UI](https://www.beautifului.dev/)、接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
+v1+ の方向は [docs/requirements.md](docs/requirements.md) が正本です。UI はライトテーマの **Paper Studio**。Beautiful UI の部品、Circle のナビゲーション、Kitesurf のプレビュー操作、OpenTUI のキー設計を基にしています。参照元と画面仕様は [docs/ui-redesign.md](docs/ui-redesign.md)。接続は OpenConnector、生成アプリのテンプレートは [tahcode](https://github.com/MichitoSugawara/tahcode) 由来、実行系は pluggable な CodingBackend。`design_handoff/` は移行用の IA / ジャーニー参考であり、最終デザインではありません。
 
 このリポジトリは Turborepo の `apps/web`（Next.js App Router）と、ルートの `convex/`（Convex バックエンド）です。ADHD Stack 本体は OpenNext（`@opennextjs/cloudflare`）で Cloudflare Workers に出し、データとリアルタイムは Convex に置きます。名前付き作成とチャットは CodingBackend（既定は GitHub + Codex Cloud Environment。第二実装は Cursor Cloud Agent。切り替えは [docs/coding-backends.md](docs/coding-backends.md)）です。公開は開いているアプリの Cloudflare Pages + Convex に出し、同じ画面に URL を返します。Convex の関数プッシュはこのサーバーからできないので、手動または CI のままです。ホスト `adhd.gawarago.com` の本番切替は次の段階です。
 
-現在公開中の [https://adhd.gawarago.com](https://adhd.gawarago.com) は静的 Pages のフロントモックです。このブランチの `apps/web` は Beautiful UI シェル（Dark Green+）です。`/connect` は ConnectionsPort 経由の実接続です。つながったようには見せません。Google ログインと API キーカードはありません。このリポジトリにシークレットは入れていません。
+このブランチの `apps/web` は暖かい紙色と白い作業面を使い、Inter / Noto Sans JP / Geist Mono で統一しています。`/connect` は ConnectionsPort 経由の実接続です。新規入力は同じタブに保存し、作成後は未送信のチャット下書きへ引き継ぎます。バックエンド未設定時は「UI プレビュー」と表示し、実際に接続・生成・公開したようには見せません。Google ログインと API キーカードはありません。今回の UI 更新は本番ホストへの反映や実 OAuth・生成・公開の完了を示すものではありません。
 
 ## 動かし方
 
@@ -93,7 +93,7 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 - トークン: `https://api.convex.dev/oauth/token`
 - ユーザーアプリの API / DB は、つながったアカウントの Convex に出します。
 
-アプリ未設定のノードは「OAuth アプリ未設定」と出ます。押すとエラーになり、偽のトークンは出しません。
+接続アプリが未設定のサービスは「設定待ち」と表示し、接続操作を無効にします。偽のトークンは出しません。
 
 ## デプロイ
 
@@ -113,4 +113,4 @@ docs              要件の正本と切替手順
 design_handoff    移行用 IA 参考
 ```
 
-`apps/web` は Beautiful UI のシェルです。品質ツールは ultracite（oxlint / oxfmt）のままです。
+`apps/web` の画面仕様は [Paper Studio](design-system/adhd-stack/MASTER.md)。既存の Beautiful UI 部品を再利用しています。品質ツールは ultracite（oxlint / oxfmt）のままです。

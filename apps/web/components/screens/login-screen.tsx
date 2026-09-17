@@ -1,90 +1,137 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { BrandMark } from "@/components/shell/brand-mark";
+import { StackLogo, WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { SERVICES } from "@/lib/services";
 import { useShell } from "@/lib/shell-state";
-
-const STEPS = [
-  { key: "connect", label: "4つのサービスをつなぐ" },
-  { key: "name", label: "名前を付けて作る" },
-  { key: "chat", label: "チャットで進める" },
-  { key: "publish", label: "自分の環境に出す" },
-] as const;
 
 export const LoginScreen = () => {
   const router = useRouter();
   const shell = useShell();
-
   const enter = () => {
     shell.enterShell();
     router.push("/connect");
   };
-
   return (
-    <main className="bg-page text-ink flex min-h-dvh items-center justify-center px-6 py-12">
-      <section className="flex w-full max-w-[560px] flex-col gap-8">
-        <div className="flex items-center gap-2.5">
-          <span className="rounded-control bg-accent text-on-accent flex size-7 items-center justify-center text-[13px] font-semibold">
-            A
+    <main className="welcome">
+      <header className="welcome-header">
+        <div className="welcome-wordmark">
+          <StackLogo />
+          <span>
+            ADHD <strong>Stack</strong>
           </span>
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            ADHD Stack
-          </p>
         </div>
+        <span className="welcome-header-note">A quieter place to build.</span>
+      </header>
+      <section className="welcome-body">
         <div>
-          <h1 className="text-[44px] leading-[1.1] font-semibold tracking-tight">
-            何も考えずに、
+          <p className="welcome-eyebrow">
+            <WorkspaceIcon name="spark" size={15} /> FROM A LITTLE IDEA.
+          </p>
+          <h1>
+            思いついたら、
             <br />
-            始める。
+            もう、<span>つくれる。</span>
           </h1>
-          <p className="text-ink-2 mt-5 max-w-md text-[15px] leading-7">
-            ChatGPT、GitHub、Cloudflare、Convex
-            をつなぎ、チャットで作って、自分の環境に出す。IDE は開かない。
+          <p className="welcome-description">
+            頭の中の「こんなの欲しい」を、動くアプリに。
+            <br />
+            チャットでつくって、確かめて、そのまま公開。
+            <br />
+            あなたは、アイデアに集中するだけ。
           </p>
-        </div>
-        <ol className="flex w-full flex-col gap-2">
-          {STEPS.map((step, index) => (
-            <li
-              className="rounded-card bg-surface shadow-card flex items-center gap-3 px-3.5 py-2.5"
-              key={step.key}
-            >
-              <span className="bg-accent-tint text-accent-ink flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums">
-                {index + 1}
+          <div className="welcome-cta">
+            <button className="ui-button-primary" onClick={enter} type="button">
+              つくりはじめる
+              <WorkspaceIcon name="arrow" size={17} />
+            </button>
+            {shell.hydrated && shell.state.entered ? (
+              <button
+                className="welcome-return"
+                type="button"
+                onClick={() => router.push("/projects")}
+              >
+                ワークスペースに戻る →
+              </button>
+            ) : null}
+          </div>
+          <div className="welcome-services" aria-label="つなぐサービス">
+            {SERVICES.map((service) => (
+              <span className="welcome-service" key={service.id}>
+                <Image src={service.logo} alt="" width={17} height={17} />
+                {service.label}
               </span>
-              <span className="text-[13.5px] font-medium">{step.label}</span>
-            </li>
-          ))}
-        </ol>
-        <div className="flex items-center gap-3" aria-label="つなぐサービス">
-          {SERVICES.map((service) => (
-            <BrandMark
-              alt={service.label}
-              key={service.id}
-              src={service.logo}
-            />
-          ))}
-          <span className="text-ink-3 text-[13px]">4つの接続で完結</span>
+            ))}
+          </div>
         </div>
-        <div className="rounded-window bg-surface shadow-card w-full p-6">
-          <h2 className="text-[20px] font-semibold">シェルを開く</h2>
-          <p className="text-ink-2 mt-2 text-[14px] leading-6">
-            Google では入りません。最初の接続がセッションになります。
-          </p>
-          <button
-            className="rounded-control bg-ink text-surface mt-6 flex h-12 w-full items-center justify-center text-[14px] font-medium transition-transform duration-150 active:scale-[0.99]"
-            onClick={enter}
-            type="button"
-          >
-            接続へ進む
-          </button>
-          <p className="text-ink-3 mt-5 text-[13px] leading-6">
-            接続画面で、本物の認可だけを始めます。
+        <div
+          className="welcome-canvas"
+          aria-label="アイデアからアプリが生まれるイメージ"
+        >
+          <div className="welcome-canvas-label">
+            <span>IDEA → SOMETHING REAL</span>
+            <span>01 / ∞</span>
+          </div>
+          <div className="welcome-thought">
+            <span>
+              <WorkspaceIcon name="spark" size={15} /> たとえば、こんなアイデア
+            </span>
+            <p>読みたい本を、ひとまとめにしたい。</p>
+          </div>
+          <span className="welcome-connector" />
+          <div className="welcome-browser" aria-hidden="true">
+            <div className="welcome-browser-bar">
+              <i />
+              <i />
+              <i />
+              <span>my little bookshelf</span>
+            </div>
+            <div className="welcome-browser-body">
+              <div className="welcome-browser-rail">
+                <i />
+                <i />
+                <i />
+              </div>
+              <div className="welcome-browser-content">
+                <strong>わたしの本棚</strong>
+                <span />
+                <div className="welcome-note-line">
+                  <i />
+                  <span />
+                </div>
+                <div className="welcome-note-line">
+                  <i />
+                  <span />
+                </div>
+                <div className="welcome-note-line">
+                  <i />
+                  <span />
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="welcome-caption">
+            <WorkspaceIcon name="message" size={13} />{" "}
+            ひとことから、少しずつ形に。
           </p>
         </div>
-        <p className="text-ink-3 text-[13px]">adhd.gawarago.com</p>
       </section>
+      <footer className="welcome-footer">
+        <div className="welcome-steps">
+          <span>
+            <b>01</b> つなぐ
+          </span>
+          <span>
+            <b>02</b> つくる
+          </span>
+          <span>
+            <b>03</b> 届ける
+          </span>
+        </div>
+        <span>あなたのアカウント。あなたのアプリ。</span>
+      </footer>
     </main>
   );
 };

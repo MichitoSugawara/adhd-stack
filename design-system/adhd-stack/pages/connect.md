@@ -1,64 +1,24 @@
-# Connect Page Overrides
+# Connect — アカウントをつなぐ
 
-> **PROJECT:** ADHD Stack
-> **Generated:** 2026-09-03 07:02:32
-> **Page Type:** Connect / device pairing
+[Paper Studio](../MASTER.md) のライトテーマを使う。色・書体をページ独自に上書きしない。
 
-> ⚠️ **IMPORTANT:** Rules in this file **override** the Master file (`design-system/MASTER.md`).
-> Only deviations from the Master are documented here. For all other rules, refer to the Master.
+## 構造
 
----
+- 最大 860px の読みやすい列に、接続ステップ、見出し、接続数、4つのサービス、次の操作を並べる。
+- ChatGPT / GitHub / Cloudflare / Convex の用途を日常の言葉で説明する。次に必要な接続を控えめに強調する。
+- 接続済みは実際の識別子と切断操作を表示する。接続アプリ未設定は「設定待ち」とし、開始できない操作を無効にする。
+- 4接続が揃ったら新規作成または元のアプリへ進む。新規作成からの寄り道では下書きを残して戻す。
+- モバイルではサービス名の下に状態と操作を並べ、横にはみ出さない。
 
-## Page-Specific Rules
+## ChatGPT のデバイス認証
 
-### Layout Overrides
+- 接続開始後、そのカード内に選択可能な確認コードを大きく表示する。コードは Geist Mono。
+- 「コードをコピー」「入力ページを開く」「キャンセル」を用意する。コピー失敗時は手動選択できる説明を出す。
+- 認可ページを別タブで開いても、コードと待機状態は元の画面に残す。URL パラメーターによるコード自動入力を前提にしない。
+- 認可待ち、確認済み、エラーを区別する。キャンセルで待機を抜けられ、完了した接続によって操作が再び有効になる。
 
-- **Max Width:** 1200px for the hero + device panel. Service nodes stay in the existing flow shell.
-- **Layout:** Hero (centered) → ChatGPT device panel (only while pairing) → four service nodes → editor gate.
-- The device panel is the source of truth. Do not hide the user code inside a node identity line.
+## 実データと表示
 
-### Spacing Overrides
+ConnectionsPort の契約は変更しない。未接続・確認中・認可待ち・接続済みを文字でも伝える。失敗の説明を対象サービスの近くに出す。
 
-- Device panel padding: `--space-lg` / `--space-xl`.
-- Action buttons: min 44×44px, at least 8px apart.
-- Code block: `--space-lg` vertical padding so the digits stay selectable.
-
-### Typography Overrides
-
-- Japanese headings use the body face (IBM Plex Sans + JP system fallbacks). JetBrains Mono is reserved for the device code, eyebrows, and counts.
-- Device code: JetBrains Mono, `clamp(32px, 7vw, 56px)`, weight 600, letter-spacing `0.16em`, `user-select: all`.
-
-### Color Overrides
-
-- Connect-only surfaces use Master dark tokens (`#0F172A` background, `#1B2336` cards, `#22C55E` accent).
-- On-accent text is `#0F172A` (not white) so the green CTA meets contrast.
-- Do not restyle the editor with these overrides.
-
-### Component Overrides
-
-- Primary CTA: `#22C55E` / `#0F172A`, 44px min height, `cursor: pointer`.
-- Secondary CTA: transparent, `#F8FAFC` text, `#475569` border.
-- Copy control: Phosphor `Copy` / `Check`, accessible name, no emoji.
-- Focus: visible 2px ring (`#FFFFFF` / accent), never `outline: none` without a replacement.
-
----
-
-## Page-Specific Components
-
-### ChatGPT device panel
-
-- Show after ChatGPT connect starts, on desktop and mobile.
-- Huge selectable monospace `user_code`.
-- One-click copy (paste must remain possible; do not block selection).
-- Primary: open ChatGPT. Secondary: reopen the same page.
-- Copy: 「ログインしたらこのコードを入力」. Do not claim `?user_code=` will auto-fill. Login at `auth.openai.com/log-in` drops the query.
-- Prefer not auto-opening a popup until this panel is on screen. A popup may open in addition, never instead.
-- Keep polling in the background. Offer 「やめる」 so connecting is not a trap.
-
----
-
-## Recommendations
-
-- Effects: keep Master subtle motion (150–300ms). Skip translate/pulse when `prefers-reduced-motion: reduce`.
-- Accessible authentication: the code must stay visible and copyable on this page even if OpenAI wipes the query.
-- Touch: 44px targets, 8px gaps. Web focus rings stay visible above the mobile dock.
+バックエンド未設定時は接続操作を無効にし、UI プレビューへの入口を用意する。接続数を増やしたり、実際に認可できたように見せたりしない。

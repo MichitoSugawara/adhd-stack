@@ -13,62 +13,66 @@ export const ChatgptDevicePanel = ({
   onOpen,
   userCode,
 }: ChatgptDevicePanelProperties) => {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"copied" | "failed" | "idle">(
+    "idle"
+  );
 
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(userCode);
-      setCopied(true);
+      setCopyStatus("copied");
     } catch {
-      setCopied(false);
+      setCopyStatus("failed");
     }
   };
 
   return (
-    <div className="mt-4">
-      <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
-        <ol className="text-ink-2 list-decimal space-y-1 pl-5 text-[13px] leading-6">
-          <li>コードをコピー</li>
-          <li>入力ページを開く</li>
-          <li>貼ると、この画面がつながります</li>
-        </ol>
-        <div className="min-w-0">
-          <p className="text-ink-3 text-[12px]">確認コード</p>
-          <p className="mt-2 font-mono text-[40px] leading-none tracking-[0.16em]">
-            {userCode}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              className="rounded-control bg-field text-ink h-9 px-3 text-[13px] font-medium"
-              onClick={() => {
-                void copyCode();
-              }}
-              type="button"
-            >
-              {copied ? "コピーした" : "コピー"}
-            </button>
-            <p className="text-ink-3 text-[12px]">あとで有効になります</p>
-          </div>
+    <div className="connection-device">
+      <div className="connection-device-heading">
+        <span className="connection-device-number">01</span>
+        <div>
+          <h3>このコードを、ChatGPT に入力</h3>
+          <p>入力ページで認可したら、この画面に戻ってください。</p>
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <div className="connection-device-code-row">
+        <code aria-label="確認コード" className="connection-device-code">
+          {userCode}
+        </code>
         <button
-          className="btn-accent rounded-control inline-flex h-10 items-center px-4 text-[13px] font-medium"
+          className="ui-button"
+          onClick={() => {
+            void copyCode();
+          }}
+          type="button"
+        >
+          {copyStatus === "copied" ? "コピーしました" : "コードをコピー"}
+        </button>
+      </div>
+      {copyStatus === "failed" ? (
+        <p className="connection-device-copy-error" role="status">
+          コピーできませんでした。上のコードを選択してコピーしてください。
+        </p>
+      ) : null}
+      <div className="connection-device-actions">
+        <button
+          className="ui-button ui-button-primary"
           onClick={onOpen}
           type="button"
         >
-          入力ページを開く
+          入力ページを開く <span aria-hidden="true">↗</span>
         </button>
         <button
-          className="rounded-control text-ink-2 hover:bg-hover h-10 px-3 text-[13px]"
+          className="ui-button connection-button-quiet"
           onClick={onCancel}
           type="button"
         >
-          やめる
+          キャンセル
         </button>
       </div>
-      <p className="text-ink-3 mt-3 text-[13px]">
-        ChatGPT 側の入力を待っています。コードはこの画面に残ります。
+      <p className="connection-device-wait" role="status">
+        <span aria-hidden="true" />
+        ChatGPT 側の入力を待っています。接続できると自動で切り替わります。
       </p>
     </div>
   );

@@ -1,60 +1,27 @@
-# Editor Page Overrides
+# Editor — 会話して、確かめる
 
-> **PROJECT:** ADHD Stack
-> **Generated:** 2026-09-03
-> **Page Type:** Chat / Codex Cloud workspace
+[Paper Studio](../MASTER.md) のライトテーマを使う。アプリの制作画面であり、IDE やターミナルの埋め込みを目的にしない。
 
-> ⚠️ **IMPORTANT:** Rules in this file **override** the Master file (`design-system/MASTER.md`).
-> Only deviations from the Master are documented here. For all other rules, refer to the Master.
+## 構造
 
----
+- デスクトップ: 共通サイドバー + アプリ名と公開操作 + チャット / ブラウザプレビューの2ペイン。
+- モバイル: 「チャット / プレビュー」の切り替え。composer は画面幅と safe area に収める。
+- 環境の概要は下部にまとめ、詳細は「公開と環境」へ移動する。作成中・接続不足・失敗は次の操作がわかる説明を出す。
+- プレビューの toolbar に URL、再読み込み、desktop / mobile 幅、新しいタブで開く操作を置く。
+- プレビュー URL がなければ準備前の状態を表示する。本番 URL を表示するときは本番と明示する。架空のアプリ画面を生成結果として埋めない。
 
-## Page-Specific Rules
+## 会話と下書き
 
-### Layout Overrides
+- Beautiful UI 由来の `PromptBar`、`StreamingText`、`TaskRows` に実データを渡す。サンプルの返答、作業、件数を本番画面に出さない。
+- 新規作成で書いたアイデアは、アプリ単位の未送信下書きとして composer に引き継ぐ。自動では AI に送らない。
+- 下書きは同じタブで保持し、送信成功を確認してから消す。失敗時は再送できるよう内容と原因を残す。
+- Enter で送信、Shift+Enter で改行。IME の確定 Enter を送信と扱わない。準備前・送信中の操作状態を伝える。
+- 読んでいる過去の会話から新着位置へ強制移動しない。状態通知はトークンごとに読み上げない。
 
-- Desktop: 228px rail + chat column. No IDE, no fake file tree.
-- Mobile: full-width transcript + docked composer (safe-area).
-- Provision strip sits under the header and stays visible while repo/env prepare.
+## 変更と公開
 
-### Spacing Overrides
+変更タブと件数はエージェントが返した変更から作る。架空のファイル、差分、環境 ID を置かない。
 
-- Composer and primary actions: min 44×44px, 8px gaps.
-- Transcript cards: `--space-md` padding, `--space-sm` between cards.
+公開設定では開いているアプリ名、公開先、実際の進捗とエラーを示す。「公開開始」と「ビルド成功・公開済み」は別の状態。新規プレビュー、検証への反映、版の戻しはバックエンドが未対応の間は実行できない。
 
-### Typography Overrides
-
-- Japanese body uses IBM Plex Sans + JP fallbacks.
-- JetBrains Mono for repo names, env ids, commands, diffs.
-
-### Color Overrides
-
-- Editor uses Master dark tokens (`#0F172A` / `#1B2336` / `#22C55E`).
-- Thinking/work/command/diff cards share one card surface; kind is a mono label, not color-only.
-
-### Component Overrides
-
-- Empty state heading: 「何を作りますか」.
-- Status updates use one `role="status"` live region (do not announce every token).
-- File / command rail items only appear when Codex produced those artifacts.
-
----
-
-## Page-Specific Components
-
-### Provision strip
-
-- Show GitHub repo URL, Codex environment id, Pages/Convex URLs, and concrete errors.
-- Never invent an environment id.
-
-### Chat cards
-
-- kinds: text, thinking, work, command, diff.
-- Diffs show files + additions/deletions. Commands show the command string.
-
----
-
-## Recommendations
-
-- Stream by polling Codex Cloud and patching Convex rows so the thread updates in place.
-- Respect `prefers-reduced-motion`. No typewriter if reduced motion is on.
+OpenTUI から取り入れるのはフォーカスと状態を意識した操作設計。terminal renderer や `@opentui/*` のランタイム依存は追加しない。

@@ -1,54 +1,39 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-import { DisabledAction } from "@/components/screens/env-card";
-import {
-  ENV_LABEL,
-  PREVIEW_FROM_UNAVAILABLE,
-  PREVIEW_UNAVAILABLE,
-  PROMOTE_UNAVAILABLE,
-  STAGING_UNAVAILABLE,
-} from "@/lib/env-labels";
-import { hostOf } from "@/lib/public-url";
+import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 
 const Overlay = ({
   children,
   title,
+  onClose,
 }: {
   children: ReactNode;
   title: string;
-}) => (
-  <div className="bg-ink/30 fixed inset-0 z-40 flex items-end justify-center p-4 backdrop-blur-[2px] sm:items-center">
-    <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
-      <h2 className="text-[18px] font-semibold">{title}</h2>
+  onClose: () => void;
+}) => {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+    };
+  }, []);
+  return (
+    <dialog
+      aria-labelledby="environment-dialog-title"
+      className="studio-modal"
+      onCancel={onClose}
+      ref={ref}
+    >
+      <h2 id="environment-dialog-title">{title}</h2>
       {children}
-    </div>
-  </div>
-);
-
-const Choice = ({
-  disabled = true,
-  label,
-  note,
-}: {
-  disabled?: boolean;
-  label: string;
-  note: string;
-}) => (
-  <label className="rounded-card bg-inset flex items-start gap-3 p-3">
-    <input
-      className="mt-1"
-      disabled={disabled}
-      name="env-choice"
-      type="radio"
-    />
-    <span>
-      <span className="block text-[13px] font-medium">{label}</span>
-      <span className="text-ink-3 mt-1 block text-[12px]">{note}</span>
-    </span>
-  </label>
-);
+    </dialog>
+  );
+};
 
 export const NewPreviewModal = ({
   existingPreviewUrl,
@@ -59,48 +44,28 @@ export const NewPreviewModal = ({
   onClose: () => void;
   productionUrl?: string | null;
 }) => (
-  <Overlay title="新しいプレビュー">
-    <p className="text-ink-2 mt-2 text-[13px] leading-6">
-      {PREVIEW_UNAVAILABLE}
+  <Overlay onClose={onClose} title="プレビューについて">
+    <p>
+      新しいプレビューを作成する機能は、まだ利用できません。既存の URL
+      からアプリを確認できます。
     </p>
-    <label className="mt-4 block">
-      <span className="text-ink-3 text-[12px]">名前</span>
-      <input
-        className="rounded-control bg-field text-ink-3 shadow-inset-field mt-1 h-10 w-full px-3 text-[14px]"
-        disabled
-        placeholder="名前と URL はまだ切れません"
-      />
-    </label>
-    <p className="text-ink-3 mt-4 text-[12px]">どこから始めるか</p>
-    <div className="mt-2 flex flex-col gap-2">
-      <Choice
-        label={`${ENV_LABEL.staging}の状態から`}
-        note="検証用のページはまだありません。"
-      />
-      <Choice
-        label={`${ENV_LABEL.production}から`}
-        note={
-          productionUrl
-            ? `${hostOf(productionUrl)} から新しいプレビューを切る操作はまだありません。`
-            : "本番から新しいプレビューを作る操作はまだありません。"
-        }
-      />
-      <Choice
-        label="既存のプレビューの続きから"
-        note={
-          existingPreviewUrl
-            ? `${hostOf(existingPreviewUrl)} はありますが、そこから新しいプレビューはまだ切れません。`
-            : "プレビュー一覧はまだ空です。"
-        }
-      />
-    </div>
-    <p className="text-ink-3 mt-3 text-[12px]">{PREVIEW_FROM_UNAVAILABLE}</p>
-    <div className="mt-5 flex justify-end">
-      <button
-        className="rounded-control bg-field text-ink h-9 px-3 text-[13px] font-medium"
-        onClick={onClose}
-        type="button"
-      >
+    <div className="studio-modal-actions">
+      {(existingPreviewUrl ?? productionUrl) ? (
+        <a
+          className="ui-button"
+          href={existingPreviewUrl ?? productionUrl ?? undefined}
+          rel="noreferrer"
+          target="_blank"
+        >
+          アプリを開く{" "}
+          <WorkspaceIcon
+            name="arrow"
+            size={14}
+            style={{ transform: "rotate(-45deg)" }}
+          />
+        </a>
+      ) : null}
+      <button className="ui-button-primary" onClick={onClose} type="button">
         閉じる
       </button>
     </div>
@@ -118,38 +83,25 @@ export const PromoteModal = ({
   onClose: () => void;
   onConfirm?: () => void;
 }) => (
-  <Overlay title="本番へ反映しますか？">
-    <p className="text-ink-3 mt-1 text-[12px]">
-      {ENV_LABEL.staging} → {ENV_LABEL.production}
-    </p>
-    <p className="text-ink-2 mt-2 text-[13px] leading-6">
+  <Overlay
+    onClose={onClose}
+    title={canPromote ? "本番へ反映しますか？" : "検証環境について"}
+  >
+    <p>
       {canPromote
-        ? "検証の内容を本番に出します。終わったことにはしません。"
-        : PROMOTE_UNAVAILABLE}
+        ? "検証した内容を本番に反映します。完了まで、進捗を確認できます。"
+        : "検証環境から本番へ反映する機能は、まだ利用できません。"}
     </p>
-    <div className="rounded-card bg-inset mt-4 p-3">
-      <p className="text-ink-3 text-[12px]">含まれる変更</p>
-      <p className="text-ink-2 mt-1 text-[13px]">
-        {changeNote ?? STAGING_UNAVAILABLE}
-      </p>
-    </div>
-    <div className="mt-5 flex justify-end gap-2">
-      <button
-        className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
-        onClick={onClose}
-        type="button"
-      >
-        やめる
+    {changeNote ? <p>{changeNote}</p> : null}
+    <div className="studio-modal-actions">
+      <button className="ui-button" onClick={onClose} type="button">
+        {canPromote ? "キャンセル" : "閉じる"}
       </button>
-      <DisabledAction>差を見る</DisabledAction>
-      <button
-        className="btn-accent rounded-control h-9 px-3 text-[13px] font-medium disabled:opacity-40"
-        disabled={!canPromote}
-        onClick={onConfirm}
-        type="button"
-      >
-        本番へ反映
-      </button>
+      {canPromote ? (
+        <button className="ui-button-primary" onClick={onConfirm} type="button">
+          本番へ反映
+        </button>
+      ) : null}
     </div>
   </Overlay>
 );
