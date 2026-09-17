@@ -38,3 +38,5 @@ export const usePublishApp = () => useAction(api.workspacePublish.publish);
 
 export const useRefreshPages = () =>
   useAction(api.workspacePublish.refreshPages);
+
+export const useDeleteApp = () => useAction(api.workspaceTeardown.deleteApp);

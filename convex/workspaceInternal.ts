@@ -357,3 +357,81 @@ export const upsertArtifact = internalMutation({
   },
   returns: v.id("messages"),
 });
+
+const teardownWorkspaceValidator = v.object({
+  cloudflareAccountId: v.optional(v.string()),
+  cloudflareProjectName: v.optional(v.string()),
+  codexEnvironmentId: v.optional(v.string()),
+  codingBackend: v.optional(codingBackendValidator),
+  codingEnvironmentId: v.optional(v.string()),
+  convexDeploymentName: v.optional(v.string()),
+  convexProjectSlug: v.optional(v.string()),
+  convexTeamSlug: v.optional(v.string()),
+  convexUrl: v.optional(v.string()),
+  githubOwner: v.optional(v.string()),
+  githubRepoFullName: v.optional(v.string()),
+  githubRepoName: v.optional(v.string()),
+  githubRepoUrl: v.optional(v.string()),
+  name: v.string(),
+  slug: v.string(),
+  userId: v.id("users"),
+});
+
+export const getWorkspaceForTeardown = internalQuery({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) {
+      return null;
+    }
+    return {
+      cloudflareAccountId: workspace.cloudflareAccountId,
+      cloudflareProjectName: workspace.cloudflareProjectName,
+      codexEnvironmentId: workspace.codexEnvironmentId,
+      codingBackend: workspace.codingBackend,
+      codingEnvironmentId:
+        workspace.codingEnvironmentId ?? workspace.codexEnvironmentId,
+      convexDeploymentName: workspace.convexDeploymentName,
+      convexProjectSlug: workspace.convexProjectSlug,
+      convexTeamSlug: workspace.convexTeamSlug,
+      convexUrl: workspace.convexUrl,
+      githubOwner: workspace.githubOwner,
+      githubRepoFullName: workspace.githubRepoFullName,
+      githubRepoName: workspace.githubRepoName,
+      githubRepoUrl: workspace.githubRepoUrl,
+      name: workspace.name,
+      slug: workspace.slug ?? slugFromName(workspace.name),
+      userId: workspace.userId,
+    };
+  },
+  returns: v.union(teardownWorkspaceValidator, v.null()),
+});
+
+export const deleteWorkspaceLocalBatch = internalMutation({
+  args: {
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const workspace = await ctx.db.get(args.workspaceId);
+    if (!workspace) {
+      return { deleted: false, done: true };
+    }
+    if (workspace.userId !== args.userId) {
+      throw new Error("Unauthorized");
+    }
+    const rows = await ctx.db
+      .query("messages")
+      .withIndex("by_workspace_and_created", (q) =>
+        q.eq("workspaceId", args.workspaceId)
+      )
+      .take(80);
+    await Promise.all(rows.map((row) => ctx.db.delete(row._id)));
+    if (rows.length === 80) {
+      return { deleted: false, done: false };
+    }
+    await ctx.db.delete(args.workspaceId);
+    return { deleted: true, done: true };
+  },
+  returns: v.object({ deleted: v.boolean(), done: v.boolean() }),
+});

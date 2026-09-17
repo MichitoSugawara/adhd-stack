@@ -46,6 +46,15 @@ export const readLastWorkspace = (): LastWorkspace | null => {
   };
 };
 
+export const clearLastWorkspaceIfSlug = (slug: string): void => {
+  const current = readLastWorkspace();
+  if (current?.slug !== slug) {
+    return;
+  }
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+};
+
 export const rememberPath = (pathname: string, name = ""): void => {
   const parts = pathname.split("/");
   if (parts[1] !== "p" || !parts[2]) {

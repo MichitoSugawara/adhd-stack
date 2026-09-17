@@ -15,6 +15,31 @@ export const githubCreateFromTemplateActionIds = [
   "github.repos_create_using_a_template",
 ] as const;
 
+export const githubDeleteRepositoryActionIds = [
+  "github.delete_a_repository",
+  "github.delete_repository",
+  "github.repos_delete",
+] as const;
+
+export const githubDeleteRepositoryInput = (args: {
+  owner: string;
+  repo: string;
+}): Record<string, unknown> => ({
+  owner: args.owner,
+  repo: args.repo,
+});
+
+export const convexDeleteProjectActionIds = [
+  "convex.delete_project",
+  "convex.delete_a_project",
+] as const;
+
+export const convexDeleteProjectInput = (args: {
+  projectId: string;
+}): Record<string, unknown> => ({
+  project_id: args.projectId,
+});
+
 export const convexCreateProjectActionIds = ["convex.create_project"] as const;
 
 export const convexCreateDeployKeyActionIds = [

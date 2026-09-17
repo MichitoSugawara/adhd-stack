@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import PromptBar from "@/components/primitives/PromptBar";
 import StreamingText from "@/components/primitives/StreamingText";
 import TaskRows from "@/components/primitives/TaskRows";
+import { DeleteAppButton } from "@/components/screens/delete-app-dialog";
 import { EditorEnvRail } from "@/components/screens/editor-env-rail";
 import { EditorPreviewPane } from "@/components/screens/editor-preview-pane";
 import type { EditorSideTab } from "@/components/screens/editor-preview-pane";
@@ -158,6 +159,7 @@ const EditorWorkspace = ({
           </div>
         </div>
         <div className="studio-project-actions">
+          {offline ? null : <DeleteAppButton name={name} slug={slug} />}
           <Link className="ui-button" href={`/p/${slug}/envs`}>
             環境
           </Link>

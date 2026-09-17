@@ -51,6 +51,8 @@
 }
 .studio-project-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
   flex-shrink: 0;
 }
@@ -654,8 +656,14 @@
   color: var(--ink-2);
   line-height: 1.9;
 }
-.studio-progress-intro > .ui-button {
+.studio-progress-intro > .ui-button,
+.studio-progress-actions {
   margin-top: 24px;
+}
+.studio-progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .studio-progress-card {
   border: 1px solid var(--line);
@@ -773,6 +781,85 @@
   gap: 8px;
   margin-top: 24px;
 }
+.studio-modal-danger {
+  width: min(100% - 32px, 480px);
+}
+.studio-delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+  color: var(--ink);
+  font-size: 13px;
+}
+.studio-delete-confirm input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--field);
+  color: var(--ink);
+}
+.studio-delete-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.studio-delete-results li {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--inset);
+}
+.studio-delete-results li[data-status="failed"],
+.studio-delete-results li[data-status="blocked"] {
+  border-color: #f0c9c9;
+  background: var(--red-tint);
+}
+.studio-delete-results strong {
+  display: block;
+  font-size: 13px;
+}
+.studio-delete-results span {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.studio-delete-results p {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+.studio-danger-zone {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 36px;
+  padding: 20px 22px;
+  border: 1px solid #f0c9c9;
+  border-radius: 14px;
+  background: #fff8f8;
+}
+.studio-danger-zone h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 550;
+}
+.studio-danger-zone p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.8;
+}
+@media (max-width: 800px) {
+  .studio-danger-zone {
+    flex-direction: column;
+  }
+}
 @media (max-width: 1100px) {
   .studio-split {
     grid-template-columns: minmax(300px, 0.46fr) minmax(0, 0.54fr);
@@ -810,7 +897,8 @@
   .studio-project-actions {
     gap: 6px;
   }
-  .studio-project-actions a {
+  .studio-project-actions a,
+  .studio-project-actions button {
     font-size: 11px;
     padding: 0 10px;
   }

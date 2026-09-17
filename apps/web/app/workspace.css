@@ -26,7 +26,8 @@ button:disabled {
 }
 .ui-button,
 .ui-button-primary,
-.ui-button-accent {
+.ui-button-accent,
+.ui-button-danger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -67,7 +68,21 @@ button:disabled {
 .ui-button-accent:hover:not(:disabled) {
   background: var(--accent-ink);
 }
-:is(.ui-button, .ui-button-primary, .ui-button-accent):disabled {
+.ui-button-danger {
+  background: var(--red-tint);
+  color: var(--red);
+  border-color: #f0c9c9;
+}
+.ui-button-danger:hover:not(:disabled) {
+  background: #f8d4d4;
+  border-color: var(--red);
+}
+:is(
+  .ui-button,
+  .ui-button-primary,
+  .ui-button-accent,
+  .ui-button-danger
+):disabled {
   opacity: 0.45;
 }
 .ui-icon-button {

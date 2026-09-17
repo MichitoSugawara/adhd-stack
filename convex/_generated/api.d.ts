@@ -20,10 +20,12 @@ import type * as oauth from "../oauth.js";
 import type * as oauthInternal from "../oauthInternal.js";
 import type * as oauthStore from "../oauthStore.js";
 import type * as publishActions from "../publishActions.js";
+import type * as teardownActions from "../teardownActions.js";
 import type * as workspaceActions from "../workspaceActions.js";
 import type * as workspaceInternal from "../workspaceInternal.js";
 import type * as workspaceProvision from "../workspaceProvision.js";
 import type * as workspacePublish from "../workspacePublish.js";
+import type * as workspaceTeardown from "../workspaceTeardown.js";
 import type * as workspaces from "../workspaces.js";
 import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
 
@@ -40,10 +42,12 @@ declare const fullApi: ApiFromModules<{
   oauthInternal: typeof oauthInternal;
   oauthStore: typeof oauthStore;
   publishActions: typeof publishActions;
+  teardownActions: typeof teardownActions;
   workspaceActions: typeof workspaceActions;
   workspaceInternal: typeof workspaceInternal;
   workspaceProvision: typeof workspaceProvision;
   workspacePublish: typeof workspacePublish;
+  workspaceTeardown: typeof workspaceTeardown;
   workspaces: typeof workspaces;
 }>;
 
