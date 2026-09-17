@@ -20,6 +20,8 @@ await copyWithTsImports("convexProject.ts");
 await copyWithTsImports("hostSafety.ts");
 await copyWithTsImports("cascadeDeletePlan.ts");
 await copyWithTsImports("cascadeDeleteResult.ts");
+await copyWithTsImports("openConnectorActionInputs.ts");
+await copyWithTsImports("openConnectorDeleteFallback.ts");
 
 const { githubRepoFromUrl, githubRepoFromWorkspace, planCascadeDelete } =
   await import(pathToFileURL(path.join(dir, "cascadeDeletePlan.ts")).href);
@@ -256,25 +258,26 @@ const blocked = summarizeCascadeResults([
 assert.equal(blocked.complete, false);
 assert.equal(blocked.localDeleted, true);
 
-const {
-  convexDeleteProjectInput,
-  convexNumericProjectId,
-} = await import("../../../convex/lib/openConnectorActionInputs.ts");
+const { convexDeleteProjectInput, convexNumericProjectId } = await import(
+  pathToFileURL(path.join(dir, "openConnectorActionInputs.ts")).href
+);
 const {
   deleteConvexProjectViaOpenConnector,
   isOpenConnectorActionSchemaMismatch,
   shouldFallThroughOpenConnectorDeleteToProxy,
-} = await import("../../../convex/lib/openConnectorDeleteFallback.ts");
-const {
-  GITHUB_DELETE_PERMISSION_MESSAGE,
-  isGitHubDeletePermissionError,
-} = await import("../../../convex/lib/githubTeardown.ts");
-const { ensureGithubOauthScopes, githubOauthScopes } = await import(
-  "../../../convex/lib/providers.ts"
+} = await import(
+  pathToFileURL(path.join(dir, "openConnectorDeleteFallback.ts")).href
 );
+const { GITHUB_DELETE_PERMISSION_MESSAGE, isGitHubDeletePermissionError } =
+  await import("../../../convex/lib/githubDeletePermission.ts");
+const { ensureGithubOauthScopes, GITHUB_OAUTH_SCOPES } =
+  await import("../../../convex/lib/githubOauthScopes.ts");
 
 assert.equal(convexNumericProjectId("18821"), 18_821);
-assert.equal(typeof convexDeleteProjectInput({ projectId: "18821" }).project_id, "number");
+assert.equal(
+  typeof convexDeleteProjectInput({ projectId: "18821" }).project_id,
+  "number"
+);
 assert.equal(
   isOpenConnectorActionSchemaMismatch(
     "Action input does not match the action schema."
@@ -288,11 +291,15 @@ assert.equal(
   true
 );
 assert.equal(
-  shouldFallThroughOpenConnectorDeleteToProxy("unknown_action:convex.delete_project"),
+  shouldFallThroughOpenConnectorDeleteToProxy(
+    "unknown_action:convex.delete_project"
+  ),
   true
 );
 assert.equal(
-  shouldFallThroughOpenConnectorDeleteToProxy("Convex チームを特定できませんでした"),
+  shouldFallThroughOpenConnectorDeleteToProxy(
+    "Convex チームを特定できませんでした"
+  ),
   false
 );
 
@@ -321,7 +328,7 @@ assert.equal(proxyCalls[0]?.method, "POST");
 assert.equal(proxyCalls[0]?.body, undefined);
 assert.equal(proxyCalls[0]?.service, "convex");
 
-const githubScopes = githubOauthScopes();
+const githubScopes = GITHUB_OAUTH_SCOPES;
 assert.ok(githubScopes.includes("delete_repo"));
 assert.ok(githubScopes.includes("repo"));
 const missingDelete = ensureGithubOauthScopes(
@@ -360,20 +367,21 @@ assert.doesNotMatch(
   /if \(!message\.startsWith\("unknown_action:"\)\)/
 );
 
-const oauthSource = await readFile(
-  path.join(convexLib, "../oauth.ts"),
-  "utf8"
-);
+const oauthSource = await readFile(path.join(convexLib, "../oauth.ts"), "utf8");
 assert.match(oauthSource, /requestedScopes/);
 assert.match(oauthSource, /ensureGithubOauthScopes/);
-assert.match(oauthSource, /githubOauthScopes/);
+assert.match(oauthSource, /GITHUB_OAUTH_SCOPES/);
 
 const githubTeardown = await readFile(
   path.join(convexLib, "githubTeardown.ts"),
   "utf8"
 );
+const githubPermission = await readFile(
+  path.join(convexLib, "githubDeletePermission.ts"),
+  "utf8"
+);
 assert.match(githubTeardown, /GITHUB_DELETE_PERMISSION_MESSAGE/);
-assert.match(githubTeardown, /delete_repo/);
+assert.match(githubPermission, /delete_repo/);
 assert.doesNotMatch(
   githubTeardown,
   /asString\(payload\.message\) \?\?[\s\S]*つなぎ直して/

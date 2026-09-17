@@ -30,16 +30,14 @@ assert.doesNotMatch(
   /window\.open\([^)]*noopener[\s\S]*?if \(popup === null\)/
 );
 
-const oauth = await readFile(
-  path.join(root, "../../convex/oauth.ts"),
+const oauth = await readFile(path.join(root, "../../convex/oauth.ts"), "utf8");
+const githubScopes = await readFile(
+  path.join(root, "../../convex/lib/githubOauthScopes.ts"),
   "utf8"
 );
-const providers = await readFile(
-  path.join(root, "../../convex/lib/providers.ts"),
-  "utf8"
-);
-assert.match(providers, /"delete_repo"/);
+assert.match(githubScopes, /"delete_repo"/);
 assert.match(oauth, /ensureGithubOauthScopes/);
 assert.match(oauth, /requestedScopes/);
+assert.match(oauth, /GITHUB_OAUTH_SCOPES/);
 
 console.log("oauth navigation ok");

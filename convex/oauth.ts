@@ -11,6 +11,10 @@ import {
   requestCodexUserCode,
 } from "./lib/codexDevice";
 import {
+  ensureGithubOauthScopes,
+  GITHUB_OAUTH_SCOPES,
+} from "./lib/githubOauthScopes";
+import {
   assertOauthAppReady,
   findNamedOcConnection,
   isOpenConnectorService,
@@ -20,9 +24,7 @@ import {
 import { isOpenConnectorConfigured } from "./lib/openConnectorEnv";
 import { createPkce, randomUrlSafe } from "./lib/pkce";
 import {
-  ensureGithubOauthScopes,
   getProviderDefinition,
-  githubOauthScopes,
   isProviderConfigured,
   PROVIDER_LABELS,
   redirectUri,
@@ -67,7 +69,7 @@ export const beginConnect = action({
       );
       const returnUri = ocReturnUri(args.provider, connectionName);
       const requestedScopes =
-        args.provider === "github" ? githubOauthScopes() : undefined;
+        args.provider === "github" ? GITHUB_OAUTH_SCOPES : undefined;
       const started =
         returnUri.length > 0
           ? await startOauthAuthorization({

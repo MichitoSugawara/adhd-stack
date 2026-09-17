@@ -2,10 +2,6 @@ import {
   convexDeleteProjectActionIds,
   convexDeleteProjectInputs,
 } from "./openConnectorActionInputs";
-import {
-  invokeOpenConnectorActionIds,
-  proxyOpenConnector,
-} from "./openConnectorActions";
 
 export const isOpenConnectorActionSchemaMismatch = (
   message: string
@@ -41,13 +37,23 @@ export const openConnectorDeleteFallback = (
 };
 
 export interface ConvexOpenConnectorDeleteDeps {
-  invoke: typeof invokeOpenConnectorActionIds;
-  proxy: typeof proxyOpenConnector;
+  invoke: (args: {
+    actionIds: readonly string[];
+    connectionName: string;
+    input?: Record<string, unknown>;
+  }) => Promise<Record<string, unknown>>;
+  proxy: (args: {
+    body?: Record<string, unknown>;
+    connectionName: string;
+    endpoint: string;
+    method: string;
+    service: string;
+  }) => Promise<{ data: Record<string, unknown>; status: number }>;
 }
 
 export const deleteConvexProjectViaOpenConnector = async (args: {
   connectionName: string;
-  deps?: ConvexOpenConnectorDeleteDeps;
+  deps: ConvexOpenConnectorDeleteDeps;
   projectId: string;
 }): Promise<{
   alreadyGone: boolean;
@@ -55,10 +61,8 @@ export const deleteConvexProjectViaOpenConnector = async (args: {
   status: number;
   via: "action" | "proxy";
 }> => {
-  const invoke = args.deps?.invoke ?? invokeOpenConnectorActionIds;
-  const proxy = args.deps?.proxy ?? proxyOpenConnector;
+  const { invoke, proxy } = args.deps;
   const inputs = convexDeleteProjectInputs(args.projectId);
-  let lastFallback: OpenConnectorDeleteFallback | undefined;
   for (const input of inputs) {
     try {
       await invoke({
@@ -75,7 +79,6 @@ export const deleteConvexProjectViaOpenConnector = async (args: {
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       const fallback = openConnectorDeleteFallback(message);
-      lastFallback = fallback;
       if (fallback.kind === "already_gone") {
         return {
           alreadyGone: true,
@@ -85,12 +88,9 @@ export const deleteConvexProjectViaOpenConnector = async (args: {
         };
       }
       if (fallback.kind === "fail") {
-        throw new Error(fallback.message);
+        throw new Error(fallback.message, { cause: error });
       }
     }
-  }
-  if (lastFallback?.kind === "fail") {
-    throw new Error(lastFallback.message);
   }
   const proxied = await proxy({
     connectionName: args.connectionName,

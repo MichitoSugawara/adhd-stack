@@ -14,7 +14,10 @@ import {
   convexNumericProjectId,
   convexTeamIdFromAccount,
 } from "./openConnectorActionInputs";
-import { proxyOpenConnector } from "./openConnectorActions";
+import {
+  invokeOpenConnectorActionIds,
+  proxyOpenConnector,
+} from "./openConnectorActions";
 import { deleteConvexProjectViaOpenConnector } from "./openConnectorDeleteFallback";
 import { reconnectMessage } from "./tokenRefresh";
 
@@ -230,6 +233,10 @@ const deleteViaOpenConnector = async (args: {
   try {
     const outcome = await deleteConvexProjectViaOpenConnector({
       connectionName: args.connectionName,
+      deps: {
+        invoke: invokeOpenConnectorActionIds,
+        proxy: proxyOpenConnector,
+      },
       projectId: String(projectId),
     });
     if (outcome.alreadyGone || outcome.status === 404) {

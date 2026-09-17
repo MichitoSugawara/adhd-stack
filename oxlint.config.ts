@@ -75,6 +75,8 @@ export default defineConfig({
         "convex/lib/cloudflareTeardown.ts",
         "convex/lib/convexTeardown.ts",
         "convex/lib/openConnectorDeleteFallback.ts",
+        "convex/lib/githubDeletePermission.ts",
+        "convex/lib/githubOauthScopes.ts",
         "convex/lib/githubTeardown.ts",
         "convex/lib/hostSafety.ts",
         "convex/lib/githubFromOpenConnector.ts",

@@ -1,6 +1,7 @@
 import type { Infer } from "convex/values";
 
 import type { providerValidator } from "../validators";
+import { GITHUB_OAUTH_SCOPES } from "./githubOauthScopes";
 import { isOpenConnectorConfigured } from "./openConnectorEnv";
 
 export type ProviderId = Infer<typeof providerValidator>;
@@ -60,7 +61,7 @@ const DEFINITIONS = {
   },
   github: {
     authorizationUrl: "https://github.com/login/oauth/authorize",
-    scopes: ["delete_repo", "read:user", "repo", "user:email"],
+    scopes: [...GITHUB_OAUTH_SCOPES],
     tokenUrl: "https://github.com/login/oauth/access_token",
   },
 } as const satisfies Record<ProviderId, ProviderDefinition>;
@@ -133,34 +134,10 @@ export const getProviderDefinition = (
   provider: ProviderId
 ): ProviderDefinition => DEFINITIONS[provider];
 
-export const githubOauthScopes = (): readonly string[] =>
-  DEFINITIONS.github.scopes;
-
-export const ensureGithubOauthScopes = (
-  authorizationUrl: string,
-  scopes: readonly string[] = DEFINITIONS.github.scopes
-): string => {
-  let parsed: URL;
-  try {
-    parsed = new URL(authorizationUrl);
-  } catch {
-    return authorizationUrl;
-  }
-  const host = parsed.hostname.toLowerCase();
-  if (host !== "github.com" && host !== "www.github.com") {
-    return authorizationUrl;
-  }
-  const existing = (parsed.searchParams.get("scope") ?? "")
-    .split(/[+\s,]/u)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
-  const merged = new Set(existing);
-  for (const scope of scopes) {
-    merged.add(scope);
-  }
-  parsed.searchParams.set("scope", [...merged].join(" "));
-  return parsed.toString();
-};
+export {
+  ensureGithubOauthScopes,
+  GITHUB_OAUTH_SCOPES,
+} from "./githubOauthScopes";
 
 export const callbackPath = (provider: ProviderId): string =>
   `/oauth/callback/${provider}`;
