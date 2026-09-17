@@ -50,7 +50,7 @@ export default function PromptBar({
   };
 
   return (
-    <div className="border-line bg-surface shadow-card flex items-end gap-2 rounded-[20px] border p-2 pl-4 transition-[border-color] duration-150 focus-within:border-[var(--line-strong)]">
+    <div className="border-line bg-surface shadow-card focus-within:ring-accent-tint flex items-end gap-2 rounded-[20px] border p-2 pl-4 transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--line-strong)] focus-within:ring-4">
       <textarea
         aria-label={placeholder}
         className="text-ink placeholder:text-ink-3 max-h-[120px] min-h-6 min-w-0 flex-1 resize-none bg-transparent py-1 text-[14px] leading-[22px] outline-none [overflow-wrap:anywhere]"
@@ -71,7 +71,7 @@ export default function PromptBar({
       />
       <button
         aria-label={sendLabel ?? "送信"}
-        className="bg-ink text-surface flex size-9 shrink-0 items-center justify-center rounded-full transition-[transform,opacity] duration-150 active:scale-95 disabled:opacity-30"
+        className="bg-ink text-surface flex size-9 shrink-0 items-center justify-center rounded-full transition-[transform,opacity,background-color] duration-150 enabled:hover:bg-ink/90 enabled:active:scale-95 disabled:opacity-30"
         disabled={!canSend}
         onClick={send}
         type="button"

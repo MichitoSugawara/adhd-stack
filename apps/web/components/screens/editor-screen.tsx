@@ -78,8 +78,10 @@ const EditorHeader = ({
       <div className="flex flex-wrap items-center gap-1">
         {SIDE_TABS.map((item) => (
           <button
-            className={`rounded-control h-8 px-2.5 text-[12px] font-medium ${
-              tab === item.id ? "bg-field text-ink" : "text-ink-3"
+            className={`rounded-control h-8 px-2.5 text-[12px] font-medium transition-colors duration-150 ${
+              tab === item.id
+                ? "bg-field text-ink"
+                : "text-ink-3 hover:bg-hover hover:text-ink"
             }`}
             key={item.id}
             onClick={() => {

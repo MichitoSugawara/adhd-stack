@@ -45,7 +45,7 @@ const EnvRow = ({
   tone: "idle" | "ok" | "wait";
 }) => (
   <Link
-    className="hover:bg-hover rounded-card flex items-center justify-between gap-2 px-2.5 py-2"
+    className="hover:bg-hover rounded-card flex items-center justify-between gap-2 px-2.5 py-2 transition-colors duration-150"
     href={href}
   >
     <span className="text-[13px] font-medium">{title}</span>
@@ -119,7 +119,7 @@ export const EditorEnvRail = ({
             {previewUrls.map((href) => (
               <li key={href}>
                 <a
-                  className="text-ink-2 block text-[12px] leading-5 underline underline-offset-2"
+                  className="text-ink-2 hover:text-ink block text-[12px] leading-5 underline underline-offset-2 transition-colors duration-150"
                   href={href}
                   rel="noreferrer"
                   target="_blank"

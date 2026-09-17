@@ -84,3 +84,26 @@ body {
   line-height: 1.6;
   padding: 10px 12px;
 }
+
+/* クリックできる面には必ずホバー応答を付ける（interfaces.dev の作法）。
+ * 個別の hover: が指定された要素はそちらを優先する。 */
+:is(button, a, [role="button"]).bg-field:not([class*="hover:"]) {
+  transition: background-color 150ms ease;
+}
+
+:is(button, a, [role="button"]).bg-field:not([class*="hover:"]):not(
+    :disabled
+  ):hover {
+  background-color: var(--hover-2);
+}
+
+:is(button, a).bg-ink:not([class*="hover:"]) {
+  transition:
+    background-color 150ms ease,
+    transform 100ms ease,
+    opacity 150ms ease;
+}
+
+:is(button, a).bg-ink:not([class*="hover:"]):not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--ink) 86%, var(--surface));
+}

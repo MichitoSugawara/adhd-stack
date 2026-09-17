@@ -21,6 +21,9 @@ const idleSetup = (): SidebarSetupItem[] =>
   }));
 
 const navFromPath = (pathname: string): string => {
+  if (pathname.startsWith("/new")) {
+    return "start";
+  }
   if (pathname.startsWith("/connect")) {
     return "connect";
   }
@@ -84,7 +87,7 @@ const FrameSidebar = ({
           }}
           onNavigate={(key) => {
             if (key === "start") {
-              router.push("/projects?new=1");
+              router.push("/new");
               return;
             }
             if (key === "connect") {
@@ -102,7 +105,7 @@ const FrameSidebar = ({
             router.push(editorPath(lastWorkspace?.slug));
           }}
           onNewChat={() => {
-            router.push("/projects?new=1");
+            router.push("/new");
           }}
           onPick={(id) => {
             const app = shell.state.apps.find((item) => item.id === id);

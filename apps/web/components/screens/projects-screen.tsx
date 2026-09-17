@@ -51,7 +51,7 @@ const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
 
   return (
     <button
-      className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium disabled:opacity-40"
+      className="rounded-control bg-ink text-surface enabled:hover:bg-ink/90 h-10 px-4 text-[13px] font-medium transition-colors duration-150 disabled:opacity-40"
       data-new-app
       disabled={blocked}
       onClick={onOpen}
@@ -119,14 +119,14 @@ const CreateDialog = ({
       </label>
       <div className="mt-5 flex justify-end gap-2">
         <button
-          className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
+          className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px] transition-colors duration-150"
           onClick={onClose}
           type="button"
         >
           やめる
         </button>
         <button
-          className="rounded-control bg-ink text-surface h-9 px-3 text-[13px] font-medium disabled:opacity-40"
+          className="rounded-control bg-ink text-surface enabled:hover:bg-ink/90 h-9 px-3 text-[13px] font-medium transition-colors duration-150 disabled:opacity-40"
           disabled={name.trim().length === 0 || pending}
           onClick={onSubmit}
           type="button"
@@ -337,7 +337,7 @@ const ProjectsSkeleton = () => {
           </p>
         </div>
         <button
-          className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+          className="rounded-control bg-ink text-surface hover:bg-ink/90 h-10 px-4 text-[13px] font-medium transition-colors duration-150"
           data-new-app
           onClick={() => {
             setManualOpen(true);

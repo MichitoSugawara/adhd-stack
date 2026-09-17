@@ -81,7 +81,7 @@ function RailItem({
   return (
     <button
       className={`relative flex w-full flex-col items-center gap-1 rounded-[10px] py-2 transition-colors duration-150 ${
-        active ? "text-accent-ink" : "text-ink-3 hover:text-ink"
+        active ? "text-accent-ink" : "text-ink-3 hover:bg-hover hover:text-ink"
       }`}
       onClick={onClick}
       type="button"
@@ -127,7 +127,7 @@ function WorkspaceMenu({
       }}
     >
       <button
-        className="hover:bg-hover flex h-10 w-full items-center gap-2 rounded-[8px] px-2 text-left"
+        className="hover:bg-hover flex h-10 w-full items-center gap-2 rounded-[8px] px-2 text-left transition-colors duration-150"
         onClick={onManage}
         type="button"
       >
@@ -143,7 +143,7 @@ function WorkspaceMenu({
       </button>
       <div className="bg-line my-1 h-px" />
       <button
-        className="hover:bg-hover flex h-9 w-full items-center gap-2 rounded-[8px] px-2 text-left"
+        className="hover:bg-hover flex h-9 w-full items-center gap-2 rounded-[8px] px-2 text-left transition-colors duration-150"
         onClick={onManage}
         type="button"
       >
@@ -156,7 +156,7 @@ function WorkspaceMenu({
       </button>
       <div className="bg-line my-1 h-px" />
       <button
-        className="hover:bg-hover flex h-9 w-full items-center gap-2 rounded-[8px] px-2 text-left"
+        className="hover:bg-hover flex h-9 w-full items-center gap-2 rounded-[8px] px-2 text-left transition-colors duration-150"
         onClick={onSignOut}
         type="button"
       >
@@ -216,7 +216,7 @@ export default function SidebarNav({
     >
       <button
         aria-expanded={workspaceOpen}
-        className="bg-ink text-surface mb-3 flex size-8 items-center justify-center rounded-[9px] text-[13px] font-bold"
+        className="bg-ink text-surface mb-3 flex size-8 items-center justify-center rounded-[9px] text-[13px] font-bold transition-[transform,box-shadow] duration-150 hover:shadow-[0_0_0_4px_var(--accent-tint)] active:scale-95"
         data-workspace-trigger
         onClick={() => {
           if (!workspaceOpen && monogramRef.current) {
