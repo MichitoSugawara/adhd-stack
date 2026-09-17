@@ -883,6 +883,43 @@ kbd {
   font-size: 9px;
   font-weight: 400;
 }
+.onboarding-journey {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin: 0 0 36px;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-3, #7d8378);
+  font-size: 12px;
+}
+.onboarding-journey li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+.onboarding-journey li[aria-current] {
+  color: var(--ink, #262925);
+  font-weight: 600;
+}
+.onboarding-journey li + li::before {
+  width: 22px;
+  height: 1px;
+  margin-right: 3px;
+  background: var(--line, #e3e6df);
+  content: "";
+}
+.onboarding-journey span {
+  font-family: var(--font-mono-face), monospace;
+  font-size: 10px;
+}
+.onboarding-journey li[aria-current] span {
+  color: var(--accent, #b84f35);
+}
+.studio-progress-intro .onboarding-journey {
+  margin-bottom: 28px;
+}
 @media (max-width: 1000px) {
   :root {
     --sidebar-width: 215px;
@@ -930,6 +967,17 @@ kbd {
   }
   .workspace-topbar-actions {
     gap: 6px;
+  }
+  .onboarding-journey {
+    gap: 12px;
+    margin-bottom: 28px;
+    font-size: 10px;
+  }
+  .onboarding-journey li {
+    gap: 5px;
+  }
+  .onboarding-journey li + li::before {
+    display: none;
   }
   .ui-icon-button {
     width: 40px;

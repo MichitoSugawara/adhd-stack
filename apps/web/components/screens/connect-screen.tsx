@@ -7,8 +7,15 @@ import type { ReactNode } from "react";
 import { ChatgptDevicePanel } from "@/components/screens/chatgpt-device-panel";
 import { ConnectServiceCard } from "@/components/screens/connect-service-card";
 import { AppFrame } from "@/components/shell/app-frame";
+import { OnboardingJourney } from "@/components/shell/onboarding-journey";
 import { ShellGate } from "@/components/shell/shell-gate";
-import { ctaLabelFor, nextDisconnected } from "@/lib/connect-copy";
+import { useWorkspaceList } from "@/lib/coding-port";
+import {
+  ctaLabelFor,
+  nextDisconnected,
+  nextHint as hintForBoard,
+  nextLabel,
+} from "@/lib/connect-copy";
 import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
 import {
   clearConnectionReturn,
@@ -17,6 +24,10 @@ import {
 import { useConnectionsPort } from "@/lib/connections-port";
 import type { BoardConnection } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
+import {
+  destinationAfterConnect,
+  markFirstActivationConsumed,
+} from "@/lib/first-activation";
 import { useLastWorkspace } from "@/lib/last-workspace";
 import { openOauthTab } from "@/lib/oauth-navigation";
 import {
@@ -27,6 +38,7 @@ import {
 import type { ServiceId } from "@/lib/services";
 import { SERVICES } from "@/lib/services";
 import { enterShell } from "@/lib/shell-state";
+import { useFirstCreateAdvance } from "@/lib/use-first-create-advance";
 
 import "./connections.css";
 
@@ -61,17 +73,7 @@ const PendingAuthorization = ({ onCancel }: { onCancel: () => void }) => (
 // The setup journey follows Circle's restrained list hierarchy and Beautiful UI's progressive disclosure.
 const ConnectHeading = () => (
   <>
-    <ol aria-label="はじめるまでのステップ" className="connection-journey">
-      <li aria-current="step">
-        <span>01</span> 接続
-      </li>
-      <li>
-        <span>02</span> アプリを作成
-      </li>
-      <li>
-        <span>03</span> 作業開始
-      </li>
-    </ol>
+    <OnboardingJourney current={1} />
     <header className="connection-heading">
       <p className="ui-eyebrow">YOUR OWN WORKSPACE</p>
       <h1>つくる準備を、ここで。</h1>
@@ -195,7 +197,7 @@ const ConnectionFooter = ({
       onClick={onNext}
       type="button"
     >
-      {resumeWorkspace && allConnected ? "アプリに戻る" : "アプリを作成"}
+      {nextLabel(allConnected, resumeWorkspace)}
       <span aria-hidden="true">→</span>
     </button>
   </div>
@@ -256,6 +258,7 @@ const ConnectBoard = () => {
   } = useConnectionsPort();
   const banner = useConnectBanner();
   const lastWorkspace = useLastWorkspace();
+  const workspaces = useWorkspaceList();
   const [errors, setErrors] = useState<Partial<Record<ServiceId, string>>>({});
   const { busy, pendingNative, dispatchActivity } = useConnectionActivity(
     board?.connections
@@ -270,6 +273,11 @@ const ConnectBoard = () => {
   const allConnected = Boolean(board?.allConnected);
   const nextService = nextDisconnected(board?.connections);
   const resumeWorkspace = !returnToNew && lastWorkspace !== null;
+  useFirstCreateAdvance({
+    allConnected,
+    hasLastWorkspace: lastWorkspace !== null,
+    workspaceCount: workspaces === undefined ? null : workspaces.length,
+  });
 
   useEffect(() => {
     if (!device) {
@@ -434,7 +442,16 @@ const ConnectBoard = () => {
       return;
     }
     clearConnectionReturn();
-    router.push(returnToNew ? "/new" : (lastWorkspace?.path ?? "/new"));
+    if (!resumeWorkspace) {
+      markFirstActivationConsumed();
+    }
+    router.push(
+      destinationAfterConnect({
+        lastPath: lastWorkspace?.path ?? null,
+        resumeWorkspace,
+        workspaceCount: workspaces?.length ?? 0,
+      })
+    );
   };
 
   const cardFor = (
@@ -485,14 +502,6 @@ const ConnectBoard = () => {
     />
   ) : null;
 
-  let nextHint = "4つの接続がそろうと、アプリを作成できます。";
-  if (allConnected) {
-    nextHint =
-      resumeWorkspace && lastWorkspace
-        ? `${lastWorkspace.name || lastWorkspace.slug} の続きに戻れます。`
-        : "次は、アプリに名前を付けます。";
-  }
-
   return (
     <>
       <ConnectHeading />
@@ -518,7 +527,10 @@ const ConnectBoard = () => {
       <ConnectionFooter
         allConnected={allConnected}
         busy={busy !== null}
-        nextHint={nextHint}
+        nextHint={hintForBoard(
+          allConnected,
+          resumeWorkspace ? lastWorkspace : null
+        )}
         onNext={goNext}
         onResume={
           returnToNew && lastWorkspace

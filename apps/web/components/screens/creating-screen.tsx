@@ -8,6 +8,7 @@ import TaskRows from "@/components/primitives/TaskRows";
 import type { TaskRow } from "@/components/primitives/TaskRows";
 import { DeleteAppButton } from "@/components/screens/delete-app-dialog";
 import { AppFrame } from "@/components/shell/app-frame";
+import { OnboardingJourney } from "@/components/shell/onboarding-journey";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { useRetryProvision, useWorkspaceBySlug } from "@/lib/coding-port";
@@ -138,13 +139,14 @@ const CreatingLive = ({ slug }: { slug: string }) => {
     <main className="studio-page">
       <div className="studio-progress-layout">
         <div className="studio-progress-intro">
+          <OnboardingJourney current={3} />
           <p className="ui-eyebrow">GETTING READY</p>
           <h1>{title}</h1>
           <p>
             「{workspace.name}」の保存先と制作環境を準備します。
             {complete
-              ? "エディタを開いて、最初のアイデアを伝えてください。"
-              : "この画面を離れても、準備は続きます。"}
+              ? "つぎはエディタで、最初のアイデアを伝えてください。"
+              : "この画面を離れても、準備は続きます。つぎは作業開始です。"}
           </p>
           <div className="studio-progress-actions">
             <Link className="ui-button" href="/projects">
@@ -215,6 +217,7 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
     <main className="studio-page">
       <div className="studio-progress-layout">
         <div className="studio-progress-intro">
+          <OnboardingJourney current={3} />
           <p className="ui-eyebrow">UI PREVIEW</p>
           <h1>
             つくる流れを、

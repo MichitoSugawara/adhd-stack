@@ -10,46 +10,6 @@
   padding: 44px 36px 32px;
 }
 
-.connection-journey {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  margin: 0 0 54px;
-  padding: 0;
-  list-style: none;
-  color: var(--ink-3, #7d8378);
-  font-size: 12px;
-}
-
-.connection-journey li {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  white-space: nowrap;
-}
-
-.connection-journey li[aria-current] {
-  color: var(--ink, #262925);
-  font-weight: 600;
-}
-
-.connection-journey li + li::before {
-  width: 22px;
-  height: 1px;
-  margin-right: 3px;
-  background: var(--line, #e3e6df);
-  content: "";
-}
-
-.connection-journey span {
-  font-family: var(--font-mono-face), monospace;
-  font-size: 10px;
-}
-
-.connection-journey li[aria-current] span {
-  color: var(--accent, #b84f35);
-}
-
 .connection-heading {
   margin-bottom: 34px;
 }
@@ -539,33 +499,11 @@
     flex-direction: column;
     gap: 8px;
   }
-
-  .connection-journey {
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .connection-journey li + li::before {
-    width: 12px;
-  }
 }
 
 @media (max-width: 600px) {
   .connection-layout {
     padding: 24px 18px 28px;
-  }
-
-  .connection-journey {
-    gap: 12px;
-    font-size: 10px;
-  }
-
-  .connection-journey li {
-    gap: 5px;
-  }
-
-  .connection-journey li + li::before {
-    display: none;
   }
 
   .connection-heading {

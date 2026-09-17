@@ -618,6 +618,16 @@
   margin: 0 auto;
   padding: 36px 46px 42px;
 }
+.new-welcome-strip {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+  font-size: 13px;
+  line-height: 1.8;
+}
 .new-back-link {
   display: inline-flex;
   align-items: center;
