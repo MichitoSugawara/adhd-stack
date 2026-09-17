@@ -12,6 +12,24 @@ import {
 } from "./openConnectorActions";
 import { reconnectMessage } from "./tokenRefresh";
 
+export const GITHUB_DELETE_PERMISSION_MESSAGE =
+  "リポジトリを消す権限がありません。GitHub をつなぎ直し、削除権限（delete_repo / 管理者）を許可してください";
+
+export const isGitHubDeletePermissionError = (
+  status?: number,
+  detail?: string
+): boolean => {
+  if (status === 403) {
+    return true;
+  }
+  const lower = (detail ?? "").toLowerCase();
+  return (
+    lower.includes("must have admin rights") ||
+    lower.includes("admin rights to repository") ||
+    /(?:^|[^a-z_])delete_repo(?:[^a-z_]|$)/u.test(lower)
+  );
+};
+
 const githubFail = (detail?: string): CascadeResourceResult => ({
   kind: "github_repo",
   message:
@@ -21,6 +39,9 @@ const githubFail = (detail?: string): CascadeResourceResult => ({
   reconnect: true,
   status: "failed",
 });
+
+const githubPermissionFail = (): CascadeResourceResult =>
+  githubFail(GITHUB_DELETE_PERMISSION_MESSAGE);
 
 const githubFromStatus = (status: number): CascadeResourceResult => {
   if (status === 204 || status === 200) {
@@ -40,9 +61,7 @@ const githubFromStatus = (status: number): CascadeResourceResult => {
     };
   }
   if (status === 403) {
-    return githubFail(
-      "消す権限が足りません。GitHub をつなぎ直してから、もう一度試してください"
-    );
+    return githubPermissionFail();
   }
   return githubFail(`HTTP ${String(status)}`);
 };
@@ -67,14 +86,13 @@ const deleteViaToken = async (args: {
     return githubFromStatus(404);
   }
   if (response.status === 403) {
-    return githubFail(
-      asString(payload.message) ??
-        "消す権限が足りません。GitHub をつなぎ直してから、もう一度試してください"
-    );
+    return githubPermissionFail();
   }
-  return githubFail(
-    asString(payload.message) ?? `HTTP ${String(response.status)}`
-  );
+  const detail = asString(payload.message);
+  if (isGitHubDeletePermissionError(response.status, detail)) {
+    return githubPermissionFail();
+  }
+  return githubFail(detail ?? `HTTP ${String(response.status)}`);
 };
 
 const deleteViaOpenConnector = async (args: {
@@ -97,6 +115,9 @@ const deleteViaOpenConnector = async (args: {
     if (!message.startsWith("unknown_action:")) {
       if (message.toLowerCase().includes("404")) {
         return githubFromStatus(404);
+      }
+      if (isGitHubDeletePermissionError(undefined, message)) {
+        return githubPermissionFail();
       }
       return githubFail(message);
     }
@@ -137,6 +158,10 @@ export const deleteGitHubRepo = async (args: {
       repo: args.repo,
     });
   } catch (error) {
-    return githubFail(error instanceof Error ? error.message : undefined);
+    const message = error instanceof Error ? error.message : undefined;
+    if (isGitHubDeletePermissionError(undefined, message)) {
+      return githubPermissionFail();
+    }
+    return githubFail(message);
   }
 };

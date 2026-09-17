@@ -74,6 +74,7 @@ export default defineConfig({
         "convex/lib/cascadeDeleteResult.ts",
         "convex/lib/cloudflareTeardown.ts",
         "convex/lib/convexTeardown.ts",
+        "convex/lib/openConnectorDeleteFallback.ts",
         "convex/lib/githubTeardown.ts",
         "convex/lib/hostSafety.ts",
         "convex/lib/githubFromOpenConnector.ts",

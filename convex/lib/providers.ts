@@ -133,6 +133,35 @@ export const getProviderDefinition = (
   provider: ProviderId
 ): ProviderDefinition => DEFINITIONS[provider];
 
+export const githubOauthScopes = (): readonly string[] =>
+  DEFINITIONS.github.scopes;
+
+export const ensureGithubOauthScopes = (
+  authorizationUrl: string,
+  scopes: readonly string[] = DEFINITIONS.github.scopes
+): string => {
+  let parsed: URL;
+  try {
+    parsed = new URL(authorizationUrl);
+  } catch {
+    return authorizationUrl;
+  }
+  const host = parsed.hostname.toLowerCase();
+  if (host !== "github.com" && host !== "www.github.com") {
+    return authorizationUrl;
+  }
+  const existing = (parsed.searchParams.get("scope") ?? "")
+    .split(/[+\s,]/u)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  const merged = new Set(existing);
+  for (const scope of scopes) {
+    merged.add(scope);
+  }
+  parsed.searchParams.set("scope", [...merged].join(" "));
+  return parsed.toString();
+};
+
 export const callbackPath = (provider: ProviderId): string =>
   `/oauth/callback/${provider}`;
 

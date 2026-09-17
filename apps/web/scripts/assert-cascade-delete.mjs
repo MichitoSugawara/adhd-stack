@@ -256,4 +256,127 @@ const blocked = summarizeCascadeResults([
 assert.equal(blocked.complete, false);
 assert.equal(blocked.localDeleted, true);
 
+const {
+  convexDeleteProjectInput,
+  convexNumericProjectId,
+} = await import("../../../convex/lib/openConnectorActionInputs.ts");
+const {
+  deleteConvexProjectViaOpenConnector,
+  isOpenConnectorActionSchemaMismatch,
+  shouldFallThroughOpenConnectorDeleteToProxy,
+} = await import("../../../convex/lib/openConnectorDeleteFallback.ts");
+const {
+  GITHUB_DELETE_PERMISSION_MESSAGE,
+  isGitHubDeletePermissionError,
+} = await import("../../../convex/lib/githubTeardown.ts");
+const { ensureGithubOauthScopes, githubOauthScopes } = await import(
+  "../../../convex/lib/providers.ts"
+);
+
+assert.equal(convexNumericProjectId("18821"), 18_821);
+assert.equal(typeof convexDeleteProjectInput({ projectId: "18821" }).project_id, "number");
+assert.equal(
+  isOpenConnectorActionSchemaMismatch(
+    "Action input does not match the action schema."
+  ),
+  true
+);
+assert.equal(
+  shouldFallThroughOpenConnectorDeleteToProxy(
+    "Action input does not match the action schema."
+  ),
+  true
+);
+assert.equal(
+  shouldFallThroughOpenConnectorDeleteToProxy("unknown_action:convex.delete_project"),
+  true
+);
+assert.equal(
+  shouldFallThroughOpenConnectorDeleteToProxy("Convex チームを特定できませんでした"),
+  false
+);
+
+let invokeCalls = 0;
+const proxyCalls = [];
+const schemaMismatch = await deleteConvexProjectViaOpenConnector({
+  connectionName: "adhd-pending-test-convex",
+  deps: {
+    invoke: async () => {
+      invokeCalls += 1;
+      throw new Error("Action input does not match the action schema.");
+    },
+    proxy: async (args) => {
+      proxyCalls.push(args);
+      return { data: { success: true }, status: 200 };
+    },
+  },
+  projectId: "18821",
+});
+assert.equal(schemaMismatch.via, "proxy");
+assert.equal(schemaMismatch.status, 200);
+assert.ok(invokeCalls >= 1);
+assert.equal(proxyCalls.length, 1);
+assert.equal(proxyCalls[0]?.endpoint, "/projects/18821/delete");
+assert.equal(proxyCalls[0]?.method, "POST");
+assert.equal(proxyCalls[0]?.body, undefined);
+assert.equal(proxyCalls[0]?.service, "convex");
+
+const githubScopes = githubOauthScopes();
+assert.ok(githubScopes.includes("delete_repo"));
+assert.ok(githubScopes.includes("repo"));
+const missingDelete = ensureGithubOauthScopes(
+  "https://github.com/login/oauth/authorize?client_id=abc&scope=repo+read%3Auser"
+);
+assert.match(missingDelete, /delete_repo/);
+assert.match(missingDelete, /user%3Aemail|user:email/);
+assert.equal(
+  ensureGithubOauthScopes("https://dashboard.convex.dev/oauth/authorize/team"),
+  "https://dashboard.convex.dev/oauth/authorize/team"
+);
+assert.equal(
+  isGitHubDeletePermissionError(403, "Must have admin rights to Repository."),
+  true
+);
+assert.equal(
+  isGitHubDeletePermissionError(
+    undefined,
+    "unknown_action:github.delete_repository"
+  ),
+  false
+);
+assert.match(
+  GITHUB_DELETE_PERMISSION_MESSAGE,
+  /リポジトリを消す権限がありません。GitHub をつなぎ直し、削除権限（delete_repo \/ 管理者）を許可してください/
+);
+
+const teardownSource = await readFile(
+  path.join(convexLib, "convexTeardown.ts"),
+  "utf8"
+);
+assert.match(teardownSource, /deleteConvexProjectViaOpenConnector/);
+assert.match(teardownSource, /args\.auth\.mode === "token"/);
+assert.doesNotMatch(
+  teardownSource.slice(teardownSource.indexOf("const deleteViaOpenConnector")),
+  /if \(!message\.startsWith\("unknown_action:"\)\)/
+);
+
+const oauthSource = await readFile(
+  path.join(convexLib, "../oauth.ts"),
+  "utf8"
+);
+assert.match(oauthSource, /requestedScopes/);
+assert.match(oauthSource, /ensureGithubOauthScopes/);
+assert.match(oauthSource, /githubOauthScopes/);
+
+const githubTeardown = await readFile(
+  path.join(convexLib, "githubTeardown.ts"),
+  "utf8"
+);
+assert.match(githubTeardown, /GITHUB_DELETE_PERMISSION_MESSAGE/);
+assert.match(githubTeardown, /delete_repo/);
+assert.doesNotMatch(
+  githubTeardown,
+  /asString\(payload\.message\) \?\?[\s\S]*つなぎ直して/
+);
+
 console.log("cascade delete planner ok");
