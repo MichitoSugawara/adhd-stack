@@ -69,7 +69,7 @@ Cloudflare のコールバック URL は Convex の HTTP Actions です。デプ
 ### GitHub
 
 - [Creating an OAuth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app)
-- スコープ: `repo` `read:user` `user:email`
+- スコープ: `repo` `delete_repo` `read:user` `user:email`
 - リポジトリのホストです。接続後、アカウント側に作業用リポジトリを用意します。
 - メールは `user:email` で `/user/emails` から取り、Convex ユーザーに残します。ChatGPT デバイスログインが同じ人に繋がるようにするためです。
 

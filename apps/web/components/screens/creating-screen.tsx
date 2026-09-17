@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import LoadingState from "@/components/primitives/LoadingState";
 import TaskRows from "@/components/primitives/TaskRows";
 import type { TaskRow } from "@/components/primitives/TaskRows";
+import { DeleteAppButton } from "@/components/screens/delete-app-dialog";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
 import { WorkspaceIcon } from "@/components/shell/workspace-icon";
@@ -145,9 +146,12 @@ const CreatingLive = ({ slug }: { slug: string }) => {
               ? "エディタを開いて、最初のアイデアを伝えてください。"
               : "この画面を離れても、準備は続きます。"}
           </p>
-          <Link className="ui-button" href="/projects">
-            アプリ一覧に戻る
-          </Link>
+          <div className="studio-progress-actions">
+            <Link className="ui-button" href="/projects">
+              アプリ一覧に戻る
+            </Link>
+            <DeleteAppButton name={workspace.name} slug={slug} />
+          </div>
         </div>
         <section className="studio-progress-card" aria-label="作成の進捗">
           <h2>{workspace.name}</h2>

@@ -13,7 +13,7 @@ export interface EnsureNamedRepoResult {
   repo: GitHubRepo;
 }
 
-const githubHeaders = (token: string): HeadersInit => ({
+export const githubHeaders = (token: string): HeadersInit => ({
   Accept: "application/vnd.github+json",
   Authorization: `Bearer ${token}`,
   "User-Agent": "adhd-stack",

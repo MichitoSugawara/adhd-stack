@@ -127,3 +127,33 @@ export const ticketBackendValidator = v.union(
   v.literal("custom"),
   v.literal("openconnector")
 );
+
+export const cascadeResourceKindValidator = v.union(
+  v.literal("cloudflare_pages"),
+  v.literal("codex_environment"),
+  v.literal("convex_project"),
+  v.literal("github_repo"),
+  v.literal("local_records")
+);
+
+export const cascadeResourceStatusValidator = v.union(
+  v.literal("already_gone"),
+  v.literal("blocked"),
+  v.literal("deleted"),
+  v.literal("failed"),
+  v.literal("skipped"),
+  v.literal("unsupported")
+);
+
+export const cascadeResourceResultValidator = v.object({
+  kind: cascadeResourceKindValidator,
+  message: v.string(),
+  reconnect: v.boolean(),
+  status: cascadeResourceStatusValidator,
+});
+
+export const cascadeDeleteResultValidator = v.object({
+  complete: v.boolean(),
+  localDeleted: v.boolean(),
+  resources: v.array(cascadeResourceResultValidator),
+});

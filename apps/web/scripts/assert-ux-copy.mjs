@@ -25,6 +25,8 @@ const login = await read("components/screens/login-screen.tsx");
 const creating = await read("components/screens/creating-screen.tsx");
 const projects = await read("components/screens/projects-screen.tsx");
 const services = await read("lib/services.ts");
+const deleteDialog = await read("components/screens/delete-app-dialog.tsx");
+const deleteCopy = await read("lib/delete-app-copy.ts");
 
 assert.match(connect, /useLastWorkspace/);
 assert.match(connect, /openOauthTab/);
@@ -66,6 +68,13 @@ assert.match(editorPane, /プレビューの表示/);
 assert.match(envs, /cloudflarePreviewUrls/);
 assert.match(connect, /allConnected/);
 assert.match(projects, /アプリ一覧|あなたのアプリ/);
+assert.match(deleteDialog, /アプリを削除/);
+assert.match(deleteDialog, /完全に削除する/);
+assert.match(deleteDialog, /続けるには/);
+assert.match(deleteCopy, /保存先/);
+assert.match(editor, /DeleteAppButton/);
+assert.match(envs, /DeleteAppZone/);
+assert.match(creating, /DeleteAppButton/);
 
 assert.match(envs, /プレビュー/);
 assert.match(envs, /本番への反映/);
@@ -83,6 +92,7 @@ assert.match(sidebar, /一覧/);
 assert.match(sidebar, /検索と移動/);
 
 assert.match(lastWorkspace, /adhd-last-workspace-v1/);
+assert.match(lastWorkspace, /clearLastWorkspaceIfSlug/);
 assert.match(lastWorkspace, /\/p\/\$\{slug\}/);
 assert.match(lastWorkspace, /\/envs/);
 assert.match(lastWorkspace, /\/publish/);
@@ -104,6 +114,8 @@ const scmSurfaces = [
   ["services", services],
   ["login", login],
   ["sidebar", sidebar],
+  ["delete-app-dialog", deleteDialog],
+  ["delete-app-copy", deleteCopy],
 ];
 const scmBan = /リポジトリ|ブランチ|コミット|プルリク|GitHub リポジトリ/u;
 for (const [label, text] of scmSurfaces) {

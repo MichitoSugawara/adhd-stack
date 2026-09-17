@@ -60,7 +60,7 @@ const DEFINITIONS = {
   },
   github: {
     authorizationUrl: "https://github.com/login/oauth/authorize",
-    scopes: ["read:user", "repo", "user:email"],
+    scopes: ["delete_repo", "read:user", "repo", "user:email"],
     tokenUrl: "https://github.com/login/oauth/access_token",
   },
 } as const satisfies Record<ProviderId, ProviderDefinition>;

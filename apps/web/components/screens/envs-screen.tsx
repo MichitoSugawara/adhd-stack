@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { DeleteAppZone } from "@/components/screens/delete-app-dialog";
 import { EnvCard } from "@/components/screens/env-card";
 import { StatusChip } from "@/components/screens/status-chip";
 import { AppFrame } from "@/components/shell/app-frame";
@@ -203,6 +204,7 @@ const EnvsLive = ({ slug }: { slug: string }) => {
       <p className="studio-env-note">
         新しいプレビューの作成、検証への反映、公開履歴から前の版に戻す操作は、現在は利用できません。
       </p>
+      <DeleteAppZone name={workspace.name} slug={slug} />
     </>
   );
 };

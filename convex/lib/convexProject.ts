@@ -4,11 +4,31 @@ export const convexProjectName = (slug: string): string => slug.slice(0, 64);
 
 export interface ConvexProjectTarget {
   deploymentName?: string;
+  projectId?: string;
   projectSlug: string;
   teamId: string;
   teamSlug?: string;
   url?: string;
 }
+
+export const convexProjectIdFromUnknown = (
+  value: unknown
+): string | undefined => {
+  const row = asRecord(value);
+  const nested = asRecord(row.project);
+  const data = asRecord(row.data);
+  for (const source of [nested, data, row]) {
+    const id = asNumber(source.id) ?? asNumber(source.projectId);
+    if (id !== undefined) {
+      return String(id);
+    }
+    const text = asString(source.id) ?? asString(source.projectId);
+    if (text && /^\d+$/u.test(text)) {
+      return text;
+    }
+  }
+  return undefined;
+};
 
 const headersFor = (token: string): HeadersInit => ({
   Authorization: `Bearer ${token}`,
@@ -79,6 +99,7 @@ export const convexProjectFromPayload = (
       asString(source.deploymentName) ??
       asString(row.prodDeploymentName) ??
       asString(row.deploymentName),
+    projectId: convexProjectIdFromUnknown(value),
     projectSlug,
     teamId,
     teamSlug: asString(source.teamSlug) ?? asString(row.teamSlug),

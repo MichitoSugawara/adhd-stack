@@ -70,7 +70,7 @@ const projectsFromPayload = (
   return parsed;
 };
 
-const resolveConvexTeamIdViaOpenConnector = async (args: {
+export const resolveConvexTeamIdViaOpenConnector = async (args: {
   accountHints: readonly string[];
   connectionName: string;
 }): Promise<number> => {
@@ -110,7 +110,7 @@ const resolveConvexTeamIdViaOpenConnector = async (args: {
   throw new Error("Convex チームを特定できませんでした");
 };
 
-const listConvexProjectViaOpenConnector = async (args: {
+export const listConvexProjectViaOpenConnector = async (args: {
   connectionName: string;
   projectName: string;
   teamId: number;

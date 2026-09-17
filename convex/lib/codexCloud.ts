@@ -380,6 +380,69 @@ export const createCodexEnvironment = async (
   throw new Error(formatCodexHttpError(response.status, response.payload));
 };
 
+export const deleteCodexEnvironment = async (
+  auth: CodexCloudAuth,
+  environmentId: string
+): Promise<{
+  detail: string;
+  outcome: "already_gone" | "deleted" | "failed" | "unsupported";
+  status: number;
+}> => {
+  const path = `/wham/environments/${encodeURIComponent(environmentId)}`;
+  const removed = await request(auth, "DELETE", path);
+  if (removed.ok || removed.status === 204) {
+    return { detail: "", outcome: "deleted", status: removed.status };
+  }
+  if (removed.status === 404) {
+    return { detail: "", outcome: "already_gone", status: 404 };
+  }
+  if (removed.status === 401 || removed.status === 403) {
+    return {
+      detail: payloadText(removed.payload),
+      outcome: "failed",
+      status: removed.status,
+    };
+  }
+  if (removed.status >= 500) {
+    return {
+      detail: payloadText(removed.payload),
+      outcome: "failed",
+      status: removed.status,
+    };
+  }
+  const fallback = await request(auth, "POST", `${path}/delete`);
+  if (fallback.ok || fallback.status === 204) {
+    return { detail: "", outcome: "deleted", status: fallback.status };
+  }
+  if (fallback.status === 404 && removed.status !== 405) {
+    return { detail: "", outcome: "already_gone", status: 404 };
+  }
+  if (fallback.status === 401 || fallback.status === 403) {
+    return {
+      detail: payloadText(fallback.payload),
+      outcome: "failed",
+      status: fallback.status,
+    };
+  }
+  if (
+    removed.status === 405 ||
+    removed.status === 501 ||
+    fallback.status === 405 ||
+    fallback.status === 501
+  ) {
+    return {
+      detail: payloadText(removed.payload),
+      outcome: "unsupported",
+      status: removed.status,
+    };
+  }
+  return {
+    detail: payloadText(removed.payload),
+    outcome: "unsupported",
+    status: removed.status,
+  };
+};
+
 export const ensureCodexEnvironment = async (
   auth: CodexCloudAuth,
   owner: string,
