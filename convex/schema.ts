@@ -106,6 +106,24 @@ export default defineSchema({
   })
     .index("by_ticket", ["ticket"])
     .index("by_account_key", ["accountKey"]),
+  previewRenders: defineTable({
+    browser: v.literal("kitesurf"),
+    capturedAt: v.number(),
+    error: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
+    status: v.union(
+      v.literal("error"),
+      v.literal("needs_setup"),
+      v.literal("ready")
+    ),
+    targetUrl: v.string(),
+    viewport: v.union(v.literal("desktop"), v.literal("mobile")),
+    workspaceId: v.id("workspaces"),
+  }).index("by_workspace_target_viewport", [
+    "workspaceId",
+    "targetUrl",
+    "viewport",
+  ]),
   workspaces: defineTable({
     cloudflareAccountId: v.optional(v.string()),
     cloudflarePagesUrl: v.optional(v.string()),

@@ -81,6 +81,27 @@ export const pagesRefreshValidator = v.object({
   pagesUrl: v.union(v.string(), v.null()),
 });
 
+export const previewViewportValidator = v.union(
+  v.literal("desktop"),
+  v.literal("mobile")
+);
+
+export const previewRenderStatusValidator = v.union(
+  v.literal("error"),
+  v.literal("needs_setup"),
+  v.literal("ready")
+);
+
+export const previewRenderValidator = v.object({
+  browser: v.literal("kitesurf"),
+  capturedAt: v.union(v.number(), v.null()),
+  imageUrl: v.union(v.string(), v.null()),
+  message: v.string(),
+  status: previewRenderStatusValidator,
+  targetUrl: v.string(),
+  viewport: previewViewportValidator,
+});
+
 export const messageKindValidator = v.union(
   v.literal("command"),
   v.literal("diff"),

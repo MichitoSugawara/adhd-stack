@@ -339,6 +339,8 @@ const EditorWorkspace = ({
           onTab={setPane}
           pagesUrl={pagesUrl}
           previewUrl={previewUrls[0]}
+          provisioning={!ready && !offline}
+          slug={offline ? undefined : slug}
           tab={pane}
           waiting={waiting}
         />
@@ -348,6 +350,7 @@ const EditorWorkspace = ({
         envsHref={`/p/${slug}/envs`}
         pagesUrl={pagesUrl}
         previewUrls={previewUrls}
+        provisioning={!ready && !offline}
         waiting={waiting}
       />
     </main>
@@ -359,7 +362,10 @@ const EditorLive = ({ slug }: { slug: string }) => {
   const messages = useChatMessages(workspace?._id);
   const sendChat = useSendChat();
   const publishFlow = usePublishFlow(slug, workspace);
-  useSyncPagesEnvironments(slug, workspace?.ready === true);
+  useSyncPagesEnvironments(
+    slug,
+    workspace?.ready === true || Boolean(workspace?.cloudflarePagesUrl)
+  );
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 

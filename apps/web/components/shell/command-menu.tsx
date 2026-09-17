@@ -41,12 +41,14 @@ export const CommandMenu = ({
   onNavigate,
   recents,
   creatingIds,
+  envHref = null,
 }: {
   open: boolean;
   onClose: () => void;
   onNavigate: (href: string) => void;
   recents: SidebarRecent[];
   creatingIds: string[];
+  envHref?: string | null;
 }) => {
   const dialog = useRef<HTMLDialogElement>(null);
   const search = useRef<HTMLInputElement>(null);
@@ -54,6 +56,16 @@ export const CommandMenu = ({
   const creating = new Set(creatingIds);
   const list = [
     ...commands,
+    ...(envHref
+      ? [
+          {
+            detail: "プレビューと本番",
+            href: envHref,
+            icon: "globe" as const,
+            label: "環境",
+          },
+        ]
+      : []),
     ...recents.map((item) => ({
       detail: "アプリを開く",
       href: `/p/${item.id}${creating.has(item.id) ? "/creating" : ""}`,

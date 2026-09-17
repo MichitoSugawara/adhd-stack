@@ -221,7 +221,7 @@ Phase 4 は公開。Phase 5 はホスト切替（資格情報待ち）。Phase 6
 
 | 決めること | 根拠にする OSS | なぜ |
 | --- | --- | --- |
-| Paper Studio の構造と操作 | Beautiful UI、Circle、Kitesurf、OpenTUI | composer・作業表示、見えるナビ、ブラウザプレビュー、フォーカスを意識したキー設計を適用。具体的な参照は [ui-redesign.md](ui-redesign.md) |
+| Paper Studio の構造と操作 | Beautiful UI、Circle、Kitesurf / [Browser Run](https://developers.cloudflare.com/browser-run/kitesurf/)、OpenTUI | composer・作業表示、見えるナビ、Kitesurf（`browser=kitesurf`）によるブラウザプレビュー、フォーカスを意識したキー設計を適用。具体的な参照は [ui-redesign.md](ui-redesign.md) |
 | 接続の置き場 | OpenConnector（[oomol-lab/open-connector](https://github.com/oomol-lab/open-connector)） | 資格情報はゲートウェイ、アプリは connection id / ラベル / Actions だけ見る。Composio 代替として vault + catalog が既にある |
 | コネクタを自作しない | OpenConnector catalog、必要なら Composio / OpenClaw のカタログ | 既存カタログの対応を先に確認する。無いものだけ interim のカスタム OAuth |
 | ChatGPT ≠ OC openai | OpenConnector openai（API キー）、Codex device OAuth（tahcode / 現行 `codexDevice`） | カタログの openai はキー接続。Codex Cloud / WHAM は ChatGPT アカウントの device OAuth が必要 |

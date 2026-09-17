@@ -38,3 +38,20 @@ export const usePublishApp = () => useAction(api.workspacePublish.publish);
 
 export const useRefreshPages = () =>
   useAction(api.workspacePublish.refreshPages);
+
+export const usePreviewRender = (
+  slug: string,
+  targetUrl: string | null,
+  viewport: "desktop" | "mobile"
+) => {
+  const { isAuthenticated } = useConvexAuth();
+  return useQuery(
+    api.workspacePreview.getRender,
+    isAuthenticated && slug && targetUrl
+      ? { slug, targetUrl, viewport }
+      : "skip"
+  );
+};
+
+export const useCapturePreview = () =>
+  useAction(api.workspacePreview.captureWithKitesurf);

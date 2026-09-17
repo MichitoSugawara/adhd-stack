@@ -58,6 +58,7 @@ assert.match(editor, /環境/);
 assert.match(editor, /TaskRows/);
 assert.match(editor, /EditorEnvRail/);
 assert.match(editor, /cloudflarePreviewUrl/);
+assert.match(editor, /provisioning=\{!ready && !offline\}/);
 assert.match(editor, /clearAppIdeaDraft/);
 assert.match(editor, /data-mobile-pane/);
 assert.doesNotMatch(editor, /偽の成功/);
@@ -81,6 +82,9 @@ assert.doesNotMatch(validators, /originRepoUrl/);
 assert.match(sidebar, /新しいアプリ/);
 assert.match(sidebar, /一覧/);
 assert.match(sidebar, /検索と移動/);
+assert.match(sidebar, /環境/);
+assert.match(creating, /環境を見る/);
+assert.match(creating, /\/p\/\$\{slug\}\/envs/);
 
 assert.match(lastWorkspace, /adhd-last-workspace-v1/);
 assert.match(lastWorkspace, /\/p\/\$\{slug\}/);

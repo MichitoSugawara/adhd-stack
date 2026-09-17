@@ -23,6 +23,7 @@ interface SidebarNavProps {
   setupItems?: SidebarSetupItem[];
   collapsed?: boolean;
   onCollapse?: () => void;
+  canOpenEnv?: boolean;
 }
 
 export default function SidebarNav({
@@ -37,6 +38,7 @@ export default function SidebarNav({
   setupItems = [],
   collapsed,
   onCollapse,
+  canOpenEnv = false,
 }: SidebarNavProps) {
   const connected = setupItems.filter(
     (item) => item.status === "connected"
@@ -112,6 +114,18 @@ export default function SidebarNav({
           <span>接続</span>
           <small>{connectCount}</small>
         </button>
+        {canOpenEnv ? (
+          <button
+            className={`sidebar-nav-item ${activeNav === "env" ? "is-active" : ""}`}
+            aria-current={activeNav === "env" ? "page" : undefined}
+            onClick={() => onNavigate?.("env")}
+            type="button"
+            title="環境"
+          >
+            <WorkspaceIcon name="globe" size={17} />
+            <span>環境</span>
+          </button>
+        ) : null}
       </nav>
       <div className="sidebar-recents">
         <p className="sidebar-section-label">最近のアプリ</p>
