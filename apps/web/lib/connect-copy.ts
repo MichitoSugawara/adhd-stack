@@ -19,14 +19,16 @@ export const ctaLabelFor = (
   return "つなぐ";
 };
 
-export const nextLabel = (allConnected: boolean, hasLast: boolean): string => {
-  if (allConnected && hasLast) {
+export const firstCreateWelcome = "つぎは最初のアプリ名を決める。";
+
+export const nextLabel = (
+  allConnected: boolean,
+  resumeWorkspace: boolean
+): string => {
+  if (allConnected && resumeWorkspace) {
     return "アプリに戻る";
   }
-  if (allConnected) {
-    return "一覧へ";
-  }
-  return "あとで";
+  return "アプリを作成";
 };
 
 export const nextHint = (
@@ -34,12 +36,12 @@ export const nextHint = (
   last?: { name: string; slug: string } | null
 ): string => {
   if (allConnected && last) {
-    return `${last.name || last.slug} へ戻ります。`;
+    return `${last.name || last.slug} の続きに戻れます。`;
   }
   if (allConnected) {
-    return "4つそろいました。";
+    return firstCreateWelcome;
   }
-  return "途中でやめても、接続は残ります。";
+  return "4つの接続がそろうと、アプリを作成できます。";
 };
 
 export const boardChip = (allConnected: boolean): string =>

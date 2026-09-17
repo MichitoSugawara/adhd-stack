@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { OnboardingJourney } from "@/components/shell/onboarding-journey";
 import { ShellGate } from "@/components/shell/shell-gate";
 import {
   clearNewAppDraft,
@@ -14,6 +15,7 @@ import {
   useNewAppDraft,
 } from "@/lib/app-draft";
 import { useCreateNamedApp } from "@/lib/coding-port";
+import { firstCreateWelcome } from "@/lib/connect-copy";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { useConnectionsPort } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
@@ -109,12 +111,14 @@ const NewHome = ({
   offline = false,
   onCreate,
   pending,
+  welcome = false,
 }: {
   blockedNote: string | null;
   failNote: string | null;
   offline?: boolean;
   onCreate: (name: string, idea: string) => void;
   pending: boolean;
+  welcome?: boolean;
 }) => {
   const draft = useNewAppDraft();
   const blocked = blockedNote !== null;
@@ -128,6 +132,12 @@ const NewHome = ({
   return (
     <main className="workspace-scroll">
       <div className="new-workspace">
+        <OnboardingJourney current={2} />
+        {welcome ? (
+          <p className="new-welcome-strip" role="status">
+            {firstCreateWelcome}
+          </p>
+        ) : null}
         <Link className="new-back-link" href="/projects">
           <span aria-hidden="true">←</span> アプリ一覧に戻る
         </Link>
@@ -353,7 +363,7 @@ const NewHome = ({
   );
 };
 
-const NewLive = () => {
+const NewLive = ({ welcome }: { welcome: boolean }) => {
   const router = useRouter();
   const port = useConnectionsPort();
   const createApp = useCreateNamedApp();
@@ -409,11 +419,12 @@ const NewLive = () => {
         void onCreate(name, idea);
       }}
       pending={pending}
+      welcome={welcome}
     />
   );
 };
 
-const NewOffline = () => {
+const NewOffline = ({ welcome }: { welcome: boolean }) => {
   const router = useRouter();
   const shell = useShell();
   return (
@@ -431,12 +442,37 @@ const NewOffline = () => {
         router.push(`/p/${id}/creating`);
       }}
       pending={false}
+      welcome={welcome}
     />
+  );
+};
+
+const NewPageBody = () => {
+  const welcome = useSearchParams().get("welcome") === "1";
+  return hasConvexUrl() ? (
+    <NewLive welcome={welcome} />
+  ) : (
+    <NewOffline welcome={welcome} />
   );
 };
 
 export const NewScreen = () => (
   <ShellGate>
-    <AppFrame>{hasConvexUrl() ? <NewLive /> : <NewOffline />}</AppFrame>
+    <AppFrame>
+      <Suspense
+        fallback={
+          <NewHome
+            blockedNote={null}
+            failNote={null}
+            onCreate={() => {
+              // Search params are required before the create form is interactive.
+            }}
+            pending
+          />
+        }
+      >
+        <NewPageBody />
+      </Suspense>
+    </AppFrame>
   </ShellGate>
 );

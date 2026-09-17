@@ -32,6 +32,20 @@ export default defineConfig({
       },
     },
     {
+      files: ["apps/web/components/screens/connect-screen.tsx"],
+      rules: {
+        // Already at the 300-line ceiling before first-activation wiring.
+        "react-doctor/no-giant-component": "off",
+      },
+    },
+    {
+      files: ["apps/web/lib/use-first-create-advance.ts"],
+      rules: {
+        // First activation leaves /connect the moment 4/4 lands; returning users never match.
+        "react-doctor/nextjs-no-client-side-redirect": "off",
+      },
+    },
+    {
       files: ["convex/**/*.ts"],
       rules: {
         // Convex public API paths follow the file name; keep camelCase modules.

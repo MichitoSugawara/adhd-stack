@@ -29,9 +29,15 @@ const deleteDialog = await read("components/screens/delete-app-dialog.tsx");
 const deleteCopy = await read("lib/delete-app-copy.ts");
 
 assert.match(connect, /useLastWorkspace/);
+assert.match(connect, /useWorkspaceList/);
+assert.match(connect, /useFirstCreateAdvance/);
 assert.match(connect, /openOauthTab/);
 assert.match(connectCopy, /アプリに戻る/);
+assert.match(connectCopy, /アプリを作成/);
+assert.match(connectCopy, /つぎは最初のアプリ名を決める/);
 assert.match(connectCopy, /入力待ち/);
+assert.match(creating, /OnboardingJourney/);
+assert.match(projects, /最初のアプリをつくる/);
 assert.doesNotMatch(connect, /一覧の骨格を見る/);
 assert.doesNotMatch(connect, /つながったように見せません/);
 assert.doesNotMatch(connect, /接続中…/);
