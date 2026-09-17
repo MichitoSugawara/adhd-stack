@@ -1,206 +1,165 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-import { DisabledAction, EnvCard } from "@/components/screens/env-card";
-import { NewPreviewModal, PromoteModal } from "@/components/screens/env-modals";
+import { EnvCard } from "@/components/screens/env-card";
 import { StatusChip } from "@/components/screens/status-chip";
-import { UrlChip } from "@/components/screens/url-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { useWorkspaceBySlug } from "@/lib/coding-port";
 import { hasConvexUrl } from "@/lib/env";
-import {
-  ENV_LABEL,
-  ENV_STATUS,
-  ROLLBACK_UNAVAILABLE,
-  SEND_STAGING_UNAVAILABLE,
-  STAGING_UNAVAILABLE,
-  previewChip,
-} from "@/lib/env-labels";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { hostOf, previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { CONVEX_FUNCTION_PUSH_NOTE } from "@/lib/publish-copy";
 import { useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
-type EnvTone = "idle" | "ok" | "wait";
+import "./studio.css";
 
-interface ProductionChip {
+interface ProductionState {
+  body: string;
   label: string;
-  tone: EnvTone;
+  tone: "idle" | "ok" | "wait";
 }
 
-const productionStatus = (
-  pagesUrl: string | null,
+const productionState = (
+  pages: string | null,
   started: boolean
-): ProductionChip => {
+): ProductionState => {
   if (started) {
-    return { label: ENV_STATUS.working, tone: "wait" };
-  }
-  if (pagesUrl) {
-    return { label: ENV_STATUS.published, tone: "ok" };
-  }
-  return { label: ENV_STATUS.unpublished, tone: "idle" };
-};
-
-const productionBody = (pages: string | null, started: boolean): string => {
-  if (started) {
-    return "本番の組み立てを待っています。完了はまだ見ていません。";
+    return {
+      body: "本番のビルドを実行中です。公開の完了を待っています。",
+      label: "ビルド中",
+      tone: "wait",
+    };
   }
   if (pages) {
-    return "いま開いている本番です。履歴と前の版に戻す操作はまだありません。";
+    return {
+      body: "みんなに届けるアプリの URL です。変更は、公開の操作をすると反映されます。",
+      label: "URL あり",
+      tone: "ok",
+    };
   }
-  return "本番はまだ出ていません。";
-};
-
-const PreviewItem = ({ href }: { href: string }) => {
-  const chip = previewChip(href);
-  return (
-    <article className="rounded-card bg-inset p-3">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[13px] font-medium">{hostOf(href)}</p>
-        <StatusChip tone={chip.tone}>{chip.status}</StatusChip>
-      </div>
-      <div className="mt-2">
-        <UrlChip href={href} />
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <a
-          className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[13px] font-medium"
-          href={href}
-          rel="noreferrer"
-          target="_blank"
-        >
-          開く
-        </a>
-        <DisabledAction>検証へ送る</DisabledAction>
-      </div>
-    </article>
-  );
+  return {
+    body: "できあがったアプリを公開する場所です。まだ公開されていません。",
+    label: "未公開",
+    tone: "idle",
+  };
 };
 
 const EnvColumns = ({
-  onNewPreview,
-  onPromote,
+  slug,
   pages,
   previews,
-  production,
-  publishHref,
   started,
+  offline = false,
 }: {
-  onNewPreview: () => void;
-  onPromote: () => void;
+  slug: string;
   pages: string | null;
   previews: readonly string[];
-  production: ProductionChip;
-  publishHref?: string;
   started: boolean;
-}) => (
-  <div className="mt-6 grid max-w-5xl gap-3 lg:grid-cols-3">
-    <section className="rounded-card bg-surface shadow-card flex flex-col p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-[16px] font-semibold">{ENV_LABEL.preview}</h2>
-          <p className="text-ink-3 mt-1 text-[12px]">
-            {previews.length > 0
-              ? `${String(previews.length)} 件あります。新しいプレビューはまだ切れません。`
-              : "いくつでも作れるようにします。いまはまだ切れません。"}
-          </p>
+  offline?: boolean;
+}) => {
+  const production = productionState(pages, started);
+  return (
+    <div className="studio-env-grid">
+      <section className="studio-env-card">
+        <span className="studio-env-number">01 / TRY IT</span>
+        <div className="studio-env-card-header">
+          <h2>プレビュー</h2>
+          <StatusChip tone={previews.length ? "ok" : "idle"}>
+            {previews.length ? `${previews.length} 件` : "未作成"}
+          </StatusChip>
         </div>
-        <StatusChip tone={previews.length > 0 ? "ok" : "idle"}>
-          {previews.length > 0 ? ENV_STATUS.published : ENV_STATUS.none}
-        </StatusChip>
-      </div>
-      <div className="mt-3 flex flex-col gap-2">
-        {previews.length === 0 ? (
-          <p className="text-ink-2 text-[13px] leading-6">
-            プレビュー用のページはまだ切っています。作ったようには見せません。
-          </p>
-        ) : (
-          previews.map((href) => <PreviewItem href={href} key={href} />)
-        )}
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-          onClick={onNewPreview}
-          type="button"
-        >
-          ＋新しいプレビュー
-        </button>
-      </div>
-      <p className="text-ink-3 mt-3 text-[12px]">{SEND_STAGING_UNAVAILABLE}</p>
-    </section>
-    <EnvCard
-      actions={
-        <>
-          <DisabledAction>差を見る</DisabledAction>
-          <button
-            className="rounded-control bg-field text-ink h-8 px-3 text-[13px] font-medium"
-            onClick={onPromote}
-            type="button"
-          >
-            本番へ反映
-          </button>
-        </>
-      }
-      body={STAGING_UNAVAILABLE}
-      status={ENV_STATUS.none}
-      title={ENV_LABEL.staging}
-      tone="idle"
-    />
-    <EnvCard
-      actions={
-        <>
-          {publishHref ? (
-            <Link
-              className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
-              href={publishHref}
+        <p>
+          {previews.length
+            ? "制作中のアプリを開いて、使い心地を確かめましょう。"
+            : "制作中のアプリを試す場所です。プレビューの URL はまだありません。"}
+        </p>
+        <div className="studio-env-preview-list">
+          {previews.map((url) => (
+            <a
+              className="studio-env-link"
+              href={url}
+              key={url}
+              rel="noreferrer"
+              target="_blank"
             >
-              本番へ反映
+              {hostOf(url)}{" "}
+              <WorkspaceIcon
+                name="arrow"
+                size={13}
+                style={{ transform: "rotate(-45deg)" }}
+              />
+            </a>
+          ))}
+        </div>
+        <div className="studio-env-actions">
+          <Link className="ui-button" href={`/p/${slug}`}>
+            編集を続ける <WorkspaceIcon name="arrow" size={14} />
+          </Link>
+        </div>
+      </section>
+      <EnvCard
+        body="公開前の最終確認をする場所です。検証環境の作成と本番への反映は、まだ利用できません。"
+        number="02 / REVIEW"
+        status="未提供"
+        title="検証"
+        tone="idle"
+      />
+      <EnvCard
+        actions={
+          offline ? (
+            <Link className="ui-button" href="/connect">
+              接続を確認する
             </Link>
           ) : (
-            <DisabledAction>本番へ反映</DisabledAction>
-          )}
-          <DisabledAction>前の版に戻す</DisabledAction>
-        </>
-      }
-      body={productionBody(pages, started)}
-      status={production.label}
-      title={ENV_LABEL.production}
-      tone={production.tone}
-      url={pages}
-    />
-  </div>
-);
+            <Link className="ui-button-primary" href={`/p/${slug}/publish`}>
+              {started ? "公開の進捗を見る" : "公開の設定へ"}{" "}
+              <WorkspaceIcon
+                name="arrow"
+                size={14}
+                style={{ transform: "rotate(-45deg)" }}
+              />
+            </Link>
+          )
+        }
+        body={production.body}
+        number="03 / SHARE"
+        status={production.label}
+        title="本番"
+        tone={production.tone}
+        url={pages}
+      />
+    </div>
+  );
+};
 
 const EnvsLive = ({ slug }: { slug: string }) => {
-  const router = useRouter();
   const workspace = useWorkspaceBySlug(slug);
   useSyncPagesEnvironments(slug, workspace?.ready === true);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [promoteOpen, setPromoteOpen] = useState(false);
-
   useEffect(() => {
-    if (!workspace) {
-      return;
+    if (workspace) {
+      writeLastWorkspace({
+        name: workspace.name,
+        path: `/p/${slug}/envs`,
+        slug,
+      });
     }
-    writeLastWorkspace({
-      name: workspace.name,
-      path: `/p/${slug}/envs`,
-      slug,
-    });
   }, [slug, workspace]);
-
   if (workspace === undefined) {
-    return <p className="text-ink-2 mt-2 text-[14px]">読み込んでいます…</p>;
+    return <p className="studio-muted">読み込んでいます…</p>;
   }
   if (workspace === null) {
     return (
-      <h1 className="mt-2 text-[24px] font-semibold">アプリが見つかりません</h1>
+      <div className="studio-page-heading">
+        <h1>アプリが見つかりません</h1>
+        <Link className="ui-button" href="/projects">
+          アプリ一覧に戻る
+        </Link>
+      </div>
     );
   }
   const pages = publicHttpUrl(workspace.cloudflarePagesUrl);
@@ -210,135 +169,82 @@ const EnvsLive = ({ slug }: { slug: string }) => {
   );
   const convex = publicHttpUrl(workspace.convexUrl);
   const started = workspace.pagesDeployStatus === "started";
-  const production = productionStatus(pages, started);
-
   return (
     <>
-      <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-        {workspace.name}
-      </h1>
-      <p className="text-ink-2 mt-2 max-w-2xl text-[14px]">
-        プレビューで試して、検証で確かめて、本番に出します。無いものはまだです。
-      </p>
+      <div className="studio-page-heading">
+        <div>
+          <p className="ui-eyebrow">ENVIRONMENTS</p>
+          <h1>試して、確かめて、届ける。</h1>
+          <p>「{workspace.name}」の公開先と、いまの状態。</p>
+        </div>
+        <Link className="ui-button" href={`/p/${slug}`}>
+          編集に戻る
+        </Link>
+      </div>
       <EnvColumns
-        onNewPreview={() => {
-          setPreviewOpen(true);
-        }}
-        onPromote={() => {
-          setPromoteOpen(true);
-        }}
         pages={pages}
         previews={previews}
-        production={production}
-        publishHref={`/p/${slug}/publish`}
+        slug={slug}
         started={started}
       />
-      {convex ? (
-        <p className="info-note mt-5 max-w-3xl">{CONVEX_FUNCTION_PUSH_NOTE}</p>
-      ) : null}
-      {workspace.publishNotes?.map((note) => (
-        <p className="info-note mt-2 max-w-3xl" key={note}>
-          {note}
-        </p>
-      ))}
       {workspace.publishError ? (
-        <p className="text-red mt-3 max-w-3xl text-[13px]">
+        <p className="studio-error" role="alert">
           {workspace.publishError}
         </p>
       ) : null}
-      <p className="text-ink-3 mt-4 max-w-3xl text-[12px]">
-        {ROLLBACK_UNAVAILABLE}
+      {workspace.publishNotes?.map((note) => (
+        <p className="studio-env-note" key={note}>
+          {note}
+        </p>
+      ))}
+      {convex ? (
+        <p className="studio-env-note">{CONVEX_FUNCTION_PUSH_NOTE}</p>
+      ) : null}
+      <p className="studio-env-note">
+        新しいプレビューの作成、検証への反映、公開履歴から前の版に戻す操作は、現在は利用できません。
       </p>
-      {previewOpen ? (
-        <NewPreviewModal
-          existingPreviewUrl={previews[0] ?? null}
-          onClose={() => {
-            setPreviewOpen(false);
-          }}
-          productionUrl={pages}
-        />
-      ) : null}
-      {promoteOpen ? (
-        <PromoteModal
-          canPromote={false}
-          onClose={() => {
-            setPromoteOpen(false);
-          }}
-          onConfirm={() => {
-            router.push(`/p/${slug}/publish`);
-          }}
-        />
-      ) : null}
     </>
   );
 };
 
-const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => {
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [promoteOpen, setPromoteOpen] = useState(false);
-  return (
-    <>
-      <h1 className="mt-2 text-[28px] font-semibold tracking-tight">{title}</h1>
-      <p className="text-ink-2 mt-2 max-w-2xl text-[14px]">
-        Convex 未設定です。環境の URL は出しません。
-      </p>
-      <EnvColumns
-        onNewPreview={() => {
-          setPreviewOpen(true);
-        }}
-        onPromote={() => {
-          setPromoteOpen(true);
-        }}
-        pages={null}
-        previews={[]}
-        production={{ label: ENV_STATUS.none, tone: "idle" }}
-        publishHref={`/p/${slug}/publish`}
-        started={false}
-      />
-      {previewOpen ? (
-        <NewPreviewModal
-          onClose={() => {
-            setPreviewOpen(false);
-          }}
-        />
-      ) : null}
-      {promoteOpen ? (
-        <PromoteModal
-          canPromote={false}
-          onClose={() => {
-            setPromoteOpen(false);
-          }}
-        />
-      ) : null}
-    </>
-  );
-};
+const EnvsOffline = ({ slug, title }: { slug: string; title: string }) => (
+  <>
+    <div className="studio-page-heading">
+      <div>
+        <p className="ui-eyebrow">ENVIRONMENTS</p>
+        <h1>試して、確かめて、届ける。</h1>
+        <p>
+          「{title}」の環境。これは UI
+          プレビューです。実行環境はまだ接続されていません。
+        </p>
+      </div>
+      <Link className="ui-button" href={`/p/${slug}`}>
+        編集に戻る
+      </Link>
+    </div>
+    <EnvColumns
+      offline
+      pages={null}
+      previews={[]}
+      slug={slug}
+      started={false}
+    />
+  </>
+);
 
 export const EnvsScreen = ({ appId }: { appId: string }) => {
-  const live = hasConvexUrl();
   const shell = useShell();
   const app = shell.state.apps.find((item) => item.id === appId);
-  const title = app?.name ?? appId;
-
   return (
     <ShellGate>
       <AppFrame>
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-6 py-10">
-            <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-              環境
-            </p>
-            {live ? (
+        <main className="studio-page">
+          <div className="studio-page-inner">
+            {hasConvexUrl() ? (
               <EnvsLive slug={appId} />
             ) : (
-              <EnvsOffline slug={appId} title={title} />
+              <EnvsOffline slug={appId} title={app?.name ?? appId} />
             )}
-            <Link
-              className="rounded-control bg-field text-ink h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-              href={`/p/${appId}`}
-            >
-              相談に戻る
-            </Link>
           </div>
         </main>
       </AppFrame>

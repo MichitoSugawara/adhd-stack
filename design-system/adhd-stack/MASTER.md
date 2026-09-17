@@ -1,233 +1,51 @@
-# Design System Master File
+# ADHD Stack — Paper Studio
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+2026-09-17 のライトテーマ刷新。プロダクト要件は [requirements.md](../../docs/requirements.md)、参照元と動線は [ui-redesign.md](../../docs/ui-redesign.md)。ページ固有の仕様は [connect](pages/connect.md) / [editor](pages/editor.md) を参照する。
 
----
+## 色と書体
 
-**Project:** ADHD Stack
-**Generated:** 2026-09-03 04:36:47
-**Category:** Developer Tool / IDE
-**Design Dials:** Variance 4/10 (Balanced / Modern) | Motion 3/10 (Subtle) | Density 7/10 (Standard)
+実装値の正本は `apps/web/app/beautifui/tokens.css`。白い作業面を暖かい紙色のキャンバスに置き、テラコッタは作成・送信・注目箇所に絞る。
 
----
+| 役割 | CSS 変数 | 値 |
+| --- | --- | --- |
+| キャンバス | `--page` | `#f7f7f5` |
+| 作業面 | `--surface` | `#ffffff` |
+| 主テキスト | `--ink` | `#262925` |
+| 補足テキスト | `--ink-2` | `#62685f` |
+| 小見出し・補助 | `--ink-3` | `#6e746b` |
+| 境界 | `--line` | `#e3e6df` |
+| 強い境界 | `--line-strong` | `#bdc4b9` |
+| アクセント | `--accent` | `#b84f35` |
+| アクセント文字 | `--accent-ink` | `#a54029` |
+| アクセント面 | `--accent-tint` | `#fbefe9` |
 
-## Global Rules
+- 見出し・本文: Inter + Noto Sans JP。日本語を等幅書体にしない。
+- コード、URL、キー表示、小さな数値: Geist Mono。
+- フォント定義は `apps/web/lib/fonts.ts`。既存の Beautiful UI foundation を保持し、アプリの値を上書きする。
 
-### Color Palette
+## 構造
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#1B2330` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#4E5A6C` | `--color-secondary` |
-| On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#4F46E5` | `--color-accent` |
-| On Accent/CTA | `#FFFFFF` | `--color-on-accent` |
-| Background | `#F6F7F9` | `--color-background` |
-| Foreground | `#1B2330` | `--color-foreground` |
-| Card | `#FFFFFF` | `--color-card` |
-| Card Foreground | `#1B2330` | `--color-card-foreground` |
-| Muted | `#F1F3F6` | `--color-muted` |
-| Muted Foreground | `#6E7A8D` | `--color-muted-foreground` |
-| Border | `#E4E8EE` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| On Destructive | `#FFFFFF` | `--color-on-destructive` |
-| Ring | `#4F46E5` | `--color-ring` |
+- デスクトップは見えるサイドバーと白い主画面。サイドバーは通常 236px、折りたたみ時 72px。新規作成、アプリ一覧、接続、最近のアプリをまとめる。
+- モバイルはメニューボタンから native dialog を開く。作業画面は「チャット / プレビュー」を切り替える。
+- ページの上位動線とアプリ内の操作を分ける。公開は作業画面から開き、対象アプリ名と現在の状態を示す。
+- 薄い境界、控えめな影、8–14px 程度の角丸で階層を作る。カードを入れ子にして情報を増やさない。
+- 操作ボタンは主・副を明確にし、モバイルで押しやすい余白を確保する。アイコンだけの操作にも名前を付ける。
 
-**Color Notes:** Light clean neutral + indigo accent (replaced Dark Green+ on 2026-09-16). Authoritative values live in `apps/web/app/beautifui/tokens.css`.
+## 操作と状態
 
-### Typography
+- `⌘K` / `Ctrl+K` で検索と移動。フォーカスを dialog 内に保ち、Escape で閉じる。IME の候補選択を奪わない。
+- 入力中の内容は接続画面への寄り道で捨てない。新規の名前・アイデアは同じタブに保存し、作成後のアイデアは未送信のチャット下書きとして引き継ぐ。
+- 接続、作成、生成、公開の成功は取得した状態だけで表示する。表示用の進捗タイマーで成功にしない。
+- バックエンド未設定時は「UI プレビュー」と明示する。ブラウザ内の下書きは実アプリ、接続、AI 実行、公開の証拠ではない。
+- フォーカスリング、文字による状態、読みやすいコントラストを確保する。装飾アニメーションは最小限とし、`prefers-reduced-motion` を尊重する。
 
-- **Heading Font:** JetBrains Mono
-- **Body Font:** IBM Plex Sans
-- **Mood:** code, developer, technical, precise, functional, hacker
-- **Google Fonts:** [JetBrains Mono + IBM Plex Sans](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap)
+## 再利用の境界
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-```
+既存の Beautiful UI `PromptBar` / `StreamingText` / `TaskRows` を実データで利用する。Circle のナビゲーション、Kitesurf のブラウザ操作、OpenTUI のフォーカスを意識したキー設計を Web 向けに適用する。今回、これらの参照元から新たなコードを直接移植していない。既存部品のライセンス・帰属は保持する。
 
-### Spacing Variables
+## 確認項目
 
-*Density: 7/10 — Standard*
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
-
-### Shadow Depths
-
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
-
----
-
-## Component Specs
-
-### Buttons
-
-```css
-/* Primary Button */
-.btn-primary {
-  background: #22C55E;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #1E293B;
-  border: 2px solid #1E293B;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
-
-### Cards
-
-```css
-.card {
-  background: #0F172A;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
-
-### Inputs
-
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
-
-.input:focus {
-  border-color: #1E293B;
-  outline: none;
-  box-shadow: 0 0 0 3px #1E293B20;
-}
-```
-
-### Modals
-
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
-
----
-
-## Style Guidelines
-
-**Style:** Clean Light
-
-**Keywords:** Light theme, neutral grey canvas, white cards, crisp hairline borders, indigo accent, high readability, calm, low cognitive load
-
-**Best For:** Productivity tools, admin shells, chat-driven workflows where one clear path matters
-
-**Key Effects:** Hairline borders with soft layered shadows, accent reserved for primary actions and active state, visible focus
-
-### Page Pattern
-
-**Pattern Name:** FAQ/Documentation Landing
-
-- **Conversion Strategy:** Reduce support tickets. Track search analytics. Show related articles. Contact escalation path.
-- **CTA Placement:** Search bar prominent + Contact CTA for unresolved questions
-- **Section Order:** Hero with search bar > Popular categories > FAQ accordion > Contact/support CTA
-
----
-
-## Motion
-
-**Scroll Reveal** (Subtle) — Trigger: scroll (viewport enter) | Duration: 300-400ms | Easing: `power1.out`
-
-```js
-gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' } });
-```
-
-**Framework notes:** Requires the ScrollTrigger plugin registered once via gsap.registerPlugin(ScrollTrigger); Use matchMedia('(prefers-reduced-motion: reduce)') to skip non-essential motion and render the final state immediately
-
-- ✅ Keep the y offset small (8-16px) so it reads as a fade, not a slide
-- ❌ Don't reveal below-the-fold content needed for SEO/crawlers as invisible-by-default without a no-JS fallback
-- ⚡ toggleActions 'play none none reverse' avoids re-triggering on every scroll direction change
-
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Dark theme (Dark Green+ was removed 2026-09-16)
-- ❌ Slow performance
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- desktop / mobile でメニュー、検索、作成、チャット、プレビュー、公開設定を辿れる。
+- キーボードと日本語入力、dialog の開閉、未接続・失敗・空状態を確認する。
+- 下書きが遷移後も残り、成功が確認される前に消えない。
+- ローカルの型・lint・build・ブラウザ確認と、実 OAuth / AI / 公開の検証結果を区別する。検証記録は [ui-redesign.md](../../docs/ui-redesign.md) に記す。

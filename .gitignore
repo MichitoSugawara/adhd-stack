@@ -9,3 +9,5 @@ node_modules
 !.env.example
 __pycache__/
 *.pyc
+.playwright-cli/
+output/playwright/

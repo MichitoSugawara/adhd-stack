@@ -8,41 +8,24 @@ import TaskRows from "@/components/primitives/TaskRows";
 import type { TaskRow } from "@/components/primitives/TaskRows";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { WorkspaceIcon } from "@/components/shell/workspace-icon";
 import { useRetryProvision, useWorkspaceBySlug } from "@/lib/coding-port";
 import { connectErrorMessage } from "@/lib/connect-error";
 import { hasConvexUrl } from "@/lib/env";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { useShell } from "@/lib/shell-state";
 
+import "./studio.css";
+
 const STEPS = [
-  { key: "repo", label: "保存先", meta: "名前付き" },
-  { key: "template", label: "足場", meta: "テンプレート" },
-  { key: "backend", label: "実行環境", meta: "準備" },
-  { key: "pages", label: "公開先", meta: "ページ" },
-  { key: "convex", label: "データ", meta: "関数" },
+  { key: "repo", label: "アプリの保存先", meta: "変更を安全に保存" },
+  { key: "template", label: "アプリの土台", meta: "最初の構成を用意" },
+  { key: "backend", label: "制作する環境", meta: "AI が作業する場所" },
+  { key: "pages", label: "公開先", meta: "アプリを届ける場所" },
+  { key: "convex", label: "データの保存先", meta: "アプリのデータを管理" },
 ] as const;
 
 type StepKey = (typeof STEPS)[number]["key"];
-
-const rowsForTick = (tick: number): TaskRow[] => {
-  const visibleCount = Math.min(tick + 1, STEPS.length);
-  const rows: TaskRow[] = [];
-  for (let index = 0; index < visibleCount; index += 1) {
-    const step = STEPS[index];
-    if (step === undefined) {
-      continue;
-    }
-    rows.push({
-      amount: step.meta,
-      details: [{ label: step.label, meta: step.meta }],
-      key: step.key,
-      label: step.label,
-      status: index < tick ? "done" : "running",
-      step: index + 1,
-    });
-  }
-  return rows;
-};
 
 const statusOf = (value: string | undefined): TaskRow["status"] => {
   if (value === "done") {
@@ -73,15 +56,12 @@ const rowsFromSteps = (
     if (steps) {
       return steps[key];
     }
-    if (key === "backend" && provisionStatus !== "pending") {
+    if (key === "backend" && provisionStatus === "provisioning") {
       return "running";
     }
     return "pending";
   };
   const rowStatus = (value: string): TaskRow["status"] => {
-    if (value === "pending" && provisionStatus === "pending") {
-      return "running";
-    }
     if (value === "skipped") {
       return "done";
     }
@@ -134,6 +114,13 @@ const CreatingLive = ({ slug }: { slug: string }) => {
 
   const complete = workspace.provisionStatus === "ready";
   const failed = workspace.provisionStatus === "error";
+  let title = "アイデアのための、場所を用意しています。";
+  if (complete) {
+    title = "つくる準備が、できました。";
+  }
+  if (failed) {
+    title = "準備を再開しましょう。";
+  }
   const handleRetry = async () => {
     setRetrying(true);
     setFailNote(null);
@@ -147,133 +134,124 @@ const CreatingLive = ({ slug }: { slug: string }) => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
-        <div>
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            作成中
+    <main className="studio-page">
+      <div className="studio-progress-layout">
+        <div className="studio-progress-intro">
+          <p className="ui-eyebrow">GETTING READY</p>
+          <h1>{title}</h1>
+          <p>
+            「{workspace.name}」の保存先と制作環境を準備します。
+            {complete
+              ? "エディタを開いて、最初のアイデアを伝えてください。"
+              : "この画面を離れても、準備は続きます。"}
           </p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            {workspace.name} をつくっています
-          </h1>
-          <p className="text-ink-2 mt-2 text-[14px]">
-            保存先、足場、実行環境の進捗です。
-            {workspace.codingBackend === "cursor_cloud"
-              ? " 実行系は Cursor Cloud Agent です。"
-              : " 実行系は Codex Cloud です。"}
-          </p>
-        </div>
-        {workspace.provisionStatus === "provisioning" ? (
-          <LoadingState label="用意しています" variant="Drive" />
-        ) : null}
-        <TaskRows
-          className="max-w-xl"
-          labels={{
-            completed: "完了",
-            failed: "失敗",
-            running: "処理中",
-            waiting: "待機",
-          }}
-          rows={rowsFromSteps(
-            workspace.provisionSteps,
-            workspace.provisionStatus
-          )}
-          variant="List"
-        />
-        {workspace.provisionError ? (
-          <p className="text-red max-w-2xl text-[13px]">
-            {workspace.provisionError}
-          </p>
-        ) : null}
-        {failNote ? (
-          <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
-        ) : null}
-        {complete ? (
-          <Link
-            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-            href={`/p/${slug}`}
-          >
-            エディタを開く
+          <Link className="ui-button" href="/projects">
+            アプリ一覧に戻る
           </Link>
-        ) : null}
-        {failed ? (
-          <button
-            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] font-medium disabled:opacity-40"
-            disabled={retrying}
-            onClick={() => {
-              void handleRetry();
+        </div>
+        <section className="studio-progress-card" aria-label="作成の進捗">
+          <h2>{workspace.name}</h2>
+          {workspace.provisionStatus === "provisioning" ? (
+            <LoadingState label="用意しています" variant="Drive" />
+          ) : null}
+          <TaskRows
+            className="max-w-xl"
+            labels={{
+              completed: "完了",
+              failed: "失敗",
+              running: "処理中",
+              waiting: "待機",
             }}
-            type="button"
-          >
-            もう一度試す
-          </button>
-        ) : null}
+            rows={rowsFromSteps(
+              workspace.provisionSteps,
+              workspace.provisionStatus
+            )}
+            variant="List"
+          />
+          {workspace.provisionError ? (
+            <p className="text-red max-w-2xl text-[13px]">
+              {workspace.provisionError}
+            </p>
+          ) : null}
+          {failNote ? (
+            <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
+          ) : null}
+          {complete ? (
+            <Link className="ui-button-primary mt-6" href={`/p/${slug}`}>
+              エディタを開く
+            </Link>
+          ) : null}
+          {failed ? (
+            <button
+              className="ui-button-primary mt-6"
+              disabled={retrying}
+              onClick={() => {
+                void handleRetry();
+              }}
+              type="button"
+            >
+              {retrying ? "再開しています…" : "準備をもう一度試す"}
+            </button>
+          ) : null}
+        </section>
       </div>
     </main>
   );
 };
 
 const CreatingSkeleton = ({ appId }: { appId: string }) => {
-  const { hydrated, setAppStep, state } = useShell();
-  const [tick, setTick] = useState(0);
+  const { hydrated, state } = useShell();
   const app = state.apps.find((item) => item.id === appId);
-  const complete = tick >= STEPS.length;
-
-  useEffect(() => {
-    if (!hydrated || !state.entered) {
-      return;
-    }
-    if (tick >= STEPS.length) {
-      setAppStep(appId, STEPS.length);
-      return;
-    }
-    setAppStep(appId, tick);
-    const timer = window.setTimeout(() => {
-      setTick((current) => current + 1);
-    }, 900);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [appId, hydrated, setAppStep, state.entered, tick]);
 
   return hydrated && !app ? (
     <main className="px-8 py-10">
       <h1 className="text-[24px] font-semibold">アプリが見つかりません</h1>
     </main>
   ) : (
-    <main className="flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
-        <div>
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            作成中
-          </p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            {app?.name ?? appId} をつくっています
+    <main className="studio-page">
+      <div className="studio-progress-layout">
+        <div className="studio-progress-intro">
+          <p className="ui-eyebrow">UI PREVIEW</p>
+          <h1>
+            つくる流れを、
+            <br />
+            見てみましょう。
           </h1>
-          <p className="text-ink-2 mt-2 text-[14px]">
-            Convex 未設定です。進捗の見た目だけで、保存先も環境も作りません。
+          <p>
+            「{app?.name ?? appId}
+            」の画面プレビューです。実行環境は未接続のため、アプリの保存先や公開先は作成されません。
           </p>
-        </div>
-        <LoadingState label="用意しています" variant="Drive" />
-        <TaskRows
-          className="max-w-xl"
-          labels={{
-            completed: "完了",
-            failed: "失敗",
-            running: "処理中",
-            waiting: "待機",
-          }}
-          rows={rowsForTick(tick)}
-          variant="List"
-        />
-        {complete ? (
-          <Link
-            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-            href={`/p/${appId}`}
-          >
-            エディタを開く
+          <Link className="ui-button" href="/connect">
+            接続を確認する
           </Link>
-        ) : null}
+        </div>
+        <section
+          className="studio-progress-card"
+          aria-label="作成手順のプレビュー"
+        >
+          <h2>接続後に準備するもの</h2>
+          <TaskRows
+            className="max-w-xl"
+            labels={{
+              completed: "完了",
+              failed: "失敗",
+              running: "処理中",
+              waiting: "待機",
+            }}
+            rows={STEPS.map((step, index) => ({
+              amount: "未実行",
+              details: [{ label: step.label, meta: step.meta }],
+              key: step.key,
+              label: step.label,
+              status: "waiting",
+              step: index + 1,
+            }))}
+            variant="List"
+          />
+          <Link className="ui-button-primary mt-6" href={`/p/${appId}`}>
+            編集画面を見る <WorkspaceIcon name="arrow" size={14} />
+          </Link>
+        </section>
       </div>
     </main>
   );

@@ -2,7 +2,7 @@
 
 プロダクトオーナー合意の方向。以降の実装・調査・検証は本ファイルを単一の正本とする。 `design_handoff/`・旧モック・現行 `convex/` 実験は証拠や移行用参考であり、本ファイルと矛盾したら本ファイルが勝つ。
 
-対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。Phase 0 で本ファイルを正本にした。Phase 1 は Beautiful UI シェル。Phase 2 は ConnectionsPort と実接続。公開 / デプロイは後続フェーズ。
+対象: **Michito 個人の v1**（マルチテナント SaaS ではない）。ホストは `https://adhd.gawarago.com`。Phase 0 で本ファイルを正本にした。Phase 1 の UI は Paper Studio に更新する。Phase 2 は ConnectionsPort と実接続。公開 / デプロイの契約は後続の各節に従う。
 
 ---
 
@@ -30,23 +30,23 @@ IDE は開かない。エディタ GUI を埋め込まない。構成やホス�
 
 ## 3. UI
 
-### 正本: Beautiful UI
+### 正本: Paper Studio
 
-長期のビジュアル / UIUX システムは [Beautiful UI](https://www.beautifului.dev/)。AI ネイティブ画面の部品をここから組む。
+2026-09-17 のオーナー指示で、ライトテーマを前提に画面構造と動線を刷新する。[Beautiful UI](https://www.beautifului.dev/) の既存部品、[Circle](https://github.com/ln-dev7/circle) のナビゲーション、[Kitesurf](https://kitesurf.cloudflare.app/) のブラウザ操作、[OpenTUI](https://github.com/anomalyco/opentui) のフォーカスを意識したキー設計を基にした **Paper Studio** を正とする。参照したファイルと commit、採用範囲は [ui-redesign.md](ui-redesign.md)。
 
-Phase 1 で最低限マップする部品:
+実画面で再利用する部品と構造:
 
-| 部品                      | 役割                         |
-| ------------------------- | ---------------------------- |
-| PromptBar                 | チャット入力（composer）     |
-| Thinking / ThinkingState  | 思考・作業中                 |
-| ToolChips                 | ツール呼び出し・差分のチップ |
-| Approval Card             | 確認待ち                     |
-| Streaming Text / Chat     | 本文ストリーム               |
-| SidebarNav / harness      | 左レール・アプリ枠           |
-| Task Rows / Loading State | 作成中・公開中の進捗         |
+| 部品                     | 役割                                   |
+| ------------------------ | -------------------------------------- |
+| PromptBar                | 同じタブで下書きを保持するチャット入力 |
+| StreamingText            | 実際の返答本文                         |
+| TaskRows                 | 実際の作成・思考・ツール実行の状態     |
+| SidebarNav / CommandMenu | 見える左ナビ・検索・最近のアプリ       |
+| ブラウザプレビュー       | 実 URL、表示幅、再読み込み、外部表示   |
 
-トークンは **ライト・クリーン** を基準にする（背景 `#f6f7f9`、面 `#ffffff`、文字 `#1b2330`、アクセント indigo `#4f46e5`）。2026-09-16 にオーナーの要望で VS Code Dark Green+（旧 `#121712` / `#1fbf3a`）から刷新した。`apps/web/app/beautifui/tokens.css` が正本の値。
+トークンは背景 `#f7f7f5`、面 `#ffffff`、文字 `#262925`、補足 `#62685f`、アクセント `#b84f35`。Inter / Noto Sans JP と Geist Mono を使う。`apps/web/app/beautifui/tokens.css` が値の正本、[MASTER.md](../design-system/adhd-stack/MASTER.md) が画面横断の仕様。デスクトップはサイドバーを常設し、モバイルはメニューとチャット / プレビューの切り替えを使う。
+
+名前とアイデアは同じタブに下書きとして保存する。接続への寄り道で失わず、作成後はアプリごとの未送信 composer へ引き継ぐ。AI への自動送信はしない。バックエンド未設定時は UI プレビューと明示し、実接続・生成・公開の成功を作らない。
 
 ### `design_handoff/` は移行用 IA だけ
 
@@ -63,9 +63,9 @@ Phase 1 で最低限マップする部品:
 - つなぐ → 名前を付けて作る → 作成中 → チャット本体 → 環境（プレビュー / 検証 / 本番）
 - git / リポジトリ / ブランチ / コミット / PR を主 UI に出さない（保存 / 変更 / 反映 / 本番へ出す）
 - 切れた接続は接続画面でつなぎ直す
-- 環境操作は [Claude Design 1795b4d9](https://claude.ai/design/p/1795b4d9-3a03-4aaf-b446-df0d1796f63c) の IA を優先する。Pages のプレビュー配備が切れているあいだは「まだ」と出し、偽の昇格はしない
+- 環境のプレビュー / 検証 / 本番という区分は維持する。旧 [Claude Design 1795b4d9](https://claude.ai/design/p/1795b4d9-3a03-4aaf-b446-df0d1796f63c) は IA の参考とし、現在の画面構造は Paper Studio に従う。Pages のプレビュー配備が無いあいだは「まだ」と出し、偽の昇格はしない
 
-緑セリフモックは削除した。画面は Beautiful UI + ライト・クリーンのシェルである（旧 Dark Green+ は 2026-09-16 に置き換え）。
+旧モックや過去の配色・書体指定は現行 UI の仕様に使わない。
 
 ---
 
@@ -73,7 +73,7 @@ Phase 1 で最低限マップする部品:
 
 カードは四つだけ: **ChatGPT / GitHub / Cloudflare / Convex**。足りないカードだけ「接続する」を出す。つながっているものは識別子（メール、@handle、team）と切断を出す。
 
-偽の接続・モックトークン・デモ用の成功状態は禁止。未設定なら「つながっていない」と出し、押せば本物の認可だけを始める。
+偽の接続・モックトークン・デモ用の成功状態は禁止。接続アプリ未設定なら「設定待ち」として操作を無効にし、利用可能な場合だけ本物の認可を始める。
 
 ### OpenConnector を優先する
 
@@ -155,9 +155,9 @@ Phase 3 で、名前付き作成（一人複数アプリ可）に合わせる。
 
 公開はユーザーの **Cloudflare Pages + Convex**。同じアプリ画面に URL を返す。
 
-主 UI は **プレビュー / 検証 / 本番** を並べる（根拠: Claude Design 1795b4d9）。ソース管理の言葉は出さない。
+「公開と環境」では **プレビュー / 検証 / 本番** を並べる。作業画面では会話とブラウザプレビューを中心にし、公開設定へ進める。ソース管理の言葉は主操作に出さない。
 
-Pages の `preview_deployment_setting` は切らない。既存の preview 配備は最大 8 件まで読む。無ければ「まだ」。本番 URL と本番反映（既存の Pages デプロイ）は本物としてつなぐ。新しいプレビューの作成、検証への送付、差を見る、版の戻しは、API が無いあいだ操作できない。公開 API に githubRepoUrl は出さない。画面の根拠は [Claude Design 1795b4d9](https://claude.ai/design/p/1795b4d9-3a03-4aaf-b446-df0d1796f63c)（環境一覧 / エディタ / 本番反映モーダル / プレビュー作成 / 接続 / 一覧）。
+Pages の `preview_deployment_setting` は切らない。既存の preview 配備は最大 8 件まで読む。無ければ「まだ」。本番 URL と本番反映（既存の Pages デプロイ）は本物としてつなぐ。新しいプレビューの作成、検証への送付、環境間の差を見る、版の戻しは、API が無いあいだ操作できない。公開 API に githubRepoUrl は出さない。会話で取得した変更一覧と、未対応の環境間比較は区別する。画面仕様は [ui-redesign.md](ui-redesign.md)。
 
 既知のギャップ（隠さない）:
 
@@ -185,17 +185,19 @@ Pages の `preview_deployment_setting` は切らない。既存の preview 配�
 
 ## 9. 画面（最小）
 
-| 画面 | ルート案 | v1 |
+| 画面 | ルート | v1 |
 | --- | --- | --- |
-| ログイン、または最初の接続をセッション開始 | `/` または `/login` | 必須。Google ボタンは置かない |
-| 接続 | `/connect` | 必須。4 カード。未接続だけ CTA |
-| プロジェクト一覧 / 新規 | `/projects`、新規は名前入力 | 必須。`adhd-app` ハードコードと対立する。名前付き作成を正とする |
-| 作成中 | `/p/[app]/creating` など | 必須。GitHub / テンプレート / CodingBackend / Pages / Convex の進捗 |
-| グローバルナビ | 最初から / 接続 / 一覧 / エディタ / 環境 | 必須。公開は環境の中の本番反映 |
-| アプリ編集（チャット本体） | `/p/[app]` | 必須。左に環境、中央に相談、右にプレビューまたはソース |
-| 環境（プレビュー / 検証 / 本番） | `/p/[app]/envs` | 必須。無い環境は「まだ」。本番反映だけ本物 |
+| 入口 | `/` | 開始とワークスペースへの復帰。Google ボタンは置かない |
+| 接続 | `/connect` | 4サービス、device code、認可・待機・失敗、元の作業への復帰 |
+| アプリ一覧 | `/projects` | 検索・状態の絞り込み・続きから開く。実アプリを表示 |
+| 新規作成 | `/new` | 名前と任意のアイデア。同じタブの下書きを保持 |
+| 作成中 | `/p/[slug]/creating` | GitHub / テンプレート / CodingBackend / Pages / Convex の実進捗 |
+| グローバルナビ | 共通サイドバー / 検索 | 新規作成・一覧・接続・最近のアプリ。`⌘K` / `Ctrl+K` |
+| アプリ編集 | `/p/[slug]` | チャットとブラウザプレビュー。実際の変更がある場合だけ変更一覧 |
+| 公開と環境 | `/p/[slug]/envs` | プレビュー / 検証 / 本番。無い環境は「まだ」 |
+| 公開設定 | `/p/[slug]/publish` | 開いているアプリの公開先、開始操作、実状態と URL |
 
-接続が 4/4 になるまで作成・チャットに進ませない、でよい。切れたら接続画面に戻し、元のアプリへ復帰する。
+接続が 4/4 になるまで実際の作成・チャットを実行しない。新規画面での下書き入力はできる。切れたら接続画面に戻し、元のアプリまたは新規入力へ復帰する。
 
 ---
 
@@ -204,7 +206,7 @@ Pages の `preview_deployment_setting` は切らない。既存の preview 配�
 | Phase | 内容 | 完了の目安 |
 | --- | --- | --- |
 | **0** | 本ファイルを正本にする | オーナーが方向に合意できる |
-| **1** | Beautiful UI シェル。ログイン / 接続 / 一覧 / 作成中 / エディタ。モック接続なし。手渡しピクセル一致なし（この PR） | 画面を辿れる。トークンは Dark Green+ |
+| **1** | Paper Studio。入口 / 接続 / 一覧 / 新規 / 作成中 / チャットとプレビュー。既存 Beautiful UI 部品を再利用 | desktop / mobile で辿れる。下書きが続き、偽の成功を出さない |
 | **2** | OpenConnector / ConnectionsPort。4 カードを本物の接続にする。ChatGPT は device OAuth 固定 | Convex に不透明 id だけ残る。UI にゲートウェイ名が出ない |
 | **3** | CodingBackend + Codex Cloud の provision / chat。tahcode 由来テンプレートを名前付きで置く（この PR） | チャットでリポジトリが変わる。公開名が `codex*` 固定でない |
 | **4** | 公開。Pages + Convex の URL を同じ画面に返す。関数プッシュのギャップは正直に出す（この PR） | 偽 URL を出さない。公開は slug 単位 |
@@ -219,9 +221,9 @@ Phase 4 は公開。Phase 5 はホスト切替（資格情報待ち）。Phase 6
 
 | 決めること | 根拠にする OSS | なぜ |
 | --- | --- | --- |
-| UI システムと Dark Green+ | tahcode、Beautiful UI | tahcode が Beautiful UI + 同系トークンでエージェント画面を成立させている。手渡し緑セリフは IA 参考に落とす |
+| Paper Studio の構造と操作 | Beautiful UI、Circle、Kitesurf、OpenTUI | composer・作業表示、見えるナビ、ブラウザプレビュー、フォーカスを意識したキー設計を適用。具体的な参照は [ui-redesign.md](ui-redesign.md) |
 | 接続の置き場 | OpenConnector（[oomol-lab/open-connector](https://github.com/oomol-lab/open-connector)） | 資格情報はゲートウェイ、アプリは connection id / ラベル / Actions だけ見る。Composio 代替として vault + catalog が既にある |
-| コネクタを自作しない | OpenConnector catalog、必要なら Composio / OpenClaw のカタログ | 1,000+ プロバイダを先に materialize する。無いものだけ interim のカスタム OAuth |
+| コネクタを自作しない | OpenConnector catalog、必要なら Composio / OpenClaw のカタログ | 既存カタログの対応を先に確認する。無いものだけ interim のカスタム OAuth |
 | ChatGPT ≠ OC openai | OpenConnector openai（API キー）、Codex device OAuth（tahcode / 現行 `codexDevice`） | カタログの openai はキー接続。Codex Cloud / WHAM は ChatGPT アカウントの device OAuth が必要 |
 | GitHub / Convex / CF の interim | 現行 ADHD Stack Convex OAuth、Ownstack の CF OAuth | OC で足りるまで、ConnectionsPort の裏に既存実装を残す。UI は同じ 4 カード |
 | CodingBackend の切り方 | t3code の provider 差し替え、Kumo の Codex Cloud 呼び出し | UI を固定し、実行系だけ差し替える。v1 は WHAM、次は Cursor Cloud Agent |

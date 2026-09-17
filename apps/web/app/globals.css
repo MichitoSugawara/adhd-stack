@@ -1,6 +1,7 @@
 @import "./beautifui/foundation.css";
 @import "./beautifui/sidebar-nav.css";
 @import "./beautifui/tokens.css";
+@import "./workspace.css";
 
 @source "../components/**/*.{ts,tsx}";
 @source "../lib/**/*.{ts,tsx}";

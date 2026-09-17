@@ -8,6 +8,7 @@ type EnvTone = "idle" | "ok" | "wait";
 export const EnvCard = ({
   actions,
   body,
+  number,
   status,
   title,
   tone,
@@ -15,25 +16,25 @@ export const EnvCard = ({
 }: {
   actions?: ReactNode;
   body: string;
+  number?: string;
   status: string;
   title: string;
   tone: EnvTone;
   url?: string | null;
 }) => (
-  <article className="rounded-card bg-surface shadow-card flex flex-col p-4">
-    <div className="flex items-start justify-between gap-3">
-      <h2 className="text-[16px] font-semibold">{title}</h2>
+  <article className={`studio-env-card${title === "検証" ? " is-muted" : ""}`}>
+    {number ? <span className="studio-env-number">{number}</span> : null}
+    <div className="studio-env-card-header">
+      <h2>{title}</h2>
       <StatusChip tone={tone}>{status}</StatusChip>
     </div>
-    <p className="text-ink-2 mt-2 text-[13px] leading-6">{body}</p>
+    <p>{body}</p>
     {url ? (
       <div className="mt-3">
         <UrlChip href={url} />
       </div>
     ) : null}
-    {actions ? (
-      <div className="mt-4 flex flex-wrap gap-2">{actions}</div>
-    ) : null}
+    {actions ? <div className="studio-env-actions">{actions}</div> : null}
   </article>
 );
 

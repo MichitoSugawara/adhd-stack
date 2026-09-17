@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import PromptBar from "@/components/primitives/PromptBar";
 import StreamingText from "@/components/primitives/StreamingText";
@@ -9,17 +9,19 @@ import TaskRows from "@/components/primitives/TaskRows";
 import { EditorEnvRail } from "@/components/screens/editor-env-rail";
 import { EditorPreviewPane } from "@/components/screens/editor-preview-pane";
 import type { EditorSideTab } from "@/components/screens/editor-preview-pane";
-import { DisabledAction } from "@/components/screens/env-card";
-import { NewPreviewModal } from "@/components/screens/env-modals";
-import { UrlChip } from "@/components/screens/url-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
+import { WorkspaceIcon } from "@/components/shell/workspace-icon";
+import {
+  clearAppIdeaDraft,
+  readAppIdeaDraft,
+  saveAppIdeaDraft,
+} from "@/lib/app-draft";
 import {
   laterSettlesTools,
   taskRowsFromThinking,
   taskRowsFromTools,
 } from "@/lib/chat-tasks";
-import type { ChangeSummary } from "@/lib/chat-view";
 import { changeSummaryFromView, toChatView } from "@/lib/chat-view";
 import {
   useChatMessages,
@@ -33,11 +35,7 @@ import { previewUrlsFrom, publicHttpUrl } from "@/lib/public-url";
 import { usePublishFlow, useSyncPagesEnvironments } from "@/lib/publish-flow";
 import { useShell } from "@/lib/shell-state";
 
-const STARTERS = [
-  "通知をやさしくする",
-  "時間の区切りを足す",
-  "色を落ち着かせる",
-];
+import "./studio.css";
 
 const TASK_LABELS = {
   completed: "完了",
@@ -45,123 +43,316 @@ const TASK_LABELS = {
   running: "処理中",
   waiting: "待機",
 } as const;
-
-const emptyChanges = (): ChangeSummary => ({ add: 0, del: 0, files: [] });
-
-const SIDE_TABS: { id: EditorSideTab; label: string }[] = [
-  { id: "preview", label: "ブラウザ" },
-  { id: "source", label: "ソース" },
-  { id: "changes", label: "変更" },
-  { id: "history", label: "履歴" },
+const STARTERS = [
+  "今日やることを整理するアプリ",
+  "小さな習慣を記録するアプリ",
+  "思いつきをすぐに残せるメモ",
 ];
+const EMPTY_PREVIEWS: readonly string[] = [];
 
-const EditorHeader = ({
-  envsHref,
-  name,
-  onTab,
-  pagesUrl,
-  previewHref,
-  tab,
-  waiting,
+const editorLabels = (ready: boolean, offline: boolean) => {
+  if (offline) {
+    return {
+      placeholder: "接続すると、指示を送れます",
+      state: "UI プレビュー",
+    };
+  }
+  if (ready) {
+    return { placeholder: "何をつくりますか？", state: "アプリの編集" };
+  }
+  return {
+    placeholder: "準備が完了するまでお待ちください",
+    state: "環境の準備中",
+  };
+};
+
+const ReadinessNotice = ({
+  offline,
+  provisionError,
+  slug,
 }: {
-  envsHref: string;
-  name: string;
-  onTab: (tab: EditorSideTab) => void;
-  pagesUrl: string | null;
-  previewHref: string | null;
-  tab: EditorSideTab;
-  waiting: boolean;
+  offline: boolean;
+  provisionError?: string;
+  slug: string;
 }) => (
-  <header className="border-line flex flex-col gap-2 border-b px-5 py-2.5">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-[15px] font-semibold">{name}</h1>
-      <div className="flex flex-wrap items-center gap-1">
-        {SIDE_TABS.map((item) => (
-          <button
-            className={`rounded-control h-8 px-2.5 text-[12px] font-medium transition-colors duration-150 ${
-              tab === item.id
-                ? "bg-field text-ink"
-                : "text-ink-3 hover:bg-hover hover:text-ink"
-            }`}
-            key={item.id}
-            onClick={() => {
-              onTab(item.id);
-            }}
-            type="button"
-          >
-            {item.label}
-          </button>
-        ))}
-        {previewHref ? (
-          <a
-            className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[13px] font-medium"
-            href={previewHref}
-            rel="noreferrer"
-            target="_blank"
-          >
-            開く
-          </a>
-        ) : null}
-        <Link
-          className="btn-accent rounded-control inline-flex h-8 items-center px-3 text-[13px] font-medium"
-          href={envsHref}
-        >
-          環境
-        </Link>
-        <DisabledAction>検証へ送る</DisabledAction>
-      </div>
-    </div>
-    {pagesUrl ? <UrlChip href={pagesUrl} waiting={waiting} /> : null}
-    {waiting ? (
-      <p className="text-ink-3 text-[13px]">
-        本番の組み立てを待っています。完了はまだ見ていません。
-        <Link
-          className="text-ink ml-2 underline underline-offset-2"
-          href={envsHref}
-        >
-          環境を見る
-        </Link>
+  <div className="studio-notice">
+    <span className="studio-dot is-waiting" />
+    <div>
+      <strong>
+        {offline ? "画面のプレビューです" : "環境を準備しています"}
+      </strong>
+      <p>
+        {offline
+          ? "実行環境が未接続のため、指示は送信されません。"
+          : (provisionError ?? "準備が完了すると、ここから指示を送れます。")}
       </p>
-    ) : null}
-  </header>
-);
-
-const EditorComposer = ({
-  disabled,
-  onSend,
-  placeholder,
-}: {
-  disabled: boolean;
-  onSend: (text: string) => void;
-  placeholder: string;
-}) => (
-  <div className="border-line border-t px-5 py-3">
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-2 flex flex-wrap gap-2">
-        {STARTERS.map((starter) => (
-          <button
-            className="rounded-chip bg-field text-ink-2 hover:bg-hover disabled:text-ink-3 h-7 px-2.5 text-[12px]"
-            disabled={disabled}
-            key={starter}
-            onClick={() => {
-              onSend(starter);
-            }}
-            type="button"
-          >
-            {starter}
-          </button>
-        ))}
-      </div>
-      <PromptBar
-        demo={false}
-        disabled={disabled}
-        onSend={onSend}
-        placeholder={placeholder}
-        sendLabel="送信"
-      />
+      <Link href={offline ? "/connect" : `/p/${slug}/creating`}>
+        {offline ? "接続を確認" : "準備の状況を見る"}{" "}
+        <WorkspaceIcon name="arrow" size={13} />
+      </Link>
     </div>
   </div>
 );
+
+const EditorWorkspace = ({
+  slug,
+  name,
+  ready,
+  offline = false,
+  messages,
+  previewUrls = EMPTY_PREVIEWS,
+  pagesUrl = null,
+  waiting = false,
+  provisionError,
+  sending = false,
+  failNote,
+  onSend,
+}: {
+  slug: string;
+  name: string;
+  ready: boolean;
+  offline?: boolean;
+  messages: ReturnType<typeof toChatView>;
+  previewUrls?: readonly string[];
+  pagesUrl?: string | null;
+  waiting?: boolean;
+  provisionError?: string;
+  sending?: boolean;
+  failNote?: string | null;
+  onSend: (text: string) => Promise<boolean>;
+}) => {
+  const [pane, setPane] = useState<EditorSideTab>("preview");
+  const [mobilePane, setMobilePane] = useState<"chat" | "preview">("chat");
+  const [draft, setDraft] = useState<string | null>(null);
+  const [draftVersion, setDraftVersion] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
+  const changes = changeSummaryFromView(messages);
+  const labels = editorLabels(ready, offline);
+
+  useEffect(() => {
+    setDraft(readAppIdeaDraft(slug));
+  }, [slug]);
+  useEffect(() => {
+    if (stickToBottom.current && scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight });
+    }
+  }, [messages]);
+
+  const setStarter = (text: string) => {
+    setDraft(text);
+    saveAppIdeaDraft(slug, text);
+    setDraftVersion((value) => value + 1);
+  };
+
+  return (
+    <main className="studio" data-mobile-pane={mobilePane}>
+      <header className="studio-project-header">
+        <div className="studio-project-identity">
+          <span className="studio-project-mark" aria-hidden="true">
+            <WorkspaceIcon name="apps" size={18} />
+          </span>
+          <div>
+            <h1>{name}</h1>
+            <span>{labels.state}</span>
+          </div>
+        </div>
+        <div className="studio-project-actions">
+          <Link className="ui-button" href={`/p/${slug}/envs`}>
+            環境
+          </Link>
+          <Link className="ui-button-primary" href={`/p/${slug}/publish`}>
+            公開する{" "}
+            <WorkspaceIcon
+              name="arrow"
+              size={14}
+              style={{ transform: "rotate(-45deg)" }}
+            />
+          </Link>
+        </div>
+      </header>
+      <div className="studio-mobile-tabs" aria-label="作業画面の切り替え">
+        <button
+          aria-pressed={mobilePane === "chat"}
+          onClick={() => setMobilePane("chat")}
+          type="button"
+        >
+          チャット
+        </button>
+        <button
+          aria-pressed={mobilePane === "preview"}
+          onClick={() => setMobilePane("preview")}
+          type="button"
+        >
+          プレビュー
+        </button>
+      </div>
+      <div className="studio-split">
+        <section className="studio-chat" aria-label="アプリをつくるチャット">
+          <div className="studio-pane-heading">
+            <h2>
+              <WorkspaceIcon name="spark" size={16} /> いっしょにつくる
+            </h2>
+            <span className="studio-pane-meta">
+              {sending ? "WORKING" : "CHAT"}
+            </span>
+          </div>
+          <div
+            className="studio-chat-scroll"
+            onScroll={() => {
+              const node = scrollRef.current;
+              if (node) {
+                stickToBottom.current =
+                  node.scrollHeight - node.scrollTop - node.clientHeight < 80;
+              }
+            }}
+            ref={scrollRef}
+          >
+            {!ready && (
+              <ReadinessNotice
+                offline={offline}
+                provisionError={provisionError}
+                slug={slug}
+              />
+            )}
+            {messages.length === 0 ? (
+              <div className="studio-chat-welcome">
+                <span className="studio-assistant-mark" aria-hidden="true">
+                  <WorkspaceIcon name="spark" size={22} />
+                </span>
+                <h2>まずは、小さなアイデアから。</h2>
+                <p>
+                  完成形が決まっていなくても大丈夫。
+                  <br />
+                  ほしいものを、ふだんの言葉で教えてください。
+                </p>
+                <div className="studio-starters">
+                  {STARTERS.map((starter) => (
+                    <button
+                      disabled={sending}
+                      key={starter}
+                      onClick={() => setStarter(starter)}
+                      type="button"
+                    >
+                      <span>{starter}</span>
+                      <WorkspaceIcon
+                        name="arrow"
+                        size={13}
+                        style={{ transform: "rotate(-45deg)" }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="studio-messages">
+              {messages.map((item, index) => {
+                if (item.type === "user") {
+                  return (
+                    <div className="studio-user-message" key={item.id}>
+                      {item.body}
+                    </div>
+                  );
+                }
+                if (item.type === "system") {
+                  return (
+                    <p className="studio-system-message" key={item.id}>
+                      {item.body}
+                    </p>
+                  );
+                }
+                if (item.type === "thinking") {
+                  return (
+                    <TaskRows
+                      className="max-w-none"
+                      key={item.id}
+                      labels={TASK_LABELS}
+                      rows={taskRowsFromThinking(item)}
+                      variant="List"
+                    />
+                  );
+                }
+                if (item.type === "tools") {
+                  return (
+                    <TaskRows
+                      className="max-w-none"
+                      key={item.id}
+                      labels={TASK_LABELS}
+                      rows={taskRowsFromTools(
+                        item,
+                        laterSettlesTools(messages, index)
+                      )}
+                      variant="List"
+                    />
+                  );
+                }
+                return (
+                  <div className="studio-assistant-message" key={item.id}>
+                    <StreamingText
+                      content={[{ text: item.body }]}
+                      followUps={[]}
+                      labels={{ followUps: "", sources: "" }}
+                      loop={false}
+                      sources={[]}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {sending ? (
+              <p className="studio-working" role="status">
+                <span className="studio-dot is-waiting" />
+                指示を送信しています…
+              </p>
+            ) : null}
+            {failNote ? (
+              <p className="studio-error" role="alert">
+                {failNote}
+              </p>
+            ) : null}
+          </div>
+          <div className="studio-composer">
+            {draft !== null && (
+              <PromptBar
+                demo={false}
+                disabled={!ready || sending}
+                initialValue={draft}
+                key={`${slug}-${draftVersion}`}
+                onDraftChange={(text) => saveAppIdeaDraft(slug, text)}
+                onSend={onSend}
+                placeholder={labels.placeholder}
+                sendLabel="指示を送信"
+              />
+            )}
+            <div className="studio-composer-hint">
+              <span>
+                {ready ? "ひとつずつ、かたちに。" : "まだ指示は送信されません"}
+              </span>
+              <span>
+                <kbd>Enter</kbd> 送信 · <kbd>Shift Enter</kbd> 改行
+              </span>
+            </div>
+          </div>
+        </section>
+        <EditorPreviewPane
+          changes={changes}
+          onTab={setPane}
+          pagesUrl={pagesUrl}
+          previewUrl={previewUrls[0]}
+          tab={pane}
+          waiting={waiting}
+        />
+      </div>
+      <EditorEnvRail
+        changes={changes}
+        envsHref={`/p/${slug}/envs`}
+        pagesUrl={pagesUrl}
+        previewUrls={previewUrls}
+        waiting={waiting}
+      />
+    </main>
+  );
+};
 
 const EditorLive = ({ slug }: { slug: string }) => {
   const workspace = useWorkspaceBySlug(slug);
@@ -171,258 +362,92 @@ const EditorLive = ({ slug }: { slug: string }) => {
   useSyncPagesEnvironments(slug, workspace?.ready === true);
   const [failNote, setFailNote] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [pane, setPane] = useState<EditorSideTab>("preview");
 
   useEffect(() => {
-    if (!workspace) {
-      return;
+    if (workspace) {
+      writeLastWorkspace({ name: workspace.name, path: `/p/${slug}`, slug });
     }
-    writeLastWorkspace({
-      name: workspace.name,
-      path: `/p/${slug}`,
-      slug,
-    });
   }, [slug, workspace]);
-
   if (workspace === undefined) {
     return (
-      <main className="px-8 py-10">
-        <p className="text-ink-2 text-[14px]">読み込んでいます…</p>
+      <main className="studio-page">
+        <p className="studio-muted">読み込んでいます…</p>
       </main>
     );
   }
   if (workspace === null) {
     return (
-      <main className="px-8 py-10">
-        <h1 className="text-[24px] font-semibold">アプリが見つかりません</h1>
+      <main className="studio-page">
+        <h1>アプリが見つかりません</h1>
+        <Link className="ui-button" href="/projects">
+          アプリ一覧に戻る
+        </Link>
       </main>
     );
   }
 
-  const { ready } = workspace;
-  const view = toChatView(messages ?? []);
-  const changes = changeSummaryFromView(view);
-  const pagesUrl = publicHttpUrl(workspace.cloudflarePagesUrl);
-  const previewUrls = previewUrlsFrom(
-    workspace.cloudflarePreviewUrl,
-    workspace.cloudflarePreviewUrls
-  );
-  const previewUrl = previewUrls[0] ?? null;
-  const envsHref = `/p/${slug}/envs`;
-
-  const send = async (text: string) => {
-    const trimmed = text.trim();
-    if (trimmed.length === 0 || sending) {
-      return;
-    }
-    if (!ready) {
-      setFailNote("保存先と実行環境の準備が終わるまで送れません");
-      return;
+  const send = async (text: string): Promise<boolean> => {
+    if (!text.trim() || sending || !workspace.ready) {
+      return false;
     }
     setSending(true);
     setFailNote(null);
     try {
-      await sendChat({ text: trimmed, workspaceId: workspace._id });
+      await sendChat({ text: text.trim(), workspaceId: workspace._id });
+      if (readAppIdeaDraft(slug).trim() === text.trim()) {
+        clearAppIdeaDraft(slug);
+      }
+      return true;
     } catch (error) {
       setFailNote(connectErrorMessage(error));
+      return false;
     } finally {
       setSending(false);
     }
   };
-
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <EditorHeader
-        envsHref={envsHref}
-        name={workspace.name}
-        onTab={setPane}
-        pagesUrl={pagesUrl}
-        previewHref={previewUrl}
-        tab={pane}
-        waiting={publishFlow.waiting}
-      />
-      <div className="flex min-h-0 flex-1 flex-col">
-        <EditorEnvRail
-          changes={changes}
-          envsHref={envsHref}
-          name={workspace.name}
-          onNewPreview={() => {
-            setPreviewOpen(true);
-          }}
-          pagesUrl={pagesUrl}
-          previewUrls={previewUrls}
-          waiting={publishFlow.waiting}
-        />
-        <div className="flex min-h-0 flex-1 flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
-              <div className="mx-auto flex max-w-2xl flex-col gap-5">
-                {ready ? (
-                  <p className="shell-note">
-                    指示は実行環境に送られます。反映は環境から。
-                  </p>
-                ) : (
-                  <p className="shell-note">
-                    実行環境の準備が終わるまで送れません。
-                    {workspace.provisionError
-                      ? ` ${workspace.provisionError}`
-                      : " 作成中の画面で進捗を確認してください。"}
-                  </p>
-                )}
-                {failNote ? (
-                  <p className="text-red text-[13px]">{failNote}</p>
-                ) : null}
-                {view.length === 0 ? (
-                  <p className="text-ink-2 text-[14px]">
-                    最初の指示を書いてください。
-                  </p>
-                ) : null}
-                {view.map((item, index) => {
-                  if (item.type === "user") {
-                    return (
-                      <div
-                        className="rounded-card bg-accent-tint ml-auto max-w-[80%] px-3.5 py-2.5 text-[14px]"
-                        key={item.id}
-                      >
-                        {item.body}
-                      </div>
-                    );
-                  }
-                  if (item.type === "system") {
-                    return (
-                      <p className="text-ink-3 text-[12px]" key={item.id}>
-                        {item.body}
-                      </p>
-                    );
-                  }
-                  if (item.type === "thinking") {
-                    return (
-                      <TaskRows
-                        className="max-w-none"
-                        key={item.id}
-                        labels={TASK_LABELS}
-                        rows={taskRowsFromThinking(item)}
-                        variant="List"
-                      />
-                    );
-                  }
-                  if (item.type === "tools") {
-                    return (
-                      <TaskRows
-                        className="max-w-none"
-                        key={item.id}
-                        labels={TASK_LABELS}
-                        rows={taskRowsFromTools(
-                          item,
-                          laterSettlesTools(view, index)
-                        )}
-                        variant="List"
-                      />
-                    );
-                  }
-                  return (
-                    <StreamingText
-                      content={[{ text: item.body }]}
-                      followUps={[]}
-                      key={item.id}
-                      labels={{ followUps: "", sources: "" }}
-                      loop={false}
-                      sources={[]}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            <EditorComposer
-              disabled={!ready || sending}
-              onSend={(text) => {
-                void send(text);
-              }}
-              placeholder={
-                ready ? "何を作りたいですか？" : "準備が終わるまで送れません"
-              }
-            />
-          </div>
-          <EditorPreviewPane
-            changes={changes}
-            pagesUrl={pagesUrl}
-            previewUrl={previewUrl}
-            tab={pane}
-            waiting={publishFlow.waiting}
-          />
-        </div>
-      </div>
-      {previewOpen ? (
-        <NewPreviewModal
-          existingPreviewUrl={previewUrl}
-          onClose={() => {
-            setPreviewOpen(false);
-          }}
-          productionUrl={pagesUrl}
-        />
-      ) : null}
-    </div>
+    <EditorWorkspace
+      failNote={failNote}
+      messages={toChatView(messages ?? [])}
+      name={workspace.name}
+      onSend={send}
+      pagesUrl={publicHttpUrl(workspace.cloudflarePagesUrl)}
+      previewUrls={previewUrlsFrom(
+        workspace.cloudflarePreviewUrl,
+        workspace.cloudflarePreviewUrls
+      )}
+      provisionError={workspace.provisionError}
+      ready={workspace.ready}
+      sending={sending}
+      slug={slug}
+      waiting={publishFlow.waiting}
+    />
   );
 };
 
 const EditorSkeleton = ({ appId }: { appId: string }) => {
   const shell = useShell();
   const app = shell.state.apps.find((item) => item.id === appId);
-  const envsHref = `/p/${appId}/envs`;
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <EditorHeader
-        envsHref={envsHref}
-        name={app?.name ?? appId}
-        onTab={() => {
-          // Offline header has no side pane.
-        }}
-        pagesUrl={null}
-        previewHref={null}
-        tab="preview"
-        waiting={false}
-      />
-      <div className="flex min-h-0 flex-1 flex-col">
-        <EditorEnvRail
-          changes={emptyChanges()}
-          envsHref={envsHref}
-          name={app?.name ?? appId}
-          onNewPreview={() => {
-            // Offline rail has no preview creation.
-          }}
-          pagesUrl={null}
-          previewUrls={[]}
-          waiting={false}
-        />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
-            <div className="mx-auto flex max-w-2xl flex-col gap-5">
-              <p className="shell-note">
-                Convex 未設定のため会話は送れません。
-              </p>
-            </div>
-          </div>
-          <EditorComposer
-            disabled
-            onSend={() => {
-              // Offline composer cannot send.
-            }}
-            placeholder="Convex 未設定のため送れません"
-          />
-        </div>
-      </div>
-    </div>
+    <EditorWorkspace
+      messages={[]}
+      name={app?.name ?? appId}
+      offline
+      onSend={() => Promise.resolve(false)}
+      ready={false}
+      slug={appId}
+    />
   );
 };
 
-export const EditorScreen = ({ appId }: { appId: string }) => {
-  const live = hasConvexUrl();
-  return (
-    <ShellGate>
-      <AppFrame>
-        {live ? <EditorLive slug={appId} /> : <EditorSkeleton appId={appId} />}
-      </AppFrame>
-    </ShellGate>
-  );
-};
+export const EditorScreen = ({ appId }: { appId: string }) => (
+  <ShellGate>
+    <AppFrame>
+      {hasConvexUrl() ? (
+        <EditorLive slug={appId} />
+      ) : (
+        <EditorSkeleton appId={appId} />
+      )}
+    </AppFrame>
+  </ShellGate>
+);

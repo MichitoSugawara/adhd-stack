@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { PublishPanel } from "@/components/screens/publish-panel";
 import { AppFrame } from "@/components/shell/app-frame";
@@ -12,6 +12,8 @@ import { hasConvexUrl } from "@/lib/env";
 import { writeLastWorkspace } from "@/lib/last-workspace";
 import { OFFLINE_PUBLISH_NOTE } from "@/lib/publish-copy";
 import { usePublishFlow } from "@/lib/publish-flow";
+
+import "./studio.css";
 
 const hostingHint = (
   board:
@@ -80,21 +82,34 @@ const PublishLive = ({ slug }: { slug: string }) => {
     );
   }
 
+  const hostingConnected =
+    board?.authenticated === true && hostingHint(board, true) === null;
+  const needsProvisioning = hostingConnected && !workspace.ready;
+  const provisioningLabel =
+    workspace.provisionStatus === "error"
+      ? "準備を再開する"
+      : "準備の進捗を見る";
+
   return (
-    <main className="flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
-        <div>
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            本番
-          </p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            本番へ反映
+    <main className="studio-page">
+      <div className="studio-progress-layout">
+        <div className="studio-progress-intro">
+          <p className="ui-eyebrow">READY TO SHARE</p>
+          <h1>
+            あなたのアイデアを、
+            <br />
+            外の世界へ。
           </h1>
-          <p className="text-ink-2 mt-2 text-[14px]">
-            いまのあとと、そろったあとを並べます。
+          <p>
+            「{workspace.name}」を公開します。公開したアプリは、URL
+            を知っている人がアクセスできます。
           </p>
+          <Link className="ui-button" href={`/p/${slug}`}>
+            編集に戻る
+          </Link>
         </div>
         <PublishPanel
+          canPublish={hostingConnected && workspace.ready}
           convexUrl={workspace.convexUrl}
           editorHref={`/p/${slug}`}
           error={publishFlow.error}
@@ -106,6 +121,10 @@ const PublishLive = ({ slug }: { slug: string }) => {
           pagesDeployStatus={publishFlow.pagesDeployStatus}
           pagesUrl={workspace.cloudflarePagesUrl}
           pending={publishFlow.pending}
+          recoveryHref={needsProvisioning ? `/p/${slug}/creating` : "/connect"}
+          recoveryLabel={
+            needsProvisioning ? provisioningLabel : "接続を確認する"
+          }
           waiting={publishFlow.waiting}
         />
       </div>
@@ -113,39 +132,35 @@ const PublishLive = ({ slug }: { slug: string }) => {
   );
 };
 
-const PublishOffline = ({ appId }: { appId: string }) => {
-  const [publishNote, setPublishNote] = useState<string | null>(null);
-  return (
-    <main className="flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
-        <div>
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            本番
-          </p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-            本番へ反映
-          </h1>
-          <p className="text-ink-2 mt-2 text-[14px]">{OFFLINE_PUBLISH_NOTE}</p>
-        </div>
-        <PublishPanel
-          editorHref={`/p/${appId}`}
-          error={publishNote}
-          hint={OFFLINE_PUBLISH_NOTE}
-          onPublish={() => {
-            setPublishNote(OFFLINE_PUBLISH_NOTE);
-          }}
-          pending={false}
-        />
-        <Link
-          className="text-ink-2 text-[13px] underline underline-offset-2"
-          href={`/p/${appId}`}
-        >
-          相談に戻る
+const PublishOffline = ({ appId }: { appId: string }) => (
+  <main className="studio-page">
+    <div className="studio-progress-layout">
+      <div className="studio-progress-intro">
+        <p className="ui-eyebrow">READY TO SHARE</p>
+        <h1>
+          あなたのアイデアを、
+          <br />
+          外の世界へ。
+        </h1>
+        <p>
+          公開先を接続すると、ここからアプリを届けられます。現在は画面のプレビューです。
+        </p>
+        <Link className="ui-button" href={`/p/${appId}`}>
+          編集に戻る
         </Link>
       </div>
-    </main>
-  );
-};
+      <PublishPanel
+        canPublish={false}
+        editorHref={`/p/${appId}`}
+        hint={OFFLINE_PUBLISH_NOTE}
+        onPublish={() => {
+          /* UI preview cannot publish. */
+        }}
+        pending={false}
+      />
+    </div>
+  </main>
+);
 
 export const PublishScreen = ({ appId }: { appId: string }) => {
   const live = hasConvexUrl();

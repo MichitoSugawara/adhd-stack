@@ -1,23 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useReducer, useState } from "react";
 import type { ReactNode } from "react";
 
 import { ChatgptDevicePanel } from "@/components/screens/chatgpt-device-panel";
 import { ConnectServiceCard } from "@/components/screens/connect-service-card";
-import { StatusChip } from "@/components/screens/status-chip";
 import { AppFrame } from "@/components/shell/app-frame";
 import { ShellGate } from "@/components/shell/shell-gate";
-import {
-  boardChip,
-  ctaLabelFor,
-  nextDisconnected,
-  nextHint,
-  nextLabel,
-} from "@/lib/connect-copy";
+import { ctaLabelFor, nextDisconnected } from "@/lib/connect-copy";
 import { connectErrorMessage, useConnectBanner } from "@/lib/connect-error";
+import {
+  clearConnectionReturn,
+  useConnectionReturn,
+} from "@/lib/connection-return";
 import { useConnectionsPort } from "@/lib/connections-port";
+import type { BoardConnection } from "@/lib/connections-port";
 import { hasConvexUrl } from "@/lib/env";
 import { useLastWorkspace } from "@/lib/last-workspace";
 import { openOauthTab } from "@/lib/oauth-navigation";
@@ -29,6 +27,8 @@ import {
 import type { ServiceId } from "@/lib/services";
 import { SERVICES } from "@/lib/services";
 import { enterShell } from "@/lib/shell-state";
+
+import "./connections.css";
 
 interface DeviceSession {
   deviceAuthId: string;
@@ -43,64 +43,207 @@ interface PendingOc {
   service: "convex" | "github";
 }
 
-const [chatgptService] = SERVICES;
-const otherServices = SERVICES.filter((service) => service.id !== "chatgpt");
+const PendingAuthorization = ({ onCancel }: { onCancel: () => void }) => (
+  <div className="connection-authorization">
+    <p role="status">
+      別のタブで認可を進めてください。終わったら、この画面に戻ります。
+    </p>
+    <button
+      className="ui-button connection-button-quiet"
+      onClick={onCancel}
+      type="button"
+    >
+      いったん中止してやり直す
+    </button>
+  </div>
+);
 
-const ConnectNextStep = ({
-  busy,
-  onConnect,
-  service,
-}: {
-  busy: boolean;
-  onConnect: (id: ServiceId) => void;
-  service: (typeof SERVICES)[number] | null;
-}) => {
-  if (!service) {
-    return null;
+// The setup journey follows Circle's restrained list hierarchy and Beautiful UI's progressive disclosure.
+const ConnectHeading = () => (
+  <>
+    <ol aria-label="はじめるまでのステップ" className="connection-journey">
+      <li aria-current="step">
+        <span>01</span> 接続
+      </li>
+      <li>
+        <span>02</span> アプリを作成
+      </li>
+      <li>
+        <span>03</span> 作業開始
+      </li>
+    </ol>
+    <header className="connection-heading">
+      <p className="ui-eyebrow">YOUR OWN WORKSPACE</p>
+      <h1>つくる準備を、ここで。</h1>
+      <p>
+        いつものアカウントをつなぐだけ。
+        <br className="connection-mobile-break" />
+        つくることから、公開まで。
+      </p>
+    </header>
+  </>
+);
+
+const progressLabel = (count: number, loading: boolean): string => {
+  if (loading) {
+    return "接続を確認しています";
   }
-  return (
-    <section className="rounded-card bg-accent-tint mt-6 max-w-4xl p-5 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_22%,transparent)]">
-      <p className="text-accent-ink text-[12px] font-medium">次のステップ</p>
-      <h2 className="mt-1 text-[20px] font-semibold">
-        {service.label} をつなぐ
-      </h2>
-      <p className="text-ink-2 mt-2 text-[13px] leading-6">{service.body}</p>
-      <button
-        className="btn-accent rounded-control mt-4 h-10 px-4 text-[13px] font-medium disabled:opacity-40"
-        disabled={busy}
-        onClick={() => {
-          onConnect(service.id);
-        }}
-        type="button"
-      >
-        つなぐ
-      </button>
-    </section>
-  );
+  return count === 4 ? "準備が整いました" : "4つのアカウントをつなぐ";
 };
 
-const ConnectProgress = ({ count }: { count: number }) => (
-  <div className="mt-6 max-w-4xl">
-    <div className="flex items-end justify-between gap-3">
-      <p className="text-[18px] font-semibold tracking-tight">
-        4つをつなぐと作成できます
-      </p>
-      <p className="text-ink-3 text-[13px] tabular-nums">{count} / 4</p>
+const ConnectProgress = ({
+  count,
+  loading = false,
+}: {
+  count: number;
+  loading?: boolean;
+}) => (
+  <div className="connection-progress">
+    <div className="connection-progress-label">
+      <p>{progressLabel(count, loading)}</p>
+      <span aria-live="polite">
+        <strong>{count}</strong> / 4
+      </span>
     </div>
-    <div className="bg-field mt-3 h-2 overflow-hidden rounded-full">
-      <div
-        className="bg-accent h-2 rounded-full transition-[width] duration-500"
-        style={{ width: `${String((count / 4) * 100)}%` }}
-      />
-    </div>
-    <p className="text-ink-3 mt-2 text-[13px]">
-      途中でやめても、接続は残ります。
+    <progress aria-label="接続済みアカウント数" max={4} value={count} />
+    <p>
+      {count === 4
+        ? "さっそく、最初のアイデアを形にしましょう。"
+        : "接続したアカウントは保存されます。続きはいつでも。"}
     </p>
+  </div>
+);
+
+type ConnectionActivity = { native: boolean; service: ServiceId } | null;
+type ConnectionActivityAction =
+  | { type: "finish" }
+  | { service: ServiceId; type: "native" | "start" };
+
+const connectionActivityReducer = (
+  _activity: ConnectionActivity,
+  action: ConnectionActivityAction
+): ConnectionActivity => {
+  if (action.type === "finish") {
+    return null;
+  }
+  return { native: action.type === "native", service: action.service };
+};
+
+const useConnectionActivity = (
+  connections: readonly BoardConnection[] | undefined
+) => {
+  const [activity, dispatchActivity] = useReducer(
+    connectionActivityReducer,
+    null
+  );
+  useEffect(() => {
+    if (
+      activity?.native &&
+      connections?.some(
+        (connection) =>
+          connection.provider === activity.service &&
+          connection.status === "connected"
+      )
+    ) {
+      dispatchActivity({ type: "finish" });
+    }
+  }, [activity, connections]);
+  return {
+    busy: activity?.service ?? null,
+    dispatchActivity,
+    pendingNative: activity?.native ? activity.service : null,
+  };
+};
+
+const ConnectionFooter = ({
+  allConnected,
+  busy,
+  nextHint,
+  onNext,
+  onResume,
+  resumeWorkspace,
+}: {
+  allConnected: boolean;
+  busy: boolean;
+  nextHint: string;
+  onNext: () => void;
+  onResume?: () => void;
+  resumeWorkspace: boolean;
+}) => (
+  <div className="connection-footer">
+    <div>
+      <p className="connection-footer-title">
+        {allConnected
+          ? "あなたの準備ができました。"
+          : "一度つなげば、次からはすぐに。"}
+      </p>
+      <p>{nextHint}</p>
+      {onResume ? (
+        <button
+          className="connection-resume"
+          disabled={!allConnected || busy}
+          onClick={onResume}
+          type="button"
+        >
+          前のアプリに戻る
+        </button>
+      ) : null}
+    </div>
+    <button
+      className="ui-button ui-button-primary connection-next"
+      disabled={!allConnected || busy}
+      onClick={onNext}
+      type="button"
+    >
+      {resumeWorkspace && allConnected ? "アプリに戻る" : "アプリを作成"}
+      <span aria-hidden="true">→</span>
+    </button>
+  </div>
+);
+
+const ConnectionProviderList = ({
+  allConnected,
+  deviceExtra,
+  loading,
+  nextService,
+  onCancel,
+  pendingService,
+  renderCard,
+}: {
+  allConnected: boolean;
+  deviceExtra: ReactNode;
+  loading: boolean;
+  nextService: (typeof SERVICES)[number] | null;
+  onCancel: () => void;
+  pendingService?: ServiceId | null;
+  renderCard: (
+    service: (typeof SERVICES)[number],
+    featured: boolean,
+    extra?: ReactNode
+  ) => ReactNode;
+}) => (
+  <div aria-busy={loading} className="connection-provider-list">
+    {SERVICES.map((service) => {
+      let extra: ReactNode;
+      if (service.id === "chatgpt") {
+        extra = deviceExtra;
+      } else if (service.id === pendingService) {
+        extra = <PendingAuthorization onCancel={onCancel} />;
+      }
+      return renderCard(
+        service,
+        !allConnected && service.id === nextService?.id,
+        extra
+      );
+    })}
   </div>
 );
 
 const ConnectBoard = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnToNew =
+    useConnectionReturn(searchParams.get("returnTo")) === "/new";
   const {
     beginConnect,
     beginDevice,
@@ -114,7 +257,9 @@ const ConnectBoard = () => {
   const banner = useConnectBanner();
   const lastWorkspace = useLastWorkspace();
   const [errors, setErrors] = useState<Partial<Record<ServiceId, string>>>({});
-  const [busy, setBusy] = useState<ServiceId | null>(null);
+  const { busy, pendingNative, dispatchActivity } = useConnectionActivity(
+    board?.connections
+  );
   const [device, setDevice] = useState<DeviceSession | null>(null);
   const [pendingOc, setPendingOc] = useState<PendingOc | null>(null);
 
@@ -123,6 +268,8 @@ const ConnectBoard = () => {
     (row) => row.status === "connected"
   ).length;
   const allConnected = Boolean(board?.allConnected);
+  const nextService = nextDisconnected(board?.connections);
+  const resumeWorkspace = !returnToNew && lastWorkspace !== null;
 
   useEffect(() => {
     if (!device) {
@@ -144,7 +291,7 @@ const ConnectBoard = () => {
         }
         enterShell();
         setDevice(null);
-        setBusy(null);
+        dispatchActivity({ type: "finish" });
         refresh();
       } catch (error) {
         if (!cancelled) {
@@ -153,7 +300,7 @@ const ConnectBoard = () => {
             chatgpt: connectErrorMessage(error),
           }));
           setDevice(null);
-          setBusy(null);
+          dispatchActivity({ type: "finish" });
         }
       }
     };
@@ -165,7 +312,7 @@ const ConnectBoard = () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [device, pollDevice, refresh, signInWithTicket]);
+  }, [device, pollDevice, refresh, dispatchActivity, signInWithTicket]);
 
   useEffect(() => {
     if (!pendingOc) {
@@ -185,7 +332,7 @@ const ConnectBoard = () => {
         clearPendingOc();
         enterShell();
         setPendingOc(null);
-        setBusy(null);
+        dispatchActivity({ type: "finish" });
         refresh();
         return true;
       } catch (error) {
@@ -196,7 +343,7 @@ const ConnectBoard = () => {
             [pendingOc.service]: connectErrorMessage(error),
           }));
           setPendingOc(null);
-          setBusy(null);
+          dispatchActivity({ type: "finish" });
         }
         return true;
       }
@@ -215,7 +362,7 @@ const ConnectBoard = () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [confirmOc, pendingOc, refresh, signInWithTicket]);
+  }, [confirmOc, pendingOc, refresh, dispatchActivity, signInWithTicket]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -228,7 +375,7 @@ const ConnectBoard = () => {
 
   const startConnect = async (id: ServiceId) => {
     setErrors((current) => ({ ...current, [id]: undefined }));
-    setBusy(id);
+    dispatchActivity({ service: id, type: "start" });
     try {
       if (id === "chatgpt") {
         const started = await beginDevice();
@@ -254,6 +401,8 @@ const ConnectBoard = () => {
         };
         writePendingOc(pending);
         setPendingOc(pending);
+      } else {
+        dispatchActivity({ service: id, type: "native" });
       }
       openOauthTab(started.url);
     } catch (error) {
@@ -261,12 +410,12 @@ const ConnectBoard = () => {
         ...current,
         [id]: connectErrorMessage(error),
       }));
-      setBusy(null);
+      dispatchActivity({ type: "finish" });
     }
   };
 
   const startDisconnect = async (id: ServiceId) => {
-    setBusy(id);
+    dispatchActivity({ service: id, type: "start" });
     try {
       await disconnect({ provider: id });
       refresh();
@@ -276,16 +425,16 @@ const ConnectBoard = () => {
         [id]: connectErrorMessage(error),
       }));
     } finally {
-      setBusy(null);
+      dispatchActivity({ type: "finish" });
     }
   };
 
   const goNext = () => {
-    if (allConnected && lastWorkspace) {
-      router.push(lastWorkspace.path);
+    if (!allConnected) {
       return;
     }
-    router.push("/projects");
+    clearConnectionReturn();
+    router.push(returnToNew ? "/new" : (lastWorkspace?.path ?? "/new"));
   };
 
   const cardFor = (
@@ -327,7 +476,7 @@ const ConnectBoard = () => {
     <ChatgptDevicePanel
       onCancel={() => {
         setDevice(null);
-        setBusy(null);
+        dispatchActivity({ type: "finish" });
       }}
       onOpen={() => {
         openOauthTab(device.verificationUrl);
@@ -336,59 +485,56 @@ const ConnectBoard = () => {
     />
   ) : null;
 
+  let nextHint = "4つの接続がそろうと、アプリを作成できます。";
+  if (allConnected) {
+    nextHint =
+      resumeWorkspace && lastWorkspace
+        ? `${lastWorkspace.name || lastWorkspace.slug} の続きに戻れます。`
+        : "次は、アプリに名前を付けます。";
+  }
+
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[28px] font-semibold tracking-tight">
-              接続を準備
-            </h1>
-            <StatusChip tone={allConnected ? "ok" : "idle"}>
-              {boardChip(allConnected)}
-            </StatusChip>
-          </div>
-          <p className="text-ink-2 mt-2 text-[14px] leading-6">
-            足りないものだけつなぎます。
-          </p>
-        </div>
-        <button
-          className="rounded-control bg-field text-ink h-10 px-4 text-[13px] font-medium"
-          onClick={goNext}
-          type="button"
-        >
-          {nextLabel(allConnected, lastWorkspace !== null)}
-        </button>
-      </div>
-      {banner ? <p className="shell-note mt-4 max-w-4xl">{banner}</p> : null}
-      <ConnectProgress count={connectedCount} />
-      {allConnected ? null : (
-        <ConnectNextStep
-          busy={busy !== null || board === undefined}
-          onConnect={(id) => {
-            void startConnect(id);
-          }}
-          service={nextDisconnected(board?.connections)}
-        />
-      )}
-      <div className="mt-6 flex max-w-4xl flex-col gap-3">
-        {chatgptService ? cardFor(chatgptService, true, chatgptExtra) : null}
-        <div className="grid gap-3 md:grid-cols-3">
-          {otherServices.map((service) => {
-            let extra: ReactNode;
-            if (service.id === pendingOc?.service) {
-              extra = (
-                <p className="text-ink-3 mt-3 text-[12px]">
-                  新しいタブで認可しています。終わったらこのタブに戻ってください。
-                </p>
-              );
-            }
-            return cardFor(service, false, extra);
-          })}
-        </div>
-      </div>
-      <p className="text-ink-3 mt-5 text-[13px]">
-        {nextHint(allConnected, lastWorkspace)}
+      <ConnectHeading />
+      {banner ? (
+        <p className="connection-banner" role="alert">
+          {banner}
+        </p>
+      ) : null}
+      <ConnectProgress count={connectedCount} loading={board === undefined} />
+      <ConnectionProviderList
+        allConnected={allConnected}
+        deviceExtra={chatgptExtra}
+        loading={board === undefined}
+        nextService={nextService}
+        onCancel={() => {
+          clearPendingOc();
+          setPendingOc(null);
+          dispatchActivity({ type: "finish" });
+        }}
+        pendingService={pendingOc?.service ?? pendingNative}
+        renderCard={cardFor}
+      />
+      <ConnectionFooter
+        allConnected={allConnected}
+        busy={busy !== null}
+        nextHint={nextHint}
+        onNext={goNext}
+        onResume={
+          returnToNew && lastWorkspace
+            ? () => {
+                if (!allConnected) {
+                  return;
+                }
+                clearConnectionReturn();
+                router.push(lastWorkspace.path);
+              }
+            : undefined
+        }
+        resumeWorkspace={resumeWorkspace}
+      />
+      <p className="connection-ownership">
+        作ったアプリも、データも。あなたのアカウントに残ります。
       </p>
     </>
   );
@@ -402,56 +548,50 @@ const ConnectOffline = () => {
   const router = useRouter();
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <ConnectHeading />
+      <div className="connection-banner">
+        <span aria-hidden="true" className="connection-banner-icon">
+          i
+        </span>
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[28px] font-semibold tracking-tight">
-              接続を準備
-            </h1>
-            <StatusChip tone="idle">まだそろっていません</StatusChip>
-          </div>
-          <p className="text-ink-2 mt-2 text-[14px] leading-6">
-            バックエンド URL が未設定です。つなぐボタンは使えません。
-          </p>
+          <strong>接続サービスが設定されていません</strong>
+          <p>設定が完了すると、ここからアカウントをつなげます。</p>
         </div>
-        <button
-          className="rounded-control bg-field text-ink h-10 px-4 text-[13px] font-medium"
-          onClick={() => {
-            router.push("/projects");
-          }}
-          type="button"
-        >
-          あとで
-        </button>
       </div>
       <ConnectProgress count={0} />
-      <ConnectNextStep busy onConnect={noop} service={chatgptService ?? null} />
-      <div className="mt-6 flex max-w-4xl flex-col gap-3">
-        {chatgptService ? (
+      <div className="connection-provider-list">
+        {SERVICES.map((service) => (
           <ConnectServiceCard
             configured={false}
             ctaDisabled
             ctaLabel="つなぐ"
-            featured
+            key={service.id}
             onConnect={noop}
             onDisconnect={noop}
-            service={chatgptService}
+            service={service}
           />
-        ) : null}
-        <div className="grid gap-3 md:grid-cols-3">
-          {otherServices.map((service) => (
-            <ConnectServiceCard
-              configured={false}
-              ctaDisabled
-              ctaLabel="つなぐ"
-              key={service.id}
-              onConnect={noop}
-              onDisconnect={noop}
-              service={service}
-            />
-          ))}
-        </div>
+        ))}
       </div>
+      <div className="connection-footer">
+        <div>
+          <p className="connection-footer-title">
+            画面の使い方を、先に見てみる。
+          </p>
+          <p>画面プレビューでは、アプリの作成や公開は行いません。</p>
+        </div>
+        <button
+          className="ui-button connection-next"
+          onClick={() => {
+            router.push("/new");
+          }}
+          type="button"
+        >
+          画面プレビューを開く <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <p className="connection-ownership">
+        作ったアプリも、データも。あなたのアカウントに残ります。
+      </p>
     </>
   );
 };
@@ -459,12 +599,22 @@ const ConnectOffline = () => {
 export const ConnectScreen = () => (
   <ShellGate>
     <AppFrame>
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            接続
-          </p>
-          {hasConvexUrl() ? <ConnectBoard /> : <ConnectOffline />}
+      <main className="connection-main">
+        <div className="connection-layout">
+          {hasConvexUrl() ? (
+            <Suspense
+              fallback={
+                <>
+                  <ConnectHeading />
+                  <ConnectProgress count={0} loading />
+                </>
+              }
+            >
+              <ConnectBoard />
+            </Suspense>
+          ) : (
+            <ConnectOffline />
+          )}
         </div>
       </main>
     </AppFrame>
