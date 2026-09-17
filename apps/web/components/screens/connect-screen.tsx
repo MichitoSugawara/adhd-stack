@@ -59,8 +59,8 @@ const ConnectNextStep = ({
     return null;
   }
   return (
-    <section className="rounded-card bg-surface shadow-card mt-6 max-w-4xl p-5">
-      <p className="text-ink-3 text-[12px]">次のステップ</p>
+    <section className="rounded-card bg-accent-tint mt-6 max-w-4xl p-5 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_22%,transparent)]">
+      <p className="text-accent-ink text-[12px] font-medium">次のステップ</p>
       <h2 className="mt-1 text-[20px] font-semibold">
         {service.label} をつなぐ
       </h2>
@@ -87,9 +87,9 @@ const ConnectProgress = ({ count }: { count: number }) => (
       </p>
       <p className="text-ink-3 text-[13px] tabular-nums">{count} / 4</p>
     </div>
-    <div className="bg-inset mt-3 h-1.5 overflow-hidden rounded-full">
+    <div className="bg-field mt-3 h-2 overflow-hidden rounded-full">
       <div
-        className="bg-accent h-1.5 rounded-full"
+        className="bg-accent h-2 rounded-full transition-[width] duration-500"
         style={{ width: `${String((count / 4) * 100)}%` }}
       />
     </div>
@@ -459,11 +459,13 @@ const ConnectOffline = () => {
 export const ConnectScreen = () => (
   <ShellGate>
     <AppFrame>
-      <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-        <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          接続
-        </p>
-        {hasConvexUrl() ? <ConnectBoard /> : <ConnectOffline />}
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            接続
+          </p>
+          {hasConvexUrl() ? <ConnectBoard /> : <ConnectOffline />}
+        </div>
       </main>
     </AppFrame>
   </ShellGate>

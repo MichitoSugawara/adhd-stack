@@ -147,66 +147,68 @@ const CreatingLive = ({ slug }: { slug: string }) => {
   };
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-      <div>
-        <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          作成中
-        </p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          {workspace.name} をつくっています
-        </h1>
-        <p className="text-ink-2 mt-2 text-[14px]">
-          保存先、足場、実行環境の進捗です。
-          {workspace.codingBackend === "cursor_cloud"
-            ? " 実行系は Cursor Cloud Agent です。"
-            : " 実行系は Codex Cloud です。"}
-        </p>
-      </div>
-      {workspace.provisionStatus === "provisioning" ? (
-        <LoadingState label="用意しています" variant="Drive" />
-      ) : null}
-      <TaskRows
-        className="max-w-xl"
-        labels={{
-          completed: "完了",
-          failed: "失敗",
-          running: "処理中",
-          waiting: "待機",
-        }}
-        rows={rowsFromSteps(
-          workspace.provisionSteps,
-          workspace.provisionStatus
-        )}
-        variant="List"
-      />
-      {workspace.provisionError ? (
-        <p className="text-red max-w-2xl text-[13px]">
-          {workspace.provisionError}
-        </p>
-      ) : null}
-      {failNote ? (
-        <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
-      ) : null}
-      {complete ? (
-        <Link
-          className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-          href={`/p/${slug}`}
-        >
-          エディタを開く
-        </Link>
-      ) : null}
-      {failed ? (
-        <button
-          className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] font-medium disabled:opacity-40"
-          disabled={retrying}
-          onClick={() => {
-            void handleRetry();
+    <main className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            作成中
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            {workspace.name} をつくっています
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">
+            保存先、足場、実行環境の進捗です。
+            {workspace.codingBackend === "cursor_cloud"
+              ? " 実行系は Cursor Cloud Agent です。"
+              : " 実行系は Codex Cloud です。"}
+          </p>
+        </div>
+        {workspace.provisionStatus === "provisioning" ? (
+          <LoadingState label="用意しています" variant="Drive" />
+        ) : null}
+        <TaskRows
+          className="max-w-xl"
+          labels={{
+            completed: "完了",
+            failed: "失敗",
+            running: "処理中",
+            waiting: "待機",
           }}
-          type="button"
-        >
-          もう一度試す
-        </button>
-      ) : null}
+          rows={rowsFromSteps(
+            workspace.provisionSteps,
+            workspace.provisionStatus
+          )}
+          variant="List"
+        />
+        {workspace.provisionError ? (
+          <p className="text-red max-w-2xl text-[13px]">
+            {workspace.provisionError}
+          </p>
+        ) : null}
+        {failNote ? (
+          <p className="text-red max-w-2xl text-[13px]">{failNote}</p>
+        ) : null}
+        {complete ? (
+          <Link
+            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
+            href={`/p/${slug}`}
+          >
+            エディタを開く
+          </Link>
+        ) : null}
+        {failed ? (
+          <button
+            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] font-medium disabled:opacity-40"
+            disabled={retrying}
+            onClick={() => {
+              void handleRetry();
+            }}
+            type="button"
+          >
+            もう一度試す
+          </button>
+        ) : null}
+      </div>
     </main>
   );
 };
@@ -239,38 +241,40 @@ const CreatingSkeleton = ({ appId }: { appId: string }) => {
       <h1 className="text-[24px] font-semibold">アプリが見つかりません</h1>
     </main>
   ) : (
-    <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-      <div>
-        <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          作成中
-        </p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          {app?.name ?? appId} をつくっています
-        </h1>
-        <p className="text-ink-2 mt-2 text-[14px]">
-          Convex 未設定です。進捗の見た目だけで、保存先も環境も作りません。
-        </p>
+    <main className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            作成中
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            {app?.name ?? appId} をつくっています
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">
+            Convex 未設定です。進捗の見た目だけで、保存先も環境も作りません。
+          </p>
+        </div>
+        <LoadingState label="用意しています" variant="Drive" />
+        <TaskRows
+          className="max-w-xl"
+          labels={{
+            completed: "完了",
+            failed: "失敗",
+            running: "処理中",
+            waiting: "待機",
+          }}
+          rows={rowsForTick(tick)}
+          variant="List"
+        />
+        {complete ? (
+          <Link
+            className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
+            href={`/p/${appId}`}
+          >
+            エディタを開く
+          </Link>
+        ) : null}
       </div>
-      <LoadingState label="用意しています" variant="Drive" />
-      <TaskRows
-        className="max-w-xl"
-        labels={{
-          completed: "完了",
-          failed: "失敗",
-          running: "処理中",
-          waiting: "待機",
-        }}
-        rows={rowsForTick(tick)}
-        variant="List"
-      />
-      {complete ? (
-        <Link
-          className="rounded-control bg-ink text-surface h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-          href={`/p/${appId}`}
-        >
-          エディタを開く
-        </Link>
-      ) : null}
     </main>
   );
 };

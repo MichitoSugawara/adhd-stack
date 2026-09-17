@@ -1,9 +1,15 @@
-import { Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Inter, Noto_Sans_JP } from "next/font/google";
 
 export const sans = Inter({
   display: "swap",
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+export const jpSans = Noto_Sans_JP({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-noto-sans-jp",
 });
 
 export const mono = Geist_Mono({
@@ -12,4 +18,4 @@ export const mono = Geist_Mono({
   variable: "--font-mono-face",
 });
 
-export const fontVariables = `${sans.variable} ${mono.variable}`;
+export const fontVariables = `${sans.variable} ${jpSans.variable} ${mono.variable}`;

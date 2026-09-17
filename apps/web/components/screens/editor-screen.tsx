@@ -72,13 +72,26 @@ const EditorHeader = ({
   tab: EditorSideTab;
   waiting: boolean;
 }) => (
-  <header className="border-line flex flex-col gap-3 border-b px-5 py-3">
+  <header className="border-line flex flex-col gap-2 border-b px-5 py-2.5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p className="text-ink-3 text-[12px]">相談</p>
-        <h1 className="text-[16px] font-semibold">{name}</h1>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <h1 className="text-[15px] font-semibold">{name}</h1>
+      <div className="flex flex-wrap items-center gap-1">
+        {SIDE_TABS.map((item) => (
+          <button
+            className={`rounded-control h-8 px-2.5 text-[12px] font-medium transition-colors duration-150 ${
+              tab === item.id
+                ? "bg-field text-ink"
+                : "text-ink-3 hover:bg-hover hover:text-ink"
+            }`}
+            key={item.id}
+            onClick={() => {
+              onTab(item.id);
+            }}
+            type="button"
+          >
+            {item.label}
+          </button>
+        ))}
         {previewHref ? (
           <a
             className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[13px] font-medium"
@@ -95,29 +108,8 @@ const EditorHeader = ({
         >
           環境
         </Link>
+        <DisabledAction>検証へ送る</DisabledAction>
       </div>
-    </div>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div className="flex flex-wrap gap-1">
-        {SIDE_TABS.map((item) => (
-          <button
-            className={`rounded-control h-8 px-3 text-[12px] font-medium ${
-              tab === item.id ? "bg-field text-ink" : "text-ink-3"
-            }`}
-            key={item.id}
-            onClick={() => {
-              onTab(item.id);
-            }}
-            type="button"
-          >
-            {item.label}
-          </button>
-        ))}
-        <span className="rounded-control bg-field text-ink inline-flex h-8 items-center px-3 text-[12px] font-medium">
-          相談
-        </span>
-      </div>
-      <DisabledAction>検証へ送る</DisabledAction>
     </div>
     {pagesUrl ? <UrlChip href={pagesUrl} waiting={waiting} /> : null}
     {waiting ? (
@@ -250,7 +242,7 @@ const EditorLive = ({ slug }: { slug: string }) => {
         tab={pane}
         waiting={publishFlow.waiting}
       />
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col">
         <EditorEnvRail
           changes={changes}
           envsHref={envsHref}
@@ -262,102 +254,104 @@ const EditorLive = ({ slug }: { slug: string }) => {
           previewUrls={previewUrls}
           waiting={publishFlow.waiting}
         />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
-            <div className="mx-auto flex max-w-2xl flex-col gap-5">
-              {ready ? (
-                <p className="shell-note">
-                  指示は実行環境に送られます。反映は環境から。
-                </p>
-              ) : (
-                <p className="shell-note">
-                  実行環境の準備が終わるまで送れません。
-                  {workspace.provisionError
-                    ? ` ${workspace.provisionError}`
-                    : " 作成中の画面で進捗を確認してください。"}
-                </p>
-              )}
-              {failNote ? (
-                <p className="text-red text-[13px]">{failNote}</p>
-              ) : null}
-              {view.length === 0 ? (
-                <p className="text-ink-2 text-[14px]">
-                  最初の指示を書いてください。
-                </p>
-              ) : null}
-              {view.map((item, index) => {
-                if (item.type === "user") {
+        <div className="flex min-h-0 flex-1 flex-row">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 overflow-auto px-5 py-5">
+              <div className="mx-auto flex max-w-2xl flex-col gap-5">
+                {ready ? (
+                  <p className="shell-note">
+                    指示は実行環境に送られます。反映は環境から。
+                  </p>
+                ) : (
+                  <p className="shell-note">
+                    実行環境の準備が終わるまで送れません。
+                    {workspace.provisionError
+                      ? ` ${workspace.provisionError}`
+                      : " 作成中の画面で進捗を確認してください。"}
+                  </p>
+                )}
+                {failNote ? (
+                  <p className="text-red text-[13px]">{failNote}</p>
+                ) : null}
+                {view.length === 0 ? (
+                  <p className="text-ink-2 text-[14px]">
+                    最初の指示を書いてください。
+                  </p>
+                ) : null}
+                {view.map((item, index) => {
+                  if (item.type === "user") {
+                    return (
+                      <div
+                        className="rounded-card bg-accent-tint ml-auto max-w-[80%] px-3.5 py-2.5 text-[14px]"
+                        key={item.id}
+                      >
+                        {item.body}
+                      </div>
+                    );
+                  }
+                  if (item.type === "system") {
+                    return (
+                      <p className="text-ink-3 text-[12px]" key={item.id}>
+                        {item.body}
+                      </p>
+                    );
+                  }
+                  if (item.type === "thinking") {
+                    return (
+                      <TaskRows
+                        className="max-w-none"
+                        key={item.id}
+                        labels={TASK_LABELS}
+                        rows={taskRowsFromThinking(item)}
+                        variant="List"
+                      />
+                    );
+                  }
+                  if (item.type === "tools") {
+                    return (
+                      <TaskRows
+                        className="max-w-none"
+                        key={item.id}
+                        labels={TASK_LABELS}
+                        rows={taskRowsFromTools(
+                          item,
+                          laterSettlesTools(view, index)
+                        )}
+                        variant="List"
+                      />
+                    );
+                  }
                   return (
-                    <div
-                      className="rounded-card bg-inset ml-auto max-w-[80%] px-3 py-2 text-[14px]"
+                    <StreamingText
+                      content={[{ text: item.body }]}
+                      followUps={[]}
                       key={item.id}
-                    >
-                      {item.body}
-                    </div>
-                  );
-                }
-                if (item.type === "system") {
-                  return (
-                    <p className="text-ink-3 text-[12px]" key={item.id}>
-                      {item.body}
-                    </p>
-                  );
-                }
-                if (item.type === "thinking") {
-                  return (
-                    <TaskRows
-                      className="max-w-none"
-                      key={item.id}
-                      labels={TASK_LABELS}
-                      rows={taskRowsFromThinking(item)}
-                      variant="List"
+                      labels={{ followUps: "", sources: "" }}
+                      loop={false}
+                      sources={[]}
                     />
                   );
-                }
-                if (item.type === "tools") {
-                  return (
-                    <TaskRows
-                      className="max-w-none"
-                      key={item.id}
-                      labels={TASK_LABELS}
-                      rows={taskRowsFromTools(
-                        item,
-                        laterSettlesTools(view, index)
-                      )}
-                      variant="List"
-                    />
-                  );
-                }
-                return (
-                  <StreamingText
-                    content={[{ text: item.body }]}
-                    followUps={[]}
-                    key={item.id}
-                    labels={{ followUps: "", sources: "" }}
-                    loop={false}
-                    sources={[]}
-                  />
-                );
-              })}
+                })}
+              </div>
             </div>
+            <EditorComposer
+              disabled={!ready || sending}
+              onSend={(text) => {
+                void send(text);
+              }}
+              placeholder={
+                ready ? "何を作りたいですか？" : "準備が終わるまで送れません"
+              }
+            />
           </div>
-          <EditorComposer
-            disabled={!ready || sending}
-            onSend={(text) => {
-              void send(text);
-            }}
-            placeholder={
-              ready ? "何を作りたいですか？" : "準備が終わるまで送れません"
-            }
+          <EditorPreviewPane
+            changes={changes}
+            pagesUrl={pagesUrl}
+            previewUrl={previewUrl}
+            tab={pane}
+            waiting={publishFlow.waiting}
           />
         </div>
-        <EditorPreviewPane
-          changes={changes}
-          pagesUrl={pagesUrl}
-          previewUrl={previewUrl}
-          tab={pane}
-          waiting={publishFlow.waiting}
-        />
       </div>
       {previewOpen ? (
         <NewPreviewModal
@@ -389,7 +383,7 @@ const EditorSkeleton = ({ appId }: { appId: string }) => {
         tab="preview"
         waiting={false}
       />
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col">
         <EditorEnvRail
           changes={emptyChanges()}
           envsHref={envsHref}

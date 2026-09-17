@@ -51,7 +51,7 @@ const ProjectsNewAppButton = ({ onOpen }: { onOpen: () => void }) => {
 
   return (
     <button
-      className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium disabled:opacity-40"
+      className="rounded-control bg-ink text-surface enabled:hover:bg-ink/90 h-10 px-4 text-[13px] font-medium transition-colors duration-150 disabled:opacity-40"
       data-new-app
       disabled={blocked}
       onClick={onOpen}
@@ -92,7 +92,7 @@ const CreateDialog = ({
   onSubmit: () => void;
   pending: boolean;
 }) => (
-  <div className="bg-page/70 fixed inset-0 z-40 flex items-end justify-center p-4 sm:items-center">
+  <div className="bg-ink/30 fixed inset-0 z-40 flex items-end justify-center p-4 backdrop-blur-[2px] sm:items-center">
     <div className="rounded-window bg-surface shadow-overlay w-full max-w-md p-5">
       <h2 className="text-[18px] font-semibold">新しいアプリ</h2>
       <p className="text-ink-2 mt-2 text-[13px]">
@@ -119,14 +119,14 @@ const CreateDialog = ({
       </label>
       <div className="mt-5 flex justify-end gap-2">
         <button
-          className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px]"
+          className="rounded-control text-ink-2 hover:bg-hover h-9 px-3 text-[13px] transition-colors duration-150"
           onClick={onClose}
           type="button"
         >
           やめる
         </button>
         <button
-          className="rounded-control bg-ink text-surface h-9 px-3 text-[13px] font-medium disabled:opacity-40"
+          className="rounded-control bg-ink text-surface enabled:hover:bg-ink/90 h-9 px-3 text-[13px] font-medium transition-colors duration-150 disabled:opacity-40"
           disabled={name.trim().length === 0 || pending}
           onClick={onSubmit}
           type="button"
@@ -182,8 +182,11 @@ const ProjectsLive = () => {
   let published = 0;
   if (apps !== undefined && apps.length === 0) {
     listBody = (
-      <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
-        まだありません。名前を付けて作成してください。
+      <div className="rounded-window bg-surface shadow-card flex max-w-xl flex-col items-center gap-3 px-6 py-12 text-center">
+        <p className="text-[15px] font-medium">まだありません</p>
+        <p className="text-ink-2 text-[13px] leading-6">
+          名前を付けて作成してください。
+        </p>
       </div>
     );
   } else if (apps !== undefined) {
@@ -213,7 +216,7 @@ const ProjectsLive = () => {
             );
             return (
               <li
-                className="grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3"
+                className="hover:bg-hover grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3 transition-colors"
                 key={app._id}
               >
                 <span>
@@ -334,7 +337,7 @@ const ProjectsSkeleton = () => {
           </p>
         </div>
         <button
-          className="rounded-control bg-ink text-surface h-10 px-4 text-[13px] font-medium"
+          className="rounded-control bg-ink text-surface hover:bg-ink/90 h-10 px-4 text-[13px] font-medium transition-colors duration-150"
           data-new-app
           onClick={() => {
             setManualOpen(true);
@@ -349,8 +352,11 @@ const ProjectsSkeleton = () => {
         Convex 未設定です。一覧はブラウザ内の見た目だけで、保存先は作りません。
       </p>
       {shell.state.apps.length === 0 ? (
-        <div className="rounded-card bg-surface text-ink-2 shadow-card max-w-xl p-5 text-[14px]">
-          まだありません。名前を付けて、作成中の画面を見てください。
+        <div className="rounded-window bg-surface shadow-card flex max-w-xl flex-col items-center gap-3 px-6 py-12 text-center">
+          <p className="text-[15px] font-medium">まだありません</p>
+          <p className="text-ink-2 text-[13px] leading-6">
+            名前を付けて、作成中の画面を見てください。
+          </p>
         </div>
       ) : (
         <div className="rounded-card bg-surface shadow-card max-w-4xl overflow-hidden">
@@ -364,7 +370,7 @@ const ProjectsSkeleton = () => {
           <ul className="divide-line divide-y">
             {shell.state.apps.map((app) => (
               <li
-                className="grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3"
+                className="hover:bg-hover grid grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1.2fr)_auto_auto] items-center gap-3 px-4 py-3 transition-colors"
                 key={app.id}
               >
                 <span>
@@ -416,8 +422,10 @@ export const ProjectsScreen = () => {
   return (
     <ShellGate>
       <AppFrame>
-        <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-          {live ? <ProjectsLive /> : <ProjectsSkeleton />}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+            {live ? <ProjectsLive /> : <ProjectsSkeleton />}
+          </div>
         </main>
       </AppFrame>
     </ShellGate>

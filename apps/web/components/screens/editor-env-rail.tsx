@@ -45,7 +45,7 @@ const EnvRow = ({
   tone: "idle" | "ok" | "wait";
 }) => (
   <Link
-    className="hover:bg-hover rounded-card flex items-center justify-between gap-2 px-2.5 py-2"
+    className="hover:bg-hover rounded-card flex items-center justify-between gap-2 px-2.5 py-2 transition-colors duration-150"
     href={href}
   >
     <span className="text-[13px] font-medium">{title}</span>
@@ -74,7 +74,7 @@ export const EditorEnvRail = ({
   const production = productionChip(pagesUrl, waiting);
 
   return (
-    <aside className="border-line flex w-full shrink-0 flex-col gap-4 overflow-auto border-b p-4 lg:w-56 lg:border-r lg:border-b-0">
+    <aside className="border-line flex w-full shrink-0 flex-row flex-wrap items-start gap-x-8 gap-y-2 border-b px-5 py-3">
       <div>
         <p className="text-ink-3 text-[11px] tracking-[0.08em] uppercase">
           アプリ
@@ -119,7 +119,7 @@ export const EditorEnvRail = ({
             {previewUrls.map((href) => (
               <li key={href}>
                 <a
-                  className="text-ink-2 block text-[12px] leading-5 underline underline-offset-2"
+                  className="text-ink-2 hover:text-ink block text-[12px] leading-5 underline underline-offset-2 transition-colors duration-150"
                   href={href}
                   rel="noreferrer"
                   target="_blank"

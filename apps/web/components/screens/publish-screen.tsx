@@ -81,32 +81,34 @@ const PublishLive = ({ slug }: { slug: string }) => {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-      <div>
-        <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          本番
-        </p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          本番へ反映
-        </h1>
-        <p className="text-ink-2 mt-2 text-[14px]">
-          いまのあとと、そろったあとを並べます。
-        </p>
+    <main className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            本番
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            本番へ反映
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">
+            いまのあとと、そろったあとを並べます。
+          </p>
+        </div>
+        <PublishPanel
+          convexUrl={workspace.convexUrl}
+          editorHref={`/p/${slug}`}
+          error={publishFlow.error}
+          hint={hostingHint(board, workspace.ready)}
+          notes={publishFlow.notes}
+          onPublish={() => {
+            void publishFlow.publish();
+          }}
+          pagesDeployStatus={publishFlow.pagesDeployStatus}
+          pagesUrl={workspace.cloudflarePagesUrl}
+          pending={publishFlow.pending}
+          waiting={publishFlow.waiting}
+        />
       </div>
-      <PublishPanel
-        convexUrl={workspace.convexUrl}
-        editorHref={`/p/${slug}`}
-        error={publishFlow.error}
-        hint={hostingHint(board, workspace.ready)}
-        notes={publishFlow.notes}
-        onPublish={() => {
-          void publishFlow.publish();
-        }}
-        pagesDeployStatus={publishFlow.pagesDeployStatus}
-        pagesUrl={workspace.cloudflarePagesUrl}
-        pending={publishFlow.pending}
-        waiting={publishFlow.waiting}
-      />
     </main>
   );
 };
@@ -114,31 +116,33 @@ const PublishLive = ({ slug }: { slug: string }) => {
 const PublishOffline = ({ appId }: { appId: string }) => {
   const [publishNote, setPublishNote] = useState<string | null>(null);
   return (
-    <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto px-6 py-6 lg:px-10">
-      <div>
-        <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-          本番
-        </p>
-        <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
-          本番へ反映
-        </h1>
-        <p className="text-ink-2 mt-2 text-[14px]">{OFFLINE_PUBLISH_NOTE}</p>
+    <main className="flex-1 overflow-y-auto">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-6 py-10">
+        <div>
+          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+            本番
+          </p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight">
+            本番へ反映
+          </h1>
+          <p className="text-ink-2 mt-2 text-[14px]">{OFFLINE_PUBLISH_NOTE}</p>
+        </div>
+        <PublishPanel
+          editorHref={`/p/${appId}`}
+          error={publishNote}
+          hint={OFFLINE_PUBLISH_NOTE}
+          onPublish={() => {
+            setPublishNote(OFFLINE_PUBLISH_NOTE);
+          }}
+          pending={false}
+        />
+        <Link
+          className="text-ink-2 text-[13px] underline underline-offset-2"
+          href={`/p/${appId}`}
+        >
+          相談に戻る
+        </Link>
       </div>
-      <PublishPanel
-        editorHref={`/p/${appId}`}
-        error={publishNote}
-        hint={OFFLINE_PUBLISH_NOTE}
-        onPublish={() => {
-          setPublishNote(OFFLINE_PUBLISH_NOTE);
-        }}
-        pending={false}
-      />
-      <Link
-        className="text-ink-2 text-[13px] underline underline-offset-2"
-        href={`/p/${appId}`}
-      >
-        相談に戻る
-      </Link>
     </main>
   );
 };

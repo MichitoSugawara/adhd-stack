@@ -46,7 +46,7 @@ Phase 1 で最低限マップする部品:
 | SidebarNav / harness      | 左レール・アプリ枠           |
 | Task Rows / Loading State | 作成中・公開中の進捗         |
 
-トークンは tahcode と同じく **VS Code Dark Green+** を基準にする（背景 `#121712`、面 `#0c150c`、文字 `#cfd4cf`、アクセント `#1fbf3a` 前後）。ライトは後でもよい。tahcode のトークン実装を証拠に、ADHD Stack のシェルへ写す。
+トークンは **ライト・クリーン** を基準にする（背景 `#f6f7f9`、面 `#ffffff`、文字 `#1b2330`、アクセント indigo `#4f46e5`）。2026-09-16 にオーナーの要望で VS Code Dark Green+（旧 `#121712` / `#1fbf3a`）から刷新した。`apps/web/app/beautifui/tokens.css` が正本の値。
 
 ### `design_handoff/` は移行用 IA だけ
 
@@ -65,7 +65,7 @@ Phase 1 で最低限マップする部品:
 - 切れた接続は接続画面でつなぎ直す
 - 環境操作は [Claude Design 1795b4d9](https://claude.ai/design/p/1795b4d9-3a03-4aaf-b446-df0d1796f63c) の IA を優先する。Pages のプレビュー配備が切れているあいだは「まだ」と出し、偽の昇格はしない
 
-緑セリフモックは削除した。Phase 1 の画面は Beautiful UI + Dark Green+ のシェルである。
+緑セリフモックは削除した。画面は Beautiful UI + ライト・クリーンのシェルである（旧 Dark Green+ は 2026-09-16 に置き換え）。
 
 ---
 

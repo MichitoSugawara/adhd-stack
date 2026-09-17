@@ -323,21 +323,23 @@ export const EnvsScreen = ({ appId }: { appId: string }) => {
   return (
     <ShellGate>
       <AppFrame>
-        <main className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-6 py-6 lg:px-10">
-          <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
-            環境
-          </p>
-          {live ? (
-            <EnvsLive slug={appId} />
-          ) : (
-            <EnvsOffline slug={appId} title={title} />
-          )}
-          <Link
-            className="rounded-control bg-field text-ink h-10 w-fit px-4 text-[13px] leading-10 font-medium"
-            href={`/p/${appId}`}
-          >
-            相談に戻る
-          </Link>
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-6 py-10">
+            <p className="text-ink-3 text-[12px] font-medium tracking-[0.08em] uppercase">
+              環境
+            </p>
+            {live ? (
+              <EnvsLive slug={appId} />
+            ) : (
+              <EnvsOffline slug={appId} title={title} />
+            )}
+            <Link
+              className="rounded-control bg-field text-ink h-10 w-fit px-4 text-[13px] leading-10 font-medium"
+              href={`/p/${appId}`}
+            >
+              相談に戻る
+            </Link>
+          </div>
         </main>
       </AppFrame>
     </ShellGate>
