@@ -1,5 +1,9 @@
 import type { ConnectorOrToken } from "./actionAuth";
 import type { CascadeResourceResult } from "./cascadeDeleteResult";
+import {
+  GITHUB_DELETE_PERMISSION_MESSAGE,
+  isGitHubDeletePermissionError,
+} from "./githubDeletePermission";
 import { githubHeaders } from "./githubRepo";
 import { asString, readJson } from "./httpJson";
 import {
@@ -12,6 +16,11 @@ import {
 } from "./openConnectorActions";
 import { reconnectMessage } from "./tokenRefresh";
 
+export {
+  GITHUB_DELETE_PERMISSION_MESSAGE,
+  isGitHubDeletePermissionError,
+} from "./githubDeletePermission";
+
 const githubFail = (detail?: string): CascadeResourceResult => ({
   kind: "github_repo",
   message:
@@ -21,6 +30,9 @@ const githubFail = (detail?: string): CascadeResourceResult => ({
   reconnect: true,
   status: "failed",
 });
+
+const githubPermissionFail = (): CascadeResourceResult =>
+  githubFail(GITHUB_DELETE_PERMISSION_MESSAGE);
 
 const githubFromStatus = (status: number): CascadeResourceResult => {
   if (status === 204 || status === 200) {
@@ -40,9 +52,7 @@ const githubFromStatus = (status: number): CascadeResourceResult => {
     };
   }
   if (status === 403) {
-    return githubFail(
-      "消す権限が足りません。GitHub をつなぎ直してから、もう一度試してください"
-    );
+    return githubPermissionFail();
   }
   return githubFail(`HTTP ${String(status)}`);
 };
@@ -67,14 +77,13 @@ const deleteViaToken = async (args: {
     return githubFromStatus(404);
   }
   if (response.status === 403) {
-    return githubFail(
-      asString(payload.message) ??
-        "消す権限が足りません。GitHub をつなぎ直してから、もう一度試してください"
-    );
+    return githubPermissionFail();
   }
-  return githubFail(
-    asString(payload.message) ?? `HTTP ${String(response.status)}`
-  );
+  const detail = asString(payload.message);
+  if (isGitHubDeletePermissionError(response.status, detail)) {
+    return githubPermissionFail();
+  }
+  return githubFail(detail ?? `HTTP ${String(response.status)}`);
 };
 
 const deleteViaOpenConnector = async (args: {
@@ -97,6 +106,9 @@ const deleteViaOpenConnector = async (args: {
     if (!message.startsWith("unknown_action:")) {
       if (message.toLowerCase().includes("404")) {
         return githubFromStatus(404);
+      }
+      if (isGitHubDeletePermissionError(undefined, message)) {
+        return githubPermissionFail();
       }
       return githubFail(message);
     }
@@ -137,6 +149,10 @@ export const deleteGitHubRepo = async (args: {
       repo: args.repo,
     });
   } catch (error) {
-    return githubFail(error instanceof Error ? error.message : undefined);
+    const message = error instanceof Error ? error.message : undefined;
+    if (isGitHubDeletePermissionError(undefined, message)) {
+      return githubPermissionFail();
+    }
+    return githubFail(message);
   }
 };

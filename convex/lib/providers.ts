@@ -1,6 +1,7 @@
 import type { Infer } from "convex/values";
 
 import type { providerValidator } from "../validators";
+import { GITHUB_OAUTH_SCOPES } from "./githubOauthScopes";
 import { isOpenConnectorConfigured } from "./openConnectorEnv";
 
 export type ProviderId = Infer<typeof providerValidator>;
@@ -60,7 +61,7 @@ const DEFINITIONS = {
   },
   github: {
     authorizationUrl: "https://github.com/login/oauth/authorize",
-    scopes: ["delete_repo", "read:user", "repo", "user:email"],
+    scopes: [...GITHUB_OAUTH_SCOPES],
     tokenUrl: "https://github.com/login/oauth/access_token",
   },
 } as const satisfies Record<ProviderId, ProviderDefinition>;
@@ -132,6 +133,11 @@ export const requireProviderEnv = (
 export const getProviderDefinition = (
   provider: ProviderId
 ): ProviderDefinition => DEFINITIONS[provider];
+
+export {
+  ensureGithubOauthScopes,
+  GITHUB_OAUTH_SCOPES,
+} from "./githubOauthScopes";
 
 export const callbackPath = (provider: ProviderId): string =>
   `/oauth/callback/${provider}`;

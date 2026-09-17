@@ -11,14 +11,14 @@ import {
 } from "./convexProject";
 import { asList, asString, readJson } from "./httpJson";
 import {
-  convexDeleteProjectActionIds,
-  convexDeleteProjectInput,
+  convexNumericProjectId,
   convexTeamIdFromAccount,
 } from "./openConnectorActionInputs";
 import {
   invokeOpenConnectorActionIds,
   proxyOpenConnector,
 } from "./openConnectorActions";
+import { deleteConvexProjectViaOpenConnector } from "./openConnectorDeleteFallback";
 import { reconnectMessage } from "./tokenRefresh";
 
 const convexFail = (detail?: string): CascadeResourceResult => ({
@@ -226,12 +226,32 @@ const deleteViaOpenConnector = async (args: {
   if (!resolved.projectId) {
     return convexFail("プロジェクト番号を特定できませんでした");
   }
+  const projectId = convexNumericProjectId(resolved.projectId);
+  if (projectId === undefined) {
+    return convexFail("プロジェクト番号を特定できませんでした");
+  }
   try {
-    await invokeOpenConnectorActionIds({
-      actionIds: convexDeleteProjectActionIds,
+    const outcome = await deleteConvexProjectViaOpenConnector({
       connectionName: args.connectionName,
-      input: convexDeleteProjectInput({ projectId: resolved.projectId }),
+      deps: {
+        invoke: invokeOpenConnectorActionIds,
+        proxy: proxyOpenConnector,
+      },
+      projectId: String(projectId),
     });
+    if (outcome.alreadyGone || outcome.status === 404) {
+      return {
+        kind: "convex_project",
+        message: "アプリのデータはすでにありませんでした",
+        reconnect: false,
+        status: "already_gone",
+      };
+    }
+    if (outcome.status >= 400) {
+      return convexFail(
+        asString(outcome.data.message) ?? `HTTP ${String(outcome.status)}`
+      );
+    }
     return {
       kind: "convex_project",
       message: "アプリのデータを消しました",
@@ -240,43 +260,16 @@ const deleteViaOpenConnector = async (args: {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    if (!message.startsWith("unknown_action:")) {
-      if (message.toLowerCase().includes("404")) {
-        return {
-          kind: "convex_project",
-          message: "アプリのデータはすでにありませんでした",
-          reconnect: false,
-          status: "already_gone",
-        };
-      }
-      return convexFail(message);
+    if (message.toLowerCase().includes("404")) {
+      return {
+        kind: "convex_project",
+        message: "アプリのデータはすでにありませんでした",
+        reconnect: false,
+        status: "already_gone",
+      };
     }
+    return convexFail(message);
   }
-  const proxied = await proxyOpenConnector({
-    connectionName: args.connectionName,
-    endpoint: `/projects/${encodeURIComponent(resolved.projectId)}/delete`,
-    method: "POST",
-    service: "convex",
-  });
-  if (proxied.status === 404) {
-    return {
-      kind: "convex_project",
-      message: "アプリのデータはすでにありませんでした",
-      reconnect: false,
-      status: "already_gone",
-    };
-  }
-  if (proxied.status >= 400) {
-    return convexFail(
-      asString(proxied.data.message) ?? `HTTP ${String(proxied.status)}`
-    );
-  }
-  return {
-    kind: "convex_project",
-    message: "アプリのデータを消しました",
-    reconnect: false,
-    status: "deleted",
-  };
 };
 
 export const deleteConvexProject = async (args: {

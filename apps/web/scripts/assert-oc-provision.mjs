@@ -7,6 +7,9 @@ const {
   convexCreateDeployKeyInput,
   convexCreateProjectActionIds,
   convexCreateProjectInput,
+  convexDeleteProjectInput,
+  convexDeleteProjectInputs,
+  convexNumericProjectId,
   convexTeamIdFromAccount,
   firstConvexTeamId,
   githubCreateOrUpdateFileActionIds,
@@ -63,6 +66,17 @@ assert.equal(convexTeamIdFromAccount("team:46534"), 46_534);
 assert.equal(convexTeamIdFromAccount("46534"), 46_534);
 assert.equal(convexTeamIdFromAccount("conn_abc"), undefined);
 assert.equal(firstConvexTeamId(["conn_abc", "team:46534"]), 46_534);
+assert.equal(convexNumericProjectId("46534"), 46_534);
+assert.equal(typeof convexNumericProjectId("46534"), "number");
+assert.equal(convexNumericProjectId("notes-app"), undefined);
+const convexDeleteInput = convexDeleteProjectInput({ projectId: "46534" });
+assert.equal(convexDeleteInput.project_id, 46_534);
+assert.equal(typeof convexDeleteInput.project_id, "number");
+assert.equal(Object.hasOwn(convexDeleteInput, "projectId"), false);
+assert.deepEqual(convexDeleteProjectInputs("46534"), [
+  { project_id: 46_534 },
+  { projectId: 46_534 },
+]);
 
 const convexLib = path.resolve(import.meta.dirname, "../../../convex");
 const githubOc = await readFile(

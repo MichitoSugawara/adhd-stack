@@ -65,10 +65,11 @@ const adminFetch = async (
   return payload;
 };
 
-const shouldRetryWithoutReturnUri = (error: unknown): boolean => {
+const shouldRetryUnknownAuthorizationField = (error: unknown): boolean => {
   const message = error instanceof Error ? error.message.toLowerCase() : "";
   return (
     message.includes("returnuri") ||
+    message.includes("requestedscope") ||
     message.includes("unknown") ||
     message.includes("extra") ||
     message.includes("unexpected")
@@ -77,15 +78,19 @@ const shouldRetryWithoutReturnUri = (error: unknown): boolean => {
 
 export const startOauthAuthorization = async (args: {
   connectionName: string;
+  requestedScopes?: readonly string[];
   returnUri?: string;
   service: OpenConnectorService;
 }): Promise<{ authorizationUrl: string; returnUriAccepted: boolean }> => {
-  const body: Record<string, string> = {
+  const body: Record<string, unknown> = {
     connectionName: args.connectionName,
     service: args.service,
   };
   if (args.returnUri) {
     body.returnUri = args.returnUri;
+  }
+  if (args.requestedScopes && args.requestedScopes.length > 0) {
+    body.requestedScopes = [...args.requestedScopes];
   }
   try {
     const payload = await adminFetch("/api/oauth/authorizations", {
@@ -101,9 +106,21 @@ export const startOauthAuthorization = async (args: {
       returnUriAccepted: Boolean(args.returnUri),
     };
   } catch (error) {
-    if (args.returnUri && shouldRetryWithoutReturnUri(error)) {
+    if (
+      args.requestedScopes &&
+      args.requestedScopes.length > 0 &&
+      shouldRetryUnknownAuthorizationField(error)
+    ) {
       return await startOauthAuthorization({
         connectionName: args.connectionName,
+        returnUri: args.returnUri,
+        service: args.service,
+      });
+    }
+    if (args.returnUri && shouldRetryUnknownAuthorizationField(error)) {
+      return await startOauthAuthorization({
+        connectionName: args.connectionName,
+        requestedScopes: args.requestedScopes,
         service: args.service,
       });
     }

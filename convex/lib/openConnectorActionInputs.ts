@@ -34,11 +34,39 @@ export const convexDeleteProjectActionIds = [
   "convex.delete_a_project",
 ] as const;
 
+export const convexNumericProjectId = (
+  projectId: string | undefined
+): number | undefined => {
+  if (!projectId) {
+    return undefined;
+  }
+  const trimmed = projectId.trim();
+  if (trimmed.length === 0 || !/^\d+$/u.test(trimmed)) {
+    return undefined;
+  }
+  const numeric = Number(trimmed);
+  return Number.isInteger(numeric) && numeric > 0 ? numeric : undefined;
+};
+
 export const convexDeleteProjectInput = (args: {
   projectId: string;
-}): Record<string, unknown> => ({
-  project_id: args.projectId,
-});
+}): Record<string, unknown> => {
+  const projectId = convexNumericProjectId(args.projectId);
+  if (projectId === undefined) {
+    return {};
+  }
+  return { project_id: projectId };
+};
+
+export const convexDeleteProjectInputs = (
+  projectId: string
+): Record<string, unknown>[] => {
+  const numeric = convexNumericProjectId(projectId);
+  if (numeric === undefined) {
+    return [];
+  }
+  return [{ project_id: numeric }, { projectId: numeric }];
+};
 
 export const convexCreateProjectActionIds = ["convex.create_project"] as const;
 

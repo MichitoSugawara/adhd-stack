@@ -11,6 +11,10 @@ import {
   requestCodexUserCode,
 } from "./lib/codexDevice";
 import {
+  ensureGithubOauthScopes,
+  GITHUB_OAUTH_SCOPES,
+} from "./lib/githubOauthScopes";
+import {
   assertOauthAppReady,
   findNamedOcConnection,
   isOpenConnectorService,
@@ -64,21 +68,29 @@ export const beginConnect = action({
         userId ?? "pending"
       );
       const returnUri = ocReturnUri(args.provider, connectionName);
+      const requestedScopes =
+        args.provider === "github" ? GITHUB_OAUTH_SCOPES : undefined;
       const started =
         returnUri.length > 0
           ? await startOauthAuthorization({
               connectionName,
+              requestedScopes,
               returnUri,
               service: args.provider,
             })
           : await startOauthAuthorization({
               connectionName,
+              requestedScopes,
               service: args.provider,
             });
+      const url =
+        args.provider === "github"
+          ? ensureGithubOauthScopes(started.authorizationUrl)
+          : started.authorizationUrl;
       return {
         connectionName,
         kind: "catalog" as const,
-        url: started.authorizationUrl,
+        url,
       };
     }
     if (!isProviderConfigured(args.provider)) {
